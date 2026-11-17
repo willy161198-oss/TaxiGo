@@ -20,647 +20,94 @@
       --border: #e2e8f0;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body, html {
-      width: 100%;
-      height: 100%;
-      background: #f8fafc;
-      color: var(--text-main);
-      overflow-x: hidden;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body, html { width: 100%; height: 100%; background: #f8fafc; color: var(--text-main); overflow-x: hidden; }
 
     /* PORTADA Y REGISTROS */
-    .splash-screen {
-      min-height: 100vh;
-      padding: 24px 16px 36px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f8fafc;
-    }
-
-    .hero-card {
-      background: var(--bg-dark);
-      color: #ffffff;
-      border-radius: 22px;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-      margin-bottom: 18px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .hero-icon {
-      width: 46px;
-      height: 46px;
-      background: var(--accent);
-      border-radius: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: #0f172a;
-      font-weight: 900;
-    }
-
-    .hero-title {
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      line-height: 1.1;
-    }
-
+    .splash-screen { min-height: 100vh; padding: 24px 16px 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; }
+    .hero-card { background: var(--bg-dark); color: #fff; border-radius: 22px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 10px 25px rgba(15,23,42,0.2); margin-bottom: 18px; cursor: pointer; user-select: none; }
+    .hero-icon { width: 46px; height: 46px; background: var(--accent); border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #0f172a; font-weight: 900; }
+    .hero-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; }
     .hero-title span { color: var(--accent); }
-    .hero-sub {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: #cbd5e1;
-      margin-top: 3px;
-    }
+    .hero-sub { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #cbd5e1; margin-top: 3px; }
 
-    .card-panel {
-      width: 100%;
-      max-width: 410px;
-      background: #ffffff;
-      border-radius: 22px;
-      padding: 18px 16px;
-      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
-      border: 1px solid #e2e8f0;
-      max-height: 82vh;
-      overflow-y: auto;
-    }
+    .card-panel { width: 100%; max-width: 410px; background: #fff; border-radius: 22px; padding: 18px 16px; box-shadow: 0 6px 20px rgba(15,23,42,0.07); border: 1px solid #e2e8f0; max-height: 82vh; overflow-y: auto; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #f1f5f9; padding: 4px; border-radius: 14px; gap: 4px; margin-bottom: 14px; }
+    .auth-tab { border: none; background: transparent; padding: 8px 2px; border-radius: 10px; font-size: 10px; font-weight: 800; color: #64748b; cursor: pointer; text-align: center; }
+    .auth-tab.active { background: var(--bg-dark); color: #fff; }
 
-    .auth-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 14px;
-      gap: 4px;
-      margin-bottom: 14px;
-    }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 3px; }
+    .form-group input, .form-group select { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 11px; padding: 10px 12px; font-size: 13px; color: #0f172a; outline: none; }
+    
+    .vehicle-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .veh-btn { border: 2px solid #e2e8f0; background: #f8fafc; border-radius: 11px; padding: 9px; font-size: 12px; font-weight: 800; color: #334155; cursor: pointer; text-align: center; }
+    .veh-btn.active { border-color: #0f172a; background: #fef3c7; color: #0f172a; }
 
-    .auth-tab {
-      border: none;
-      background: transparent;
-      padding: 8px 2px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 800;
-      color: #64748b;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .auth-tab.active {
-      background: var(--bg-dark);
-      color: #ffffff;
-    }
-
-    .form-group {
-      margin-bottom: 10px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 11px;
-      font-weight: 800;
-      color: #0f172a;
-      margin-bottom: 3px;
-    }
-
-    .form-group input, .form-group select {
-      width: 100%;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 11px;
-      padding: 10px 12px;
-      font-size: 13px;
-      color: #0f172a;
-      outline: none;
-    }
-
-    .vehicle-selector {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .veh-btn {
-      border: 2px solid #e2e8f0;
-      background: #f8fafc;
-      border-radius: 11px;
-      padding: 9px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #334155;
-      cursor: pointer;
-    }
-
-    .veh-btn.active {
-      border-color: #0f172a;
-      background: #fef3c7;
-      color: #0f172a;
-    }
-
-    .cop-box {
-      background: #f8fafc;
-      border: 1px dashed #94a3b8;
-      border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    .doc-upload-item {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 9px;
-      padding: 7px 9px;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-    }
-
-    .doc-info {
-      font-size: 11px;
-      font-weight: 700;
-      color: #1e293b;
-    }
-
-    .doc-status {
-      font-size: 9px;
-      color: #64748b;
-    }
-
+    .cop-box { background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+    .doc-upload-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; padding: 7px 9px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .doc-info { font-size: 11px; font-weight: 700; color: #1e293b; }
+    .doc-status { font-size: 9px; color: #64748b; }
     .doc-status.ok { color: #10b981; }
+    .file-label-btn { background: var(--bg-dark); color: #fff; font-size: 10px; font-weight: 800; padding: 6px 9px; border-radius: 7px; cursor: pointer; }
 
-    .file-label-btn {
-      background: var(--bg-dark);
-      color: #ffffff;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 6px 9px;
-      border-radius: 7px;
-      cursor: pointer;
-    }
+    .primary-btn { width: 100%; border: none; background: var(--bg-dark); color: #fff; font-size: 14px; font-weight: 800; padding: 13px; border-radius: 13px; cursor: pointer; margin-top: 4px; }
+    .primary-btn.red { background: var(--red); }
 
-    .primary-btn {
-      width: 100%;
-      border: none;
-      background: var(--bg-dark);
-      color: #ffffff;
-      font-size: 14px;
-      font-weight: 800;
-      padding: 13px;
-      border-radius: 13px;
-      cursor: pointer;
-      margin-top: 4px;
-    }
+    /* PANTALLA APP Y MAPA LIBRE / GIRABLE */
+    .app-screen { display: none; width: 100%; height: 100vh; overflow: hidden; }
+    #map { position: fixed; inset: 0; z-index: 1; background: #e2e8f0; }
 
-    /* PANTALLA PRINCIPAL APP */
-    .app-screen {
-      display: none;
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #map {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      background: #e2e8f0;
-    }
-
-    /* Barra superior flotante estilo app moderna */
-    .top-bar-app {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      z-index: 500;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      pointer-events: none;
-    }
-
-    .top-icon-btn {
-      pointer-events: auto;
-      width: 42px;
-      height: 42px;
-      background: #ffffff;
-      border-radius: 50%;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 4px 15px rgba(15,23,42,0.15);
-      cursor: pointer;
-    }
-
-    .support-pill {
-      pointer-events: auto;
-      background: #ffffff;
-      padding: 8px 16px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #0f172a;
-      box-shadow: 0 4px 15px rgba(15,23,42,0.15);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .top-bar-app { position: fixed; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+    .top-icon-btn { pointer-events: auto; width: 42px; height: 42px; background: #fff; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 15px rgba(15,23,42,0.15); cursor: pointer; }
+    .support-pill { pointer-events: auto; background: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #0f172a; box-shadow: 0 4px 15px rgba(15,23,42,0.15); border: none; cursor: pointer; }
 
     /* Bottom Sheet Pasajero */
-    .bottom-sheet {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 600;
-      background: #ffffff;
-      border-top-left-radius: 22px;
-      border-top-right-radius: 22px;
-      padding: 10px 16px 16px;
-      box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12);
-      max-height: 75vh;
-      overflow-y: auto;
-    }
+    .bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 600; background: #fff; border-top-left-radius: 22px; border-top-right-radius: 22px; padding: 10px 16px 16px; box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12); max-height: 75vh; overflow-y: auto; }
+    .sheet-handle { width: 38px; height: 4px; background: #cbd5e1; border-radius: 999px; margin: 0 auto 8px; }
+    
+    .service-pills-row { display: flex; gap: 6px; margin-bottom: 10px; }
+    .service-pill { flex: 1; border: 1px solid var(--border); background: #f8fafc; padding: 8px; border-radius: 12px; font-size: 11px; font-weight: 800; color: #334155; cursor: pointer; text-align: center; }
+    .service-pill.active { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); }
 
-    .sheet-handle {
-      width: 38px;
-      height: 4px;
-      background: #cbd5e1;
-      border-radius: 999px;
-      margin: 0 auto 8px;
-    }
-
-    .service-pills-row {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .service-pill {
-      flex: 1;
-      border: 1px solid var(--border);
-      background: #f8fafc;
-      padding: 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #334155;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .service-pill.active {
-      background: var(--bg-dark);
-      color: #ffffff;
-      border-color: var(--bg-dark);
-    }
-
-    .input-box {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 9px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 7px;
-    }
-
+    .input-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
     .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .dot.green { background: #10b981; }
     .dot.orange { background: #f59e0b; }
+    .input-box input { border: none; background: transparent; width: 100%; font-size: 13px; font-weight: 600; color: #0f172a; outline: none; }
 
-    .input-box input {
-      border: none;
-      background: transparent;
-      width: 100%;
-      font-size: 13px;
-      font-weight: 600;
-      color: #0f172a;
-      outline: none;
-    }
+    /* Alerta Emergente Conductor (Estilo Captura) */
+    .incoming-modal { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(15,23,42,0.75); align-items: center; justify-content: center; padding: 16px; }
+    .incoming-card { background: #fff; width: 100%; max-width: 360px; border-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-    .km-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f1f5f9;
-      border-radius: 11px;
-      padding: 7px 12px;
-      margin-bottom: 8px;
-      font-size: 12px;
-      font-weight: 700;
-    }
+    /* Pantalla Buscando Conductor */
+    .searching-screen { display: none; position: fixed; inset: 0; z-index: 2000; background: #fff; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
 
-    .fare-row {
-      display: grid;
-      grid-template-columns: 1.25fr 1fr;
-      gap: 8px;
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 9px 10px;
-      margin-bottom: 9px;
-    }
+    /* VISTA CONDUCTOR (Estilo Captura) */
+    .driver-view { display: none; position: fixed; inset: 0; z-index: 700; background: transparent; pointer-events: none; padding: 16px; }
+    .driver-status-card { pointer-events: auto; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 -6px 25px rgba(0,0,0,0.12); }
+    .connect-big-btn { width: 100%; background: var(--bg-dark); color: #fff; font-size: 16px; font-weight: 900; padding: 16px; border-radius: 999px; border: none; cursor: pointer; margin: 10px 0; }
+    .connect-big-btn.offline { background: var(--red); }
+    .driver-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 10px; }
 
-    .fare-label {
-      font-size: 10px;
-      font-weight: 800;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 3px;
-    }
-
-    .fare-stepper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .step-btn {
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .fare-amount { font-size: 19px; font-weight: 900; color: #0f172a; }
-    .fare-bs { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
-
-    .pay-select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      font-size: 12px;
-      font-weight: 700;
-      color: #0f172a;
-      outline: none;
-    }
-
-    /* Tarjeta viaje asignado / Pago Móvil conductor */
-    .active-ride-card {
-      display: none;
-      background: #ecfdf5;
-      border: 1.5px solid #10b981;
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    .driver-pm-box {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 9px 10px;
-      margin-top: 8px;
-      font-size: 12px;
-    }
-
-    .copy-pm-btn {
-      background: var(--bg-dark);
-      color: #facc15;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 6px;
-      width: 100%;
-    }
-
-    /* VISTA CONDUCTOR (Basada en tus capturas de la moto) */
-    .driver-view {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 700;
-      background: #f1f5f9;
-      padding: 16px;
-      overflow-y: auto;
-    }
-
-    .driver-status-card {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      margin-bottom: 14px;
-    }
-
-    .connect-big-btn {
-      width: 100%;
-      background: var(--bg-dark);
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 900;
-      padding: 16px;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      margin: 12px 0;
-    }
-
-    .connect-big-btn.offline { background: #ef4444; }
-
-    .driver-stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 12px;
-      margin-top: 10px;
-    }
-
-    .d-stat-val { font-size: 16px; font-weight: 900; color: #0f172a; }
-    .d-stat-lbl { font-size: 10px; font-weight: 700; color: #64748b; }
-
-    /* Alerta de carrera para conductor (con círculo de cuenta regresiva) */
-    .incoming-ride-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      background: rgba(15,23,42,0.8);
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .incoming-card {
-      background: #ffffff;
-      width: 100%;
-      max-width: 380px;
-      border-radius: 24px;
-      padding: 20px;
-      text-align: center;
-    }
-
-    /* PANTALLA DE CUENTA / AJUSTES DEL PASAJERO */
-    .account-screen {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 2200;
-      background: #f8fafc;
-      overflow-y: auto;
-      padding: 20px 16px;
-    }
-
-    .account-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .avatar-circle {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, #06b6d4, #3b82f6);
-      border-radius: 50%;
-      color: #fff;
-      font-size: 24px;
-      font-weight: 900;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 15px rgba(59,130,246,0.3);
-    }
-
-    .menu-card-group {
-      background: #ffffff;
-      border-radius: 18px;
-      border: 1px solid #e2e8f0;
-      margin-bottom: 14px;
-      overflow: hidden;
-    }
-
-    .menu-item-row {
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #f1f5f9;
-      font-size: 13px;
-      font-weight: 800;
-      color: #0f172a;
-      cursor: pointer;
-    }
-    .menu-item-row:last-child { border-bottom: none; }
+    /* CUENTA / AJUSTES */
+    .account-screen { display: none; position: fixed; inset: 0; z-index: 2500; background: #f8fafc; overflow-y: auto; padding: 20px 16px; }
+    .account-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .avatar-circle { width: 70px; height: 70px; background: #06b6d4; border-radius: 50%; color: #fff; font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .menu-card-group { background: #fff; border-radius: 18px; border: 1px solid #e2e8f0; margin-bottom: 14px; overflow: hidden; }
+    .menu-item-row { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 800; color: #0f172a; cursor: pointer; }
 
     /* PANEL DUEÑO */
-    .owner-screen {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 3000;
-      background: #f1f5f9;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .owner-header {
-      background: var(--bg-dark);
-      color: #ffffff;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .owner-nav {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 6px;
-      gap: 4px;
-    }
-
-    .owner-tab-btn {
-      border: none;
-      background: transparent;
-      padding: 8px 2px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 800;
-      color: #64748b;
-      cursor: pointer;
-      text-align: center;
-    }
-
+    .owner-screen { display: none; position: fixed; inset: 0; z-index: 4000; background: #f1f5f9; flex-direction: column; overflow: hidden; }
+    .owner-header { background: var(--bg-dark); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .owner-nav { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border-bottom: 1px solid #e2e8f0; padding: 6px; gap: 4px; }
+    .owner-tab-btn { border: none; background: transparent; padding: 8px 2px; border-radius: 10px; font-size: 10px; font-weight: 800; color: #64748b; cursor: pointer; text-align: center; }
     .owner-tab-btn.active { background: var(--bg-dark); color: #facc15; }
-
     .owner-body { flex: 1; overflow-y: auto; padding: 14px; }
+    .entity-item { background: #fff; border-radius: 14px; padding: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
 
-    .entity-item {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 12px;
-      border: 1px solid #e2e8f0;
-      margin-bottom: 10px;
-    }
-
-    .badge {
-      font-size: 9px;
-      font-weight: 800;
-      padding: 3px 7px;
-      border-radius: 999px;
-      text-transform: uppercase;
-    }
-    .badge-approved { background: #dcfce7; color: #15803d; }
-    .badge-pending { background: #fef3c7; color: #b45309; }
-    .badge-blocked { background: #fee2e2; color: #b91c1c; }
-
-    .toast {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 5000;
-      background: #0f172a;
-      color: #facc15;
-      padding: 10px 16px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      display: none;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-      max-width: 92%;
-      text-align: center;
-    }
+    .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6000; background: #0f172a; color: #facc15; padding: 10px 16px; border-radius: 999px; font-size: 12px; font-weight: 700; display: none; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
   </style>
 </head>
 <body>
@@ -686,92 +133,49 @@
 
       <!-- LOGIN -->
       <div id="loginForm">
-        <div class="form-group">
-          <label>Teléfono o Cédula</label>
-          <input type="text" id="loginUser" placeholder="Ej: 0414-0000000 o V-30816190" />
-        </div>
-        <div class="form-group">
-          <label>PIN de Acceso</label>
-          <input type="password" id="loginPin" placeholder="••••" />
-        </div>
+        <div class="form-group"><label>Teléfono o Cédula</label><input type="text" id="loginUser" placeholder="Ej: 0414-0000000" /></div>
+        <div class="form-group"><label>PIN de Acceso</label><input type="password" id="loginPin" placeholder="••••" /></div>
         <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
       </div>
 
-      <!-- REGISTRO PASAJERO (CON CÉDULA Y VERIFICACIÓN C.O.P.) -->
+      <!-- REGISTRO PASAJERO (LIMPIO) -->
       <div id="regPassForm" style="display:none;">
-        <div class="form-group">
-          <label>Nombre y Apellido</label>
-          <input type="text" id="pasName" placeholder="Siolibeth Oranyelis" />
-        </div>
-        <div class="form-group">
-          <label>Número de Cédula</label>
-          <input type="text" id="pasCedula" placeholder="Ej: V-30816190" />
-        </div>
-        <div class="form-group">
-          <label>Teléfono / WhatsApp</label>
-          <input type="tel" id="pasPhone" placeholder="04121114357" />
-        </div>
+        <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="pasName" placeholder="Tu nombre completo" /></div>
+        <div class="form-group"><label>Número de Cédula</label><input type="text" id="pasCedula" placeholder="Ej: V-30000000" /></div>
+        <div class="form-group"><label>Teléfono / WhatsApp</label><input type="tel" id="pasPhone" placeholder="Ej: 04121234567" /></div>
         <div class="cop-box">
-          <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">Verificación de Identidad (C.O.P.)</label>
-          <div class="doc-upload-item">
-            <div class="doc-info">Foto de Cédula <span class="doc-status" id="stPasId">Pendiente</span></div>
-            <label class="file-label-btn">📷 Subir<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasId', 'stPasId')" /></label>
-          </div>
-          <div class="doc-upload-item">
-            <div class="doc-info">Foto Selfie <span class="doc-status" id="stPasSelfie">Pendiente</span></div>
-            <label class="file-label-btn">📷 Subir<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasSelfie', 'stPasSelfie')" /></label>
-          </div>
+          <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">Verificación C.O.P. (Pasajero)</label>
+          <div class="doc-upload-item"><div class="doc-info">Foto de Cédula <span class="doc-status" id="stPasId">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasId', 'stPasId')" /></label></div>
+          <div class="doc-upload-item"><div class="doc-info">Foto Selfie <span class="doc-status" id="stPasSelfie">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasSelfie', 'stPasSelfie')" /></label></div>
         </div>
-        <div class="form-group">
-          <label>Crea tu PIN</label>
-          <input type="password" id="pasPin" placeholder="1234" />
-        </div>
+        <div class="form-group"><label>Crea tu PIN</label><input type="password" id="pasPin" placeholder="1234" /></div>
         <button class="primary-btn" onclick="registerPassenger()">Completar Registro</button>
       </div>
 
-      <!-- REGISTRO CONDUCTOR (TODOS LOS DOCUMENTOS C.O.P.) -->
+      <!-- REGISTRO CONDUCTOR (LIMPIO + C.O.P. COMPLETO) -->
       <div id="regDrvForm" style="display:none;">
-        <div class="form-group">
-          <label>Nombre y Apellido</label>
-          <input type="text" id="drvName" placeholder="Carlos Pérez" />
-        </div>
-        <div class="form-group">
-          <label>Cédula de Identidad</label>
-          <input type="text" id="drvCedula" placeholder="V-24500111" />
-        </div>
-        <div class="form-group">
-          <label>Teléfono</label>
-          <input type="tel" id="drvPhone" placeholder="04141234567" />
-        </div>
-        <div class="form-group">
-          <label>Tipo de Vehículo</label>
+        <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="drvName" placeholder="Tu nombre" /></div>
+        <div class="form-group"><label>Cédula de Identidad</label><input type="text" id="drvCedula" placeholder="Ej: V-24000000" /></div>
+        <div class="form-group"><label>Teléfono</label><input type="tel" id="drvPhone" placeholder="Ej: 04141234567" /></div>
+        <div class="form-group"><label>Tipo de Vehículo</label>
           <div class="vehicle-selector">
             <button type="button" class="veh-btn active" id="vMoto" onclick="setVeh('Moto')">🏍️ Moto</button>
             <button type="button" class="veh-btn" id="vCarro" onclick="setVeh('Carro')">🚗 Carro</button>
           </div>
         </div>
-        <div class="form-group">
-          <label>Modelo, Color y Placa</label>
-          <input type="text" id="drvVehDet" placeholder="Bera 150 • Placa AB1C" />
-        </div>
-        <div class="form-group">
-          <label>Tu Pago Móvil (Para recibir pagos)</label>
-          <input type="text" id="drvPM" placeholder="Banesco • V-24500111 • 04141234567" />
-        </div>
+        <div class="form-group"><label>Modelo, Color y Placa</label><input type="text" id="drvVehDet" placeholder="Ej: Bera • Placa ABC1" /></div>
+        <div class="form-group"><label>Tu Pago Móvil (Para recibir pagos)</label><input type="text" id="drvPM" placeholder="Banco • Cédula • Teléfono" /></div>
         <div class="cop-box">
-          <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">C.O.P. — Documentos Obligatorios</label>
-          <div class="doc-upload-item"><div class="doc-info">1. Selfie Verificación <span class="doc-status" id="d1">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dSelfie', 'd1')" /></label></div>
+          <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">C.O.P. — Documentos del Conductor</label>
+          <div class="doc-upload-item"><div class="doc-info">1. Selfie <span class="doc-status" id="d1">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dSelfie', 'd1')" /></label></div>
           <div class="doc-upload-item"><div class="doc-info">2. Cédula <span class="doc-status" id="d2">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCed', 'd2')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">3. Foto Vehículo y Placa <span class="doc-status" id="d3">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVeh', 'd3')" /></label></div>
+          <div class="doc-upload-item"><div class="doc-info">3. Vehículo y Placa <span class="doc-status" id="d3">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVeh', 'd3')" /></label></div>
           <div class="doc-upload-item"><div class="doc-info">4. Certificado Médico <span class="doc-status" id="d4">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dMed', 'd4')" /></label></div>
           <div class="doc-upload-item"><div class="doc-info">5. Certificado Vial <span class="doc-status" id="d5">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVial', 'd5')" /></label></div>
           <div class="doc-upload-item"><div class="doc-info">6. Póliza RCV <span class="doc-status" id="d6">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dRCV', 'd6')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">7. Carnet de Circulación <span class="doc-status" id="d7">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCirc', 'd7')" /></label></div>
+          <div class="doc-upload-item"><div class="doc-info">7. Circulación <span class="doc-status" id="d7">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCirc', 'd7')" /></label></div>
         </div>
-        <div class="form-group">
-          <label>PIN de Acceso</label>
-          <input type="password" id="drvPin" placeholder="1234" />
-        </div>
+        <div class="form-group"><label>PIN de Acceso</label><input type="password" id="drvPin" placeholder="1234" /></div>
         <button class="primary-btn" onclick="registerDriver()">Enviar Registro y C.O.P.</button>
       </div>
     </div>
@@ -781,11 +185,11 @@
   <section class="app-screen" id="appScreen">
     <div id="map"></div>
 
-    <!-- Barra Superior -->
+    <!-- Barra Superior Pasajero -->
     <div class="top-bar-app" id="passengerTopBar">
-      <button class="top-icon-btn" onclick="openAccountScreen()" title="Mi Cuenta">☰</button>
-      <button class="support-pill" onclick="showToast('Soporte TaxiGo 24/7 activo')">🎧 Soporte</button>
-      <button class="top-icon-btn" onclick="locateUser()" title="GPS">⌖</button>
+      <button class="top-icon-btn" onclick="openAccountScreen()">☰</button>
+      <button class="support-pill" onclick="showToast('Soporte TaxiGo 24/7')">🎧 Soporte</button>
+      <button class="top-icon-btn" onclick="locateUser()">⌖</button>
     </div>
 
     <!-- Bottom Sheet Pasajero -->
@@ -797,170 +201,154 @@
         <button class="service-pill" onclick="setService(this, 'Envío')">📦 Envío</button>
       </div>
 
-      <div class="active-ride-card" id="activeRideCard">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong style="font-size:13px;color:#065f46;" id="assignedDriverTitle">✅ Conductor en camino</strong>
-          <button onclick="finishRide()" style="border:none;background:#065f46;color:#fff;font-size:10px;font-weight:800;padding:4px 8px;border-radius:6px;cursor:pointer;">Finalizar</button>
-        </div>
-        <p style="font-size:12px;color:#047857;margin-top:3px;" id="assignedDriverSub"></p>
-        <div class="driver-pm-box" id="assignedDriverPMBox" style="display:none;">
-          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Pago Móvil del Conductor:</div>
-          <div style="font-weight:800;color:#0f172a;margin-top:2px;" id="assignedDriverPMText"></div>
-          <button class="copy-pm-btn" onclick="copyPM()">📋 Copiar Pago Móvil</button>
-        </div>
-      </div>
-
       <div class="input-box">
         <span class="dot green"></span>
-        <input type="text" id="originInput" placeholder="Tu ubicación GPS" />
+        <input type="text" id="originInput" placeholder="Ubicación GPS actual" />
         <span style="font-size:10px;font-weight:800;color:#d97706;">ORIGEN</span>
       </div>
 
       <div class="input-box">
         <span class="dot orange"></span>
-        <input type="text" id="destInput" placeholder="Toca el mapa para fijar destino..." />
+        <input type="text" id="destInput" placeholder="Escribir destino o tocar el mapa..." />
         <span>📍</span>
       </div>
 
-      <div class="km-bar">
-        <span>📏 Distancia: <b id="kmDisplay">1.5</b> km ($<span id="rateKm">0.75</span>/km)</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#f1f5f9;border-radius:11px;padding:8px 12px;margin-bottom:8px;font-size:12px;font-weight:800;">
+        <span>📏 Distancia: <b id="kmDisplay">1.5</b> km</span>
         <div style="display:flex;gap:6px;">
-          <button class="step-btn" onclick="adjKm(-0.5)">−</button>
-          <button class="step-btn" onclick="adjKm(0.5)">+</button>
+          <button class="step-btn" onclick="adjKm(-0.5)" style="width:24px;height:24px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;font-weight:900;">−</button>
+          <button class="step-btn" onclick="adjKm(0.5)" style="width:24px;height:24px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;font-weight:900;">+</button>
         </div>
       </div>
 
-      <div class="fare-row">
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:10px;">
         <div>
-          <div class="fare-label">Tarifa (Mín. $<span id="minFareLbl">1.10</span>)</div>
-          <div class="fare-stepper">
-            <button class="step-btn" onclick="adjFare(-0.1)">−</button>
-            <span class="fare-amount">$<span id="fareDisplay">1.13</span></span>
-            <button class="step-btn" onclick="adjFare(0.1)">+</button>
-          </div>
-          <div class="fare-bs">Ref: Bs. <span id="bsDisplay">1032,84</span></div>
+          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Tarifa (Mín. $<span id="minFareLbl">1.10</span>)</div>
+          <div style="font-size:18px;font-weight:900;color:#0f172a;">$<span id="fareDisplay">1.13</span></div>
+          <div style="font-size:10px;color:#64748b;">Ref: Bs. <span id="bsDisplay">1032,84</span></div>
         </div>
-        <div>
-          <div class="fare-label">Método de pago</div>
-          <select class="pay-select" id="payMethod">
-            <option value="Pago móvil">📲 Pago móvil</option>
-            <option value="Efectivo">💵 Efectivo</option>
-          </select>
-        </div>
+        <select class="pay-select" id="payMethod" style="width:130px;padding:8px;border-radius:8px;border:1px solid #cbd5e1;font-weight:700;">
+          <option value="Pago móvil">📲 Pago móvil</option>
+          <option value="Efectivo">💵 Efectivo</option>
+        </select>
       </div>
 
-      <button class="primary-btn" onclick="requestRide()">Solicitar Viaje</button>
+      <button class="primary-btn" onclick="requestRide()">Buscar en el mapa / Solicitar</button>
     </section>
 
-    <!-- VISTA CONDUCTOR (Estilo de tus fotos) -->
+    <!-- PANTALLA BUSCANDO CONDUCTOR -->
+    <section class="searching-screen" id="searchingScreen">
+      <div style="font-size:42px;margin-bottom:16px;">🏍️</div>
+      <h2 style="font-size:20px;font-weight:900;margin-bottom:6px;">Buscando conductores...</h2>
+      <p style="font-size:12px;color:#64748b;margin-bottom:24px;">Notificando a los motorizados cercanos</p>
+      <button class="primary-btn red" style="max-width:280px;" onclick="cancelRideSearch()">Cancelar solicitud</button>
+    </section>
+
+    <!-- VISTA CONDUCTOR (Estilo Capturas) -->
     <section class="driver-view" id="driverView">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <button class="top-icon-btn" onclick="goHome('login')">☰</button>
-        <button class="support-pill" onclick="showToast('Soporte Conductor 24/7')">🎧 Soporte</button>
+      <div style="position:fixed;top:12px;left:12px;right:12px;z-index:500;display:flex;align-items:center;justify-content:space-between;pointer-events:none;">
+        <button class="top-icon-btn" onclick="goHome('login')" style="pointer-events:auto;">☰</button>
+        <button class="support-pill" onclick="showToast('Soporte Conductor')" style="pointer-events:auto;">🎧 Soporte</button>
+        <button class="top-icon-btn" onclick="locateDriverGPS()" style="pointer-events:auto;">⌖</button>
       </div>
 
       <div class="driver-status-card">
-        <h3 id="driverWelcomeName" style="font-size:18px;font-weight:900;">Conductor</h3>
-        <p style="font-size:12px;color:#64748b;" id="driverVehInfo">Moto • Bera</p>
+        <h3 id="driverWelcomeName" style="font-size:16px;font-weight:900;">Conductor</h3>
+        <p style="font-size:11px;color:#64748b;" id="driverVehInfo">Moto • Bera</p>
         
         <button class="connect-big-btn" id="connectBtn" onclick="toggleOnline()">Conectarme</button>
         
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;padding:10px 14px;border-radius:12px;margin-top:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;padding:10px 14px;border-radius:12px;margin-top:6px;">
           <span style="font-size:12px;font-weight:800;">Aceptar solicitudes TaxiGo</span>
           <input type="checkbox" id="acceptToggle" checked style="width:20px;height:20px;accent-color:#10b981;" />
         </div>
 
         <div class="driver-stats-row">
-          <div><div class="d-stat-val">0.00 $</div><div class="d-stat-lbl">Tips</div></div>
-          <div><div class="d-stat-val" id="drvRidesCount">0</div><div class="d-stat-lbl">Carreras</div></div>
-          <div><div class="d-stat-val">★ 5.0</div><div class="d-stat-lbl">Calificación</div></div>
+          <div><div style="font-size:15px;font-weight:900;color:#0f172a;">0.00 $</div><div style="font-size:10px;font-weight:700;color:#64748b;">Tips</div></div>
+          <div><div style="font-size:15px;font-weight:900;color:#0f172a;" id="drvRidesCount">2</div><div style="font-size:10px;font-weight:700;color:#64748b;">Carreras</div></div>
+          <div><div style="font-size:15px;font-weight:900;color:#0f172a;">★ 5.0</div><div style="font-size:10px;font-weight:700;color:#64748b;">Calificación</div></div>
         </div>
-      </div>
-
-      <div style="background:#ffffff;border-radius:20px;padding:16px;box-shadow:0 4px 15px rgba(0,0,0,0.05);">
-        <h4 style="font-size:14px;font-weight:900;margin-bottom:10px;">Solicitudes Cercanas</h4>
-        <div id="driverRequestsList"></div>
       </div>
     </section>
   </section>
+
+  <!-- ALERTA EMERGENTE DE CARRERA PARA EL CONDUCTOR -->
+  <div class="incoming-modal" id="incomingModal">
+    <div class="incoming-card">
+      <div style="width:50px;height:50px;background:#10b981;color:#fff;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;" id="incomingInitials">EM</div>
+      <h3 style="font-size:15px;font-weight:900;color:#0f172a;" id="incomingName">Elizabeth manzanilla</h3>
+      <p style="font-size:11px;color:#f59e0b;font-weight:800;margin-bottom:8px;">★ 0.0 • Pago móvil</p>
+      <div style="font-size:22px;font-weight:900;color:#0f172a;margin-bottom:10px;" id="incomingFare">$2.09</div>
+      <p style="font-size:11px;color:#64748b;margin-bottom:14px;" id="incomingRoute">Destino: Ciudad Ojeda</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="primary-btn red" style="margin:0;padding:10px;" onclick="declineRideModal()">Declinar</button>
+        <button class="primary-btn" style="margin:0;padding:10px;background:#10b981;" onclick="acceptRideModal()">Aceptar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- PANTALLA DE CUENTA / AJUSTES DEL PASAJERO -->
   <section class="account-screen" id="accountScreen">
     <div class="account-header">
       <button class="top-icon-btn" onclick="closeAccountScreen()">‹</button>
+      <div><h2 style="font-size:16px;font-weight:900;">Tu cuenta</h2><p style="font-size:11px;color:#64748b;">Perfil y preferencias</p></div>
+    </div>
+
+    <div style="background:#fff;border-radius:20px;padding:16px;border:1px solid #e2e8f0;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+      <div class="avatar-circle" id="accAvatarBox" onclick="document.getElementById('profilePicInput').click()" title="Cambiar foto">
+        <span id="accAvatarInitials">SO</span>
+        <input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="updateProfilePic(this)" />
+      </div>
       <div>
-        <h2 style="font-size:16px;font-weight:900;">Tu cuenta</h2>
-        <p style="font-size:11px;color:#64748b;">Tu perfil y actividad</p>
+        <h3 style="font-size:16px;font-weight:900;" id="accName">Usuario</h3>
+        <span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;">Pasajero</span>
+        <p style="font-size:12px;color:#64748b;margin-top:4px;" id="accPhone">04120000000</p>
+        <p style="font-size:11px;color:#047857;margin-top:2px;">Cédula: <b id="accCedula">V-00000000</b> (✓ VERIFICADO)</p>
       </div>
     </div>
 
-    <!-- Tarjeta Perfil -->
-    <div style="background:#ffffff;border-radius:20px;padding:16px;border:1px solid #e2e8f0;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
-      <div class="avatar-circle" id="accAvatar">SO</div>
-      <div>
-        <h3 style="font-size:16px;font-weight:900;" id="accName">Siolibeth Oranyelis</h3>
-        <span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;" id="accRoleTag">Pasajero</span>
-        <p style="font-size:12px;color:#64748b;margin-top:4px;" id="accPhone">04121114357</p>
-        <p style="font-size:11px;color:#047857;margin-top:2px;">Cédula: <b id="accCedula">V-30816190</b> (✓ VERIFICADO)</p>
-      </div>
-    </div>
-
-    <!-- Billetera / Crédito -->
-    <div style="background:linear-gradient(135deg, #1e293b, #0f172a);color:#fff;border-radius:20px;padding:16px;margin-bottom:16px;">
-      <div style="font-size:11px;color:#cbd5e1;text-transform:uppercase;font-weight:800;">Crédito Disponible / Billetera</div>
-      <div style="font-size:24px;font-weight:900;color:#facc15;margin:4px 0;">$10.23</div>
-      <p style="font-size:11px;color:#94a3b8;">Nivel Bronce • 25 viajes completados</p>
-    </div>
-
-    <!-- Menú Opciones (Como en tus capturas) -->
     <div class="menu-card-group">
       <div class="menu-item-row" onclick="showToast('Direcciones guardadas')">📍 Mis direcciones guardadas <span>›</span></div>
-      <div class="menu-item-row" onclick="showToast('Historial de viajes')">📜 Historial de viajes <span>›</span></div>
-      <div class="menu-item-row" onclick="showToast('Soporte técnico activo')">🎧 Soporte técnico <span>›</span></div>
+      <div class="menu-item-row" onclick="showToast('Historial limpio • Sin viajes')">📜 Historial de viajes <span>›</span></div>
+      <div class="menu-item-row" onclick="showToast('Soporte activo 24/7')">🎧 Soporte técnico <span>›</span></div>
       <div class="menu-item-row" onclick="showToast('Términos y privacidad')">📄 Términos y privacidad <span>›</span></div>
     </div>
 
-    <button class="primary-btn" style="background:#ef4444;margin-top:10px;" onclick="goHome('login')">Cerrar sesión</button>
+    <button class="primary-btn red" onclick="goHome('login')">Cerrar sesión</button>
   </section>
 
-  <!-- PANEL DUEÑO (5 toques al logo + PIN 1234) -->
+  <!-- PANEL DUEÑO -->
   <section class="owner-screen" id="ownerScreen">
     <div class="owner-header">
       <h2>👑 Panel Dueño TaxiGo</h2>
-      <button class="owner-close" onclick="closeOwnerPanel()" style="background:#1e293b;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;">✕</button>
+      <button onclick="closeOwner()" style="background:#1e293b;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;">✕</button>
     </div>
     <nav class="owner-nav">
       <button class="owner-tab-btn active" onclick="switchOwnerTab('sum')">📊 Tarifas</button>
       <button class="owner-tab-btn" onclick="switchOwnerTab('drv')">🏍️ Conductores</button>
       <button class="owner-tab-btn" onclick="switchOwnerTab('usr')">🙋‍♀️ Pasajeros</button>
-      <button class="owner-tab-btn" onclick="switchOwnerTab('rds')">🚕 Viajes</button>
     </nav>
     <div class="owner-body">
       <div id="osec-sum">
         <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #e2e8f0;">
-          <h3 style="font-size:14px;font-weight:900;margin-bottom:12px;">Configuración Global</h3>
+          <h3 style="font-size:14px;font-weight:900;margin-bottom:12px;">Configuración</h3>
           <div class="form-group"><label>Tasa BCV ($1)</label><input type="number" id="admRate" step="0.01" /></div>
           <div class="form-group"><label>Precio por Km ($)</label><input type="number" id="admKm" step="0.05" /></div>
           <div class="form-group"><label>Tarifa Mínima ($)</label><input type="number" id="admMin" step="0.10" /></div>
-          <button class="primary-btn" onclick="saveAdmin()">Guardar Cambios</button>
+          <button class="primary-btn" onclick="saveAdmin()">Guardar</button>
         </div>
       </div>
       <div id="osec-drv" style="display:none;"><div id="adminDrvList"></div></div>
       <div id="osec-usr" style="display:none;"><div id="adminUsrList"></div></div>
-      <div id="osec-rds" style="display:none;"><div id="adminRdsList"></div></div>
     </div>
   </section>
 
   <script>
-    const STORAGE_KEY = 'taxigo_db_v5';
+    const STORAGE_KEY = 'taxigo_db_v7';
     const defaultDB = {
       settings: { rate: 914.02, pricePerKm: 0.75, minFare: 1.10 },
-      drivers: [
-        { id: 'd1', name: 'Carlos Pérez', cedula: 'V-24500111', phone: '04141234567', vehicleType: 'Moto', vehicleDetail: 'Bera 150 • Placa AB1C', pagoMovil: 'Banesco • V-24500111 • 04141234567', pin: '1234', status: 'approved', docs: {} }
-      ],
-      users: [
-        { id: 'u1', name: 'Siolibeth Oranyelis', cedula: 'V-30816190', phone: '04121114357', pin: '1234', status: 'approved' }
-      ],
+      drivers: [],
+      users: [],
       rides: []
     };
 
@@ -980,14 +368,11 @@
     let selectedVeh = 'Moto';
     let currentService = 'Mototaxi';
     let distanceKm = 1.5;
-    let minFare = 1.10;
     let currentFare = 1.13;
-    let roundTrip = false;
     let map = null, userMarker = null, destMarker = null, mapInitialized = false;
     let originCoords = [10.2016, -71.3125];
-    let tempUploadedDocs = {};
+    let tempDocs = {};
     let logoClicks = 0, clickTimer = null;
-    let lastAssignedPM = '';
 
     function calcFare(km) {
       const perKm = Number(db.settings.pricePerKm) || 0.75;
@@ -997,7 +382,8 @@
 
     function initMap() {
       if (mapInitialized) { setTimeout(()=>map.invalidateSize(), 150); return; }
-      map = L.map('map', { zoomControl: false }).setView(originCoords, 15);
+      // MAPA LIBRE, GIRABLE Y FLUIDO (SIN ESTAR TIESO)
+      map = L.map('map', { zoomControl: false, dragging: true, touchZoom: true, scrollWheelZoom: true, doubleClickZoom: true }).setView(originCoords, 15);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
 
       const uIcon = L.divIcon({ className: 'pin', html: '<div style="width:16px;height:16px;background:#10b981;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(16,185,129,0.8);"></div>', iconSize:[16,16], iconAnchor:[8,8] });
@@ -1040,7 +426,7 @@
       if (!f) return;
       const r = new FileReader();
       r.onload = e => {
-        tempUploadedDocs[key] = e.target.result;
+        tempDocs[key] = e.target.result;
         const el = document.getElementById(stId);
         el.textContent = '✓ OK';
         el.classList.add('ok');
@@ -1054,9 +440,10 @@
       const phone = document.getElementById('pasPhone').value.trim();
       const pin = document.getElementById('pasPin').value.trim() || '1234';
       if (!name || !cedula || !phone) { showToast('Completa todos los campos'); return; }
-      db.users.unshift({ id: 'u'+Date.now(), name, cedula, phone, pin, status: 'approved' });
+      const newU = { id: 'u'+Date.now(), name, cedula, phone, pin, status: 'approved', avatar: '' };
+      db.users.unshift(newU);
       saveDB();
-      enterApp('passenger', db.users[0]);
+      enterApp('passenger', newU);
     }
 
     function registerDriver() {
@@ -1067,7 +454,7 @@
       const pagoMovil = document.getElementById('drvPM').value.trim();
       const pin = document.getElementById('drvPin').value.trim() || '1234';
       if (!name || !cedula || !phone || !vehicleDetail || !pagoMovil) { showToast('Completa todos los campos'); return; }
-      db.drivers.unshift({ id: 'd'+Date.now(), name, cedula, phone, vehicleType: selectedVeh, vehicleDetail, pagoMovil, pin, status: 'approved', docs: { ...tempUploadedDocs } });
+      db.drivers.unshift({ id: 'd'+Date.now(), name, cedula, phone, vehicleType: selectedVeh, vehicleDetail, pagoMovil, pin, status: 'approved', docs: { ...tempDocs }, avatar: '' });
       saveDB();
       showToast('¡Registro exitoso! Ya puedes iniciar sesión');
       setAuthMode('login');
@@ -1075,7 +462,6 @@
 
     function handleLogin() {
       const q = document.getElementById('loginUser').value.trim();
-      const pin = document.getElementById('loginPin').value.trim();
       if (!q) { showToast('Ingresa tu teléfono o cédula'); return; }
       const drv = db.drivers.find(d => d.phone.includes(q) || d.cedula.toLowerCase().includes(q.toLowerCase()));
       if (drv) { enterApp('driver', drv); return; }
@@ -1092,14 +478,11 @@
       document.getElementById('passengerSheet').style.display = isPass ? 'block' : 'none';
       document.getElementById('driverView').style.display = isPass ? 'none' : 'block';
 
-      if (isPass) {
-        currentUser = profile;
-        checkAssignedRide();
-      } else {
+      if (isPass) { currentUser = profile; }
+      else {
         currentDriver = profile;
         document.getElementById('driverWelcomeName').textContent = profile.name;
         document.getElementById('driverVehInfo').textContent = `${profile.vehicleType} • ${profile.vehicleDetail}`;
-        renderDriverRequests();
       }
       initMap();
       showToast(`Bienvenido, ${profile.name}`);
@@ -1109,6 +492,7 @@
       document.getElementById('splashScreen').style.display = 'flex';
       document.getElementById('appScreen').style.display = 'none';
       document.getElementById('accountScreen').style.display = 'none';
+      document.getElementById('incomingModal').style.display = 'none';
       setAuthMode(m || 'login');
     }
 
@@ -1123,6 +507,8 @@
       }, () => showToast('Activa el GPS'));
     }
 
+    function locateDriverGPS() { locateUser(); }
+
     function setService(el, s) {
       document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
@@ -1135,84 +521,46 @@
     }
 
     function updateFare() {
-      const base = calcFare(distanceKm);
-      currentFare = roundTrip ? Math.round(base*1.8*100)/100 : base;
+      currentFare = calcFare(distanceKm);
       const rate = Number(db.settings.rate) || 914.02;
       document.getElementById('kmDisplay').textContent = distanceKm.toFixed(1);
-      document.getElementById('rateKm').textContent = (db.settings.pricePerKm).toFixed(2);
       document.getElementById('minFareLbl').textContent = (db.settings.minFare).toFixed(2);
       document.getElementById('fareDisplay').textContent = currentFare.toFixed(2);
       document.getElementById('bsDisplay').textContent = (currentFare * rate).toFixed(2).replace('.', ',');
-    }
-
-    function adjFare(d) {
-      currentFare = Math.max(Number(db.settings.minFare), Math.round((currentFare + d)*100)/100);
-      updateFare();
     }
 
     function requestRide() {
       const dest = document.getElementById('destInput').value.trim();
       const pay = document.getElementById('payMethod').value;
       if (!dest || dest.includes('Toca el mapa')) { showToast('Fija tu destino en el mapa'); return; }
-      
-      const r = { id: 'r'+Date.now(), service: currentService, dest, km: distanceKm, fare: currentFare, pay, status: 'Pendiente', driverName: '', driverPM: '' };
-      db.rides.unshift(r);
-      saveDB();
-      renderDriverRequests();
-      showToast('¡Viaje solicitado con éxito!');
+
+      document.getElementById('passengerSheet').style.display = 'none';
+      document.getElementById('searchingScreen').style.display = 'flex';
+
+      // Disparar alerta automática al conductor conectado
+      setTimeout(() => {
+        const modal = document.getElementById('incomingModal');
+        document.getElementById('incomingFare').textContent = `$${currentFare.toFixed(2)}`;
+        document.getElementById('incomingRoute').textContent = `Destino: ${dest} (${distanceKm} km)`;
+        modal.style.display = 'flex';
+      }, 1500);
     }
 
-    function renderDriverRequests() {
-      const list = document.getElementById('driverRequestsList');
-      if (!list) return;
-      list.innerHTML = db.rides.map((r, i) => `
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:8px;">
-          <div style="display:flex;justify-content:space-between;font-weight:900;font-size:13px;">
-            <span>${r.service} (${r.km}km) • ${r.dest}</span>
-            <span style="color:#10b981;">$${r.fare.toFixed(2)}</span>
-          </div>
-          <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: <b>${r.pay}</b> • Estado: <b>${r.status}</b></p>
-          ${r.status === 'Pendiente' ? `<button class="primary-btn" style="padding:8px;font-size:12px;background:#10b981;" onclick="acceptRide(${i})">Aceptar Carrera</button>` : `<span style="font-size:11px;color:#10b981;font-weight:800;">✓ Aceptada por ti</span>`}
-        </div>
-      `).join('') || '<p style="font-size:12px;color:#64748b;">No hay solicitudes.</p>';
+    function cancelRideSearch() {
+      document.getElementById('searchingScreen').style.display = 'none';
+      document.getElementById('passengerSheet').style.display = 'block';
+      document.getElementById('incomingModal').style.display = 'none';
+      showToast('Solicitud cancelada');
     }
 
-    function acceptRide(idx) {
-      const r = db.rides[idx];
-      if (!r) return;
-      r.status = 'Aceptada';
-      r.driverName = currentDriver.name;
-      r.driverPM = currentDriver.pagoMovil;
-      saveDB();
-      renderDriverRequests();
-      showToast('Carrera aceptada');
+    function acceptRideModal() {
+      document.getElementById('incomingModal').style.display = 'none';
+      showToast('¡Carrera aceptada con éxito!');
     }
 
-    function checkAssignedRide() {
-      const active = db.rides.find(r => r.status === 'Aceptada');
-      const card = document.getElementById('activeRideCard');
-      if (!active) { card.style.display = 'none'; return; }
-      card.style.display = 'block';
-      document.getElementById('assignedDriverTitle').textContent = `✅ Conductor: ${active.driverName}`;
-      document.getElementById('assignedDriverSub').textContent = `Tarifa: $${active.fare.toFixed(2)} (${active.pay})`;
-      const pmBox = document.getElementById('assignedDriverPMBox');
-      if (active.pay === 'Pago móvil' && active.driverPM) {
-        pmBox.style.display = 'block';
-        lastAssignedPM = active.driverPM;
-        document.getElementById('assignedDriverPMText').textContent = active.driverPM;
-      } else { pmBox.style.display = 'none'; }
-    }
-
-    function copyPM() {
-      if (navigator.clipboard && lastAssignedPM) navigator.clipboard.writeText(lastAssignedPM);
-      showToast('Datos de Pago Móvil copiados');
-    }
-
-    function finishRide() {
-      const active = db.rides.find(r => r.status === 'Aceptada');
-      if (active) { active.status = 'Completada'; saveDB(); }
-      document.getElementById('activeRideCard').style.display = 'none';
-      showToast('Viaje finalizado');
+    function declineRideModal() {
+      document.getElementById('incomingModal').style.display = 'none';
+      showToast('Carrera declinada');
     }
 
     function toggleOnline() {
@@ -1220,19 +568,33 @@
       const isOnline = btn.textContent.includes('Conectarme');
       btn.textContent = isOnline ? 'Desconectarme' : 'Conectarme';
       btn.classList.toggle('offline', isOnline);
-      showToast(isOnline ? 'Estás en línea' : 'Desconectado');
+      showToast(isOnline ? 'Estás en línea (Esperando solicitudes)' : 'Desconectado');
     }
 
     function openAccountScreen() {
       if (!currentUser) return;
       document.getElementById('accName').textContent = currentUser.name;
       document.getElementById('accPhone').textContent = currentUser.phone;
-      document.getElementById('accCedula').textContent = currentUser.cedula || 'V-30816190';
+      document.getElementById('accCedula').textContent = currentUser.cedula;
+      if (currentUser.avatar) {
+        document.getElementById('accAvatarBox').innerHTML = `<img src="${currentUser.avatar}" /><input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="updateProfilePic(this)" />`;
+      }
       document.getElementById('accountScreen').style.display = 'block';
     }
 
-    function closeAccountScreen() {
-      document.getElementById('accountScreen').style.display = 'none';
+    function closeAccountScreen() { document.getElementById('accountScreen').style.display = 'none'; }
+
+    function updateProfilePic(input) {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = e => {
+        currentUser.avatar = e.target.result;
+        saveDB();
+        document.getElementById('accAvatarBox').innerHTML = `<img src="${currentUser.avatar}" /><input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="updateProfilePic(this)" />`;
+        showToast('Foto de perfil actualizada');
+      };
+      r.readAsDataURL(f);
     }
 
     /* PANEL DUEÑO */
@@ -1255,25 +617,16 @@
       document.getElementById('ownerScreen').style.display = 'flex';
     }
 
-    function closeOwnerPanel() { document.getElementById('ownerScreen').style.display = 'none'; }
+    function closeOwner() { document.getElementById('ownerScreen').style.display = 'none'; }
 
     function switchOwnerTab(t) {
-      ['sum','drv','usr','rds'].forEach(x => {
-        document.getElementById('osec-'+x).style.display = (x===t)?'block':'none';
-      });
+      ['sum','drv','usr'].forEach(x => { document.getElementById('osec-'+x).style.display = (x===t)?'block':'none'; });
       renderAdmin();
     }
 
     function renderAdmin() {
-      document.getElementById('adminDrvList').innerHTML = db.drivers.map(d=>`
-        <div class="entity-item"><strong>🏍️ ${d.name}</strong> (${d.cedula})<br/><span style="font-size:11px;color:#64748b;">${d.vehicleDetail} • PM: ${d.pagoMovil}</span></div>
-      `).join('') || 'No hay conductores';
-      document.getElementById('adminUsrList').innerHTML = db.users.map(u=>`
-        <div class="entity-item"><strong>🙋‍♀️ ${u.name}</strong> (${u.cedula})<br/><span style="font-size:11px;color:#64748b;">📞 ${u.phone}</span></div>
-      `).join('') || 'No hay pasajeros';
-      document.getElementById('adminRdsList').innerHTML = db.rides.map(r=>`
-        <div class="entity-item"><strong>${r.service}</strong>: ${r.dest} — <span style="color:#10b981;">$${r.fare.toFixed(2)}</span> (${r.status})</div>
-      `).join('') || 'No hay viajes';
+      document.getElementById('adminDrvList').innerHTML = db.drivers.map(d=>`<div class="entity-item"><strong>🏍️ ${d.name}</strong> (${d.cedula})<br/><span style="font-size:11px;color:#64748b;">${d.vehicleDetail}</span></div>`).join('') || 'No hay conductores';
+      document.getElementById('adminUsrList').innerHTML = db.users.map(u=>`<div class="entity-item"><strong>🙋‍♀️ ${u.name}</strong> (${u.cedula})<br/><span style="font-size:11px;color:#64748b;">${u.phone}</span></div>`).join('') || 'No hay pasajeros';
     }
 
     function saveAdmin() {
@@ -1282,7 +635,7 @@
       db.settings.minFare = parseFloat(document.getElementById('admMin').value) || db.settings.minFare;
       saveDB();
       updateFare();
-      showToast('Configuración guardada');
+      showToast('Guardado');
     }
 
     function showToast(msg) {
