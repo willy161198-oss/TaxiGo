@@ -1,5 +1,5 @@
 // =========================================================
-// TAXIGO · EXTRAS-PASAJERO.JS (SOLICITUD REAL, PAGO MÓVIL Y CANCELACIÓN)
+// TAXIGO · EXTRAS-PASAJERO.JS v2.0 (PERFIL LIMPIO, HISTORIAL REAL Y CANCELACIÓN)
 // =========================================================
 (function () {
   function initPassengerModule() {
@@ -10,7 +10,88 @@
 
     const appShell = document.getElementById('app-shell');
 
-    // Cuadro de Pago Móvil del conductor dentro de viaje activo del pasajero
+    // 1. Limpiar historial de viajes inventados y dejar solo los viajes reales del pasajero
+    if (!Array.isArray(state.passengerHistory)) {
+      state.passengerHistory = [];
+    } else {
+      state.passengerHistory = state.passengerHistory.filter(
+        h => h && h.date !== '16 Nov 2026 · 07:38 PM' && h.date !== '14 Nov 2026 · 02:15 PM'
+      );
+    }
+    saveState();
+
+    // 2. Quitar la fila "Nuevo registro / Documentos" de "Tu cuenta" y limpiar textos de actividad
+    function cleanPassengerAccountAndHistory() {
+      const regRow = document.querySelector('#screen-account button[onclick*="screen-register"]');
+      if (regRow) {
+        regRow.remove();
+      }
+
+      const u = getActiveUser();
+      const realTripsCount = (state.passengerHistory || []).filter(
+        h => !h.passengerId || (u && h.passengerId === u.id)
+      ).length;
+
+      const tripsCounter = document.getElementById('profile-trips-count');
+      if (tripsCounter && u && u.role === 'passenger') {
+        tripsCounter.textContent = realTripsCount;
+      }
+
+      const historySub = document.getElementById('history-count-sub');
+      if (historySub && u && u.role === 'passenger') {
+        historySub.textContent = realTripsCount === 1 ? '1 viaje realizado' : `${realTripsCount} viajes realizados`;
+      }
+    }
+
+    // Sobrescribir renderPassengerHistory para mostrar solo viajes limpios del pasajero
+    window.renderPassengerHistory = function () {
+      const u = getActiveUser();
+      const listEl = document.getElementById('passenger-history-list');
+      if (!listEl) return;
+
+      const myTrips = (state.passengerHistory || []).filter(
+        h => !h.passengerId || (u && h.passengerId === u.id)
+      );
+
+      if (myTrips.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Aún no has realizado viajes en TaxiGo.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = myTrips.map(h => `
+        <div class="card-surface rounded-2xl p-3.5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-extrabold">${h.route}</p>
+            <p class="text-[11px] text-gray-500 mt-0.5">${h.date} · ${h.vehicle} · ${h.method}</p>
+          </div>
+          <p class="text-sm font-extrabold">${h.fare}</p>
+        </div>
+      `).join('');
+    };
+
+    // Guardar passengerId al completar un viaje del pasajero
+    const origCompletePass = window.completePassengerRide;
+    window.completePassengerRide = function () {
+      const u = getActiveUser();
+      if (typeof origCompletePass === 'function') {
+        origCompletePass();
+      }
+      if (state.passengerHistory && state.passengerHistory[0] && u) {
+        state.passengerHistory[0].passengerId = u.id;
+        saveState();
+      }
+      cleanPassengerAccountAndHistory();
+    };
+
+    const origUpdateUI = window.updateAllUI;
+    window.updateAllUI = function () {
+      if (typeof origUpdateUI === 'function') origUpdateUI();
+      cleanPassengerAccountAndHistory();
+    };
+
+    cleanPassengerAccountAndHistory();
+
+    // 3. Cuadro de Pago Móvil del conductor dentro de viaje activo del pasajero
     const activePassStep = document.getElementById('step-active-passenger');
     if (activePassStep && !document.getElementById('passenger-driver-pm-box')) {
       const actionBtns = activePassStep.querySelector('.flex.gap-2');
@@ -33,7 +114,7 @@
       showToast('Datos copiados');
     };
 
-    // Solicitud real hacia la cola de conductores (NO se auto-acepta)
+    // 4. Solicitud real hacia la cola de conductores (NO se auto-acepta)
     window.passengerPollInterval = null;
 
     window.startSearchingDriver = function () {
@@ -103,7 +184,7 @@
       showToast(`¡${req.driverName} aceptó tu viaje!`);
     }
 
-    // Modal compartido de cancelación con motivo obligatorio
+    // 5. Modal de cancelación con motivo obligatorio
     if (!document.getElementById('cancel-reason-modal')) {
       appShell.insertAdjacentHTML('beforeend', `
         <div id="cancel-reason-modal" class="hidden absolute inset-0 z-[125] bg-black/70 flex items-end">
