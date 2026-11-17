@@ -1,14 +1,16 @@
 // =========================================================
-// TAXIGO · EXTRAS-AUTH.JS (INICIO, REGISTRO Y CERRAR SESIÓN)
+// TAXIGO · EXTRAS-AUTH.JS v3.0 (ROL PASAJERO / CONDUCTOR 100% SEPARADO)
 // =========================================================
 (function () {
-  function initAuthModule() {
+  window.taxiGoSelectedRole = 'passenger';
+
+  function bootAuthModule() {
     if (typeof state === 'undefined' || !document.getElementById('app-shell')) {
-      setTimeout(initAuthModule, 60);
+      setTimeout(bootAuthModule, 60);
       return;
     }
 
-    // Limpieza inicial segura
+    // 1. Limpieza segura de datos iniciales
     if (!Array.isArray(state.users)) state.users = [];
     if (!state.ownerPagoMovil || state.ownerPagoMovil.banco === 'Banesco (0134)') {
       state.ownerPagoMovil = { banco: '', cedula: '', telefono: '', titular: '' };
@@ -26,7 +28,7 @@
 
     const appShell = document.getElementById('app-shell');
 
-    // Pantalla de Bienvenida / Login / Registro separado
+    // 2. Pantalla de Bienvenida / Login / Registro separado
     if (!document.getElementById('screen-auth')) {
       appShell.insertAdjacentHTML('beforeend', `
         <section id="screen-auth" class="screen" style="background: linear-gradient(165deg, #11131a 0%, #1b2030 65%, #2a1218 100%); color: #fff;">
@@ -72,12 +74,35 @@
       `);
     }
 
+    // 3. Reemplazar setRegRole para que cambiar entre Pasajero y Conductor funcione siempre
+    window.setRegRole = function (role) {
+      window.taxiGoSelectedRole = role === 'driver' ? 'driver' : 'passenger';
+      const btnP = document.getElementById('reg-role-passenger');
+      const btnD = document.getElementById('reg-role-driver');
+      const vBox = document.getElementById('reg-driver-vehicle-box');
+      const dBox = document.getElementById('reg-driver-docs-box');
+
+      if (window.taxiGoSelectedRole === 'passenger') {
+        if (btnP) btnP.className = 'py-3 px-3 rounded-2xl border-2 border-[#11131a] bg-[#11131a] text-white font-bold text-xs flex items-center justify-center gap-2';
+        if (btnD) btnD.className = 'py-3 px-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 font-bold text-xs flex items-center justify-center gap-2';
+        if (vBox) vBox.classList.add('hidden');
+        if (dBox) dBox.classList.add('hidden');
+      } else {
+        if (btnD) btnD.className = 'py-3 px-3 rounded-2xl border-2 border-[#11131a] bg-[#11131a] text-white font-bold text-xs flex items-center justify-center gap-2';
+        if (btnP) btnP.className = 'py-3 px-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 font-bold text-xs flex items-center justify-center gap-2';
+        if (vBox) vBox.classList.remove('hidden');
+        if (dBox) dBox.classList.remove('hidden');
+      }
+    };
+
+    // Blindar botón atrás en registro
     const regBackBtn = document.querySelector('#screen-register button[onclick*="switchScreen"]');
     if (regBackBtn) regBackBtn.setAttribute('onclick', 'handleRegisterBack()');
 
     window.handleRegisterBack = function () {
       if (state.isLoggedIn) {
-        switchScreen(state.mode === 'driver' ? 'screen-driver' : 'screen-passenger');
+        const u = getActiveUser();
+        switchScreen(u && u.role === 'driver' ? 'screen-driver' : 'screen-passenger');
       } else {
         switchScreen('screen-auth');
       }
@@ -105,7 +130,7 @@
       });
 
       switchScreen('screen-register');
-      if (typeof setRegRole === 'function') setRegRole(role);
+      window.setRegRole(role);
     };
 
     window.loginWithAccount = function () {
@@ -142,7 +167,8 @@
       if (!docs.face) { showToast('Sube la foto de tu rostro (Selfie)'); return; }
       if (!docs.cedula) { showToast('Sube la foto de tu Cédula'); return; }
 
-      const currentRole = (typeof regRole !== 'undefined') ? regRole : 'passenger';
+      // Usa directamente la variable global controlada por el botón elegido
+      const currentRole = window.taxiGoSelectedRole || 'passenger';
       const newUser = {
         id: 'usr-' + Date.now(),
         role: currentRole,
@@ -185,16 +211,18 @@
       window.rebuildCleanDrawer();
       switchScreen(newUser.role === 'driver' ? 'screen-driver' : 'screen-passenger');
       updateAllUI();
-      showToast('Registro enviado para aprobación');
+      showToast(currentRole === 'passenger' ? 'Cuenta de Pasajero enviada para aprobación' : 'Cuenta de Conductor enviada para aprobación');
     };
 
+    // 4. Reconstrucción blindada del menú lateral con botón Cerrar sesión
     window.rebuildCleanDrawer = function () {
       const u = getActiveUser();
+      const isDriver = u && u.role === 'driver';
       const drawerMenu = document.querySelector('#side-drawer .flex-1');
       const drawerFooter = document.querySelector('#side-drawer .p-4.border-t');
 
       if (drawerMenu) {
-        if (u && u.role === 'driver') {
+        if (isDriver) {
           drawerMenu.innerHTML = `
             <button type="button" onclick="closeDrawer(); switchScreen('screen-driver')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
               <span>🏍️</span> Panel de solicitudes
@@ -243,6 +271,20 @@
 
       const profileSwitchBanner = document.querySelector('#screen-account div[onclick="switchToDriverMode()"]');
       if (profileSwitchBanner) profileSwitchBanner.classList.add('hidden');
+
+      const regInAccountBtn = document.querySelector('#screen-account button[onclick="switchScreen(\'screen-register\')"]');
+      if (regInAccountBtn) regInAccountBtn.classList.add('hidden');
+
+      const accBackBtn = document.querySelector('#screen-account button[onclick*="switchScreen"]');
+      if (accBackBtn) {
+        accBackBtn.setAttribute('onclick', isDriver ? "switchScreen('screen-driver')" : "switchScreen('screen-passenger')");
+      }
+    };
+
+    const origOpenDrawer = window.openDrawer;
+    window.openDrawer = function () {
+      window.rebuildCleanDrawer();
+      if (typeof origOpenDrawer === 'function') origOpenDrawer();
     };
 
     window.logoutUser = function () {
@@ -253,24 +295,21 @@
       showToast('Sesión cerrada');
     };
 
-    const origUpdateUI = window.updateAllUI;
-    window.updateAllUI = function () {
-      origUpdateUI();
+    function enforceInitialScreen() {
       window.rebuildCleanDrawer();
-    };
-
-    window.rebuildCleanDrawer();
-    if (!state.isLoggedIn) {
-      switchScreen('screen-auth');
-    } else {
-      switchScreen(state.mode === 'driver' ? 'screen-driver' : 'screen-passenger');
+      const u = getActiveUser();
+      if (!state.isLoggedIn || !u) {
+        switchScreen('screen-auth');
+      } else {
+        state.mode = u.role;
+        switchScreen(u.role === 'driver' ? 'screen-driver' : 'screen-passenger');
+      }
     }
+
+    enforceInitialScreen();
+    setTimeout(enforceInitialScreen, 250);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAuthModule);
-  } else {
-    initAuthModule();
-  }
+  window.addEventListener('load', bootAuthModule);
+  setTimeout(bootAuthModule, 120);
 })();
-
