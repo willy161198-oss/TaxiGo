@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TaxiGo - Movilidad y Envíos</title>
+  <!-- SDK Oficial de Telegram WebApp -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS (Mapas gratuitos OpenStreetMap) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Iconos Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Fuente Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .leaflet-control-attribution { display: none !important; }
+    .leaflet-control-zoom { display: none !important; }
+    .theme-dark { background-color: #0B1120 !important; color: #F8FAFC !important; }
+    .theme-dark .surface-card { background-color: #162033 !important; border-color: #24324D !important; color: #F8FAFC !important; }
+    .theme-dark .surface-soft { background-color: #1E293B !important; border-color: #334155 !important; color: #F1F5F9 !important; }
+    .theme-dark .text-muted { color: #94A3B8 !important; }
+    .pulse-ring { animation: pulseRing 1.8s infinite; }
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+  </style>
+</head>
+<body class="bg-[#F4F6F9] text-slate-900 select-none">
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div id="app" class="max-w-md mx-auto min-h-screen bg-[#F4F6F9] relative shadow-2xl overflow-hidden flex flex-col">
+
+    <!-- BARRA SUPERIOR DE CAMBIO DE VISTA / USUARIO -->
+    <div id="top-switcher" class="bg-[#0F172A] text-white px-3 py-2 flex items-center justify-between border-b border-slate-800 z-40">
+      <button onclick="handleSecretLogoTap()" class="flex items-center gap-2 text-left active:scale-95 transition">
+        <div class="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-sm shadow">TG</div>
+        <div>
+          <div class="font-extrabold text-sm leading-none tracking-tight">Taxi<span class="text-amber-400">Go</span></div>
+          <div class="text-[10px] text-slate-400 font-medium leading-tight">Movilidad y Envíos</div>
+        </div>
+      </button>
+
+      <div class="flex items-center gap-1 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
+        <button id="sw-passenger" onclick="switchRole('passenger')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 transition">Pasajero</button>
+        <button id="sw-driver" onclick="switchRole('driver')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white transition">Conductor</button>
+        <button id="sw-auth" onclick="openAuthView('register_passenger')" class="px-2 py-1 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white transition">+ Registro</button>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         VISTA 1: PASAJERO (MAPA + SOLICITUD DESDE $1.10)
+    ========================================================== -->
+    <section id="view-passenger" class="flex-1 flex flex-col relative">
+      <!-- Mapa Real OpenStreetMap -->
+      <div class="relative w-full h-[54vh] bg-slate-200">
+        <div id="passenger-map" class="w-full h-full z-10"></div>
+
+        <!-- Botones Flotantes Superiores -->
+        <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
+          <button onclick="openDrawer('passenger')" class="pointer-events-auto w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-800 active:scale-95 transition border border-slate-100">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+
+          <!-- Selector de Servicio -->
+          <div class="pointer-events-auto bg-white/95 backdrop-blur-md px-1.5 py-1.5 rounded-full shadow-lg border border-slate-100 flex items-center gap-1">
+            <button onclick="selectService('Mototaxi')" id="srv-Mototaxi" class="srv-pill px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#0F172A] text-white transition">🏍️ Mototaxi</button>
+            <button onclick="selectService('Taxi')" id="srv-Taxi" class="srv-pill px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition">🚗 Taxi</button>
+            <button onclick="selectService('Delivery')" id="srv-Delivery" class="srv-pill px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition">📦 Envío</button>
+          </div>
+
+          <button onclick="recenterPassengerMap()" class="pointer-events-auto w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-800 active:scale-95 transition border border-slate-100">
+            <i data-lucide="crosshair" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Botón Flotante Soporte -->
+        <button onclick="openSupportModal()" class="absolute bottom-5 left-3 z-20 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-700 border border-slate-100">
+          <i data-lucide="headphones" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Etiqueta de Distancia / Ruta -->
+        <div id="route-badge" class="hidden absolute bottom-5 right-3 z-20 bg-[#0F172A] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+          <i data-lucide="navigation" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span id="route-badge-text">2.4 km • 6 min</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta Inferior de Solicitud -->
+      <div id="passenger-sheet" class="surface-card flex-1 bg-white -mt-4 rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-20 p-4 flex flex-col justify-between border-t border-slate-100">
+        <!-- Estado normal: Formulario de viaje -->
+        <div id="passenger-form-box">
+          <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-3"></div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-extrabold tracking-tight">¿A dónde iremos hoy?</h2>
+            <button onclick="toggleRoundTrip()" id="btn-roundtrip" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center gap-1">
+              <i data-lucide="repeat" class="w-3 h-3"></i> Solo ida
+            </button>
+          </div>
+
+          <!-- Campos Origen y Destino -->
+          <div class="space-y-2.5 mb-3">
+            <div class="surface-soft flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl px-3 py-2.5">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 shrink-0"></span>
+              <input id="input-origin" type="text" value="Los Samanes, Calle Principal" onchange="recalculateRoute()" class="bg-transparent w-full text-xs font-semibold focus:outline-none" placeholder="Punto de recogida" />
+              <button onclick="useGpsOrigin()" class="text-amber-500 text-xs font-bold shrink-0" title="Usar GPS actual">GPS</button>
+            </div>
+
+            <div class="surface-soft flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl px-3 py-2.5">
+              <span class="w-3 h-3 rounded-full bg-amber-500 ring-4 ring-amber-500/20 shrink-0"></span>
+              <input id="input-destination" list="local-places" type="text" placeholder="Escribir aquí tu destino..." onchange="recalculateRoute()" oninput="recalculateRoute()" class="bg-transparent w-full text-xs font-semibold focus:outline-none" />
+              <datalist id="local-places">
+                <option value="Casco Central / Plaza Bolívar">
+                <option value="Av. Intercomunal - Las Morochas">
+                <option value="Centro Comercial Ojeda Mall">
+                <option value="Hospital Dr. Pedro García Clara">
+                <option value="Barrio Libertad / Av. 41">
+                <option value="El Menito - Lagunillas">
+                <option value="Terminal de Pasajeros">
+                <option value="Ciudad Urdaneta">
+              </datalist>
+              <i data-lucide="star" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            </div>
+          </div>
+
+          <!-- Tarifa (Mínimo $1.10) y Método de Pago -->
+          <div class="surface-soft bg-slate-50 border border-slate-200/80 rounded-2xl p-3 mb-3 flex items-center justify-between">
+            <div>
+              <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Tarifa ofrecida (Mín. $1.10)</div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <button onclick="adjustFare(-0.10)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 font-black text-base flex items-center justify-center active:scale-90">-</button>
+                <div class="text-xl font-black text-slate-900" id="fare-usd-display">$1.10</div>
+                <button onclick="adjustFare(0.20)" class="w-7 h-7 rounded-lg bg-white border border-slate-200 font-black text-base flex items-center justify-center active:scale-90">+</button>
+              </div>
+              <div class="text-[11px] font-semibold text-slate-500" id="fare-bs-display">Ref: Bs. 99,00</div>
+            </div>
+
+            <div class="text-right">
+              <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Método de pago</div>
+              <select id="payment-method" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none">
+                <option value="Pago móvil">📲 Pago móvil</option>
+                <option value="Efectivo USD">💵 Efectivo $</option>
+                <option value="Efectivo Bs">💴 Efectivo Bs</option>
+              </select>
+            </div>
+          </div>
+
+          <button onclick="requestRide()" class="w-full py-3.5 rounded-2xl bg-[#0F172A] hover:bg-slate-800 text-white font-extrabold text-sm shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2 active:scale-[0.99] transition">
+            <span>Solicitar <span id="btn-service-label">Mototaxi</span></span>
+            <span class="px-2 py-0.5 rounded-lg bg-amber-500 text-slate-950 text-xs font-black" id="btn-fare-label">$1.10</span>
+          </button>
+        </div>
+
+        <!-- Estado buscando o viaje asignado para el pasajero -->
+        <div id="passenger-active-box" class="hidden space-y-3">
+          <div class="flex items-center justify-between">
+            <span id="p-ride-status-pill" class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">Buscando conductor cercano...</span>
+            <span class="text-base font-black text-slate-900" id="p-ride-fare">$1.10</span>
+          </div>
+
+          <div class="surface-soft bg-slate-50 rounded-2xl p-3 border border-slate-200/80 flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#0F172A] text-amber-400 font-black flex items-center justify-center text-base shrink-0" id="p-driver-initials">LM</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-extrabold text-sm truncate" id="p-driver-name">Notificando conductores activos...</div>
+              <div class="text-xs text-slate-500 truncate" id="p-driver-vehicle">Esperando respuesta en la zona</div>
+            </div>
+            <button onclick="openChatModal('passenger')" id="p-chat-btn" class="hidden px-3 py-2 rounded-xl bg-amber-500 text-slate-950 text-xs font-extrabold flex items-center gap-1">
+              <i data-lucide="message-circle" class="w-4 h-4"></i> Chat
+            </button>
+          </div>
+
+          <div class="text-xs space-y-1 text-slate-600 px-1">
+            <div><strong class="text-emerald-600">Desde:</strong> <span id="p-ride-origin"></span></div>
+            <div><strong class="text-amber-600">Hasta:</strong> <span id="p-ride-dest"></span></div>
+          </div>
+
+          <button onclick="cancelPassengerRide()" class="w-full py-2.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs border border-rose-200">
+            Cancelar solicitud
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         VISTA 2: CONDUCTOR (ESTILO DE TUS CAPTURES + SIN CRÉDITOS)
+    ========================================================== -->
+    <section id="view-driver" class="hidden flex-1 flex flex-col relative">
+      <!-- Mapa Real del Conductor -->
+      <div class="relative w-full h-[56vh] bg-slate-200">
+        <div id="driver-map" class="w-full h-full z-10"></div>
+
+        <!-- Controles Flotantes Superiores -->
+        <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between">
+          <button onclick="openDrawer('driver')" class="w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-800 border border-slate-100">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+
+          <button onclick="openSupportModal()" class="px-4 py-2.5 rounded-full bg-white/95 shadow-lg flex items-center gap-2 text-xs font-bold text-slate-800 border border-slate-100">
+            <i data-lucide="headphones" class="w-4 h-4 text-slate-600"></i> Soporte
+          </button>
+
+          <div class="flex flex-col gap-2">
+            <button onclick="openDriverHistory()" class="w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-800 border border-slate-100" title="Historial de viajes">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+            </button>
+            <button onclick="recenterDriverMap()" class="w-11 h-11 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-800 border border-slate-100" title="Centrar GPS">
+              <i data-lucide="crosshair" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel Inferior del Conductor (Conectarme / Esperando / Viaje Activo) -->
+      <div class="surface-card flex-1 bg-white -mt-4 rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.08)] z-20 p-4 flex flex-col justify-between border-t border-slate-100">
+        <!-- Estado 1: Libre (Desconectado o Esperando Solicitudes) -->
+        <div id="driver-idle-panel" class="space-y-4">
+          <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto"></div>
+
+          <button id="btn-toggle-online" onclick="toggleDriverOnline()" class="w-full py-4 rounded-2xl bg-[#334155] text-white font-extrabold text-base shadow-lg flex items-center justify-center gap-2.5 active:scale-[0.99] transition">
+            <i data-lucide="car" class="w-5 h-5 text-amber-400"></i>
+            <span id="btn-online-text">Conectarme</span>
+          </button>
+
+          <div id="driver-status-row" class="flex items-center justify-between px-2">
+            <span class="text-sm font-bold text-slate-700" id="driver-status-label">Aceptar solicitudes TaxiGo</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="driver-online-switch" onchange="toggleDriverOnline()" class="sr-only peer">
+              <div class="w-12 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <div id="driver-waiting-indicator" class="hidden text-center py-1">
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              Esperando solicitudes cercanas...
+            </div>
+          </div>
+
+          <!-- Métricas Inferiores (Sin Créditos - 100% TaxiGo) -->
+          <div class="grid grid-cols-3 divide-x divide-slate-200 pt-2 border-t border-slate-100 text-center">
+            <div>
+              <div class="text-[11px] font-semibold text-slate-500">Ganado (90%)</div>
+              <div class="text-base font-black text-slate-900 mt-0.5" id="d-stat-earnings">$0.00</div>
+            </div>
+            <div>
+              <div class="text-[11px] font-semibold text-slate-500">Carreras</div>
+              <div class="text-base font-black text-slate-900 mt-0.5" id="d-stat-trips">0</div>
+            </div>
+            <div>
+              <div class="text-[11px] font-semibold text-slate-500">Calificación</div>
+              <div class="text-base font-black text-slate-900 mt-0.5">★ 5.0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado 2: Viaje en Curso del Conductor -->
+        <div id="driver-trip-panel" class="hidden space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-slate-400" id="d-trip-step-label">Recoge al pasajero</div>
+              <div class="text-lg font-black text-slate-900" id="d-trip-passenger">Alejandro Velásquez</div>
+            </div>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-100 text-amber-800 text-xs font-extrabold" id="d-trip-service">Mototaxi</span>
+          </div>
+
+          <div class="flex items-start gap-2 text-xs text-slate-600">
+            <i data-lucide="map-pin" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+            <div>
+              <div class="font-bold text-slate-800" id="d-trip-pickup">Av. Intercomunal, Ciudad Ojeda</div>
+              <div class="text-slate-500 mt-0.5">Destino: <strong id="d-trip-dropoff">Casco Central</strong></div>
+            </div>
+          </div>
+
+          <!-- Tarjeta Oscura de Tarifa + Desglose 90% / 10% -->
+          <div class="bg-[#0F172A] text-white rounded-2xl p-3.5 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400 font-semibold">Tarifa del viaje</span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold" id="d-trip-paymethod">Pago móvil</span>
+            </div>
+            <div class="text-xl font-black tracking-tight" id="d-trip-fare">$1.50 / Bs. 135,00</div>
+            <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-800">
+              <span class="text-emerald-400 font-bold">Tu ganancia (90%): <span id="d-trip-net">$1.35</span></span>
+              <span class="text-slate-400">Comisión TaxiGo (10%): <span id="d-trip-fee">$0.15</span></span>
+            </div>
+          </div>
+
+          <!-- Acciones: Llamar, Chat, Google Maps -->
+          <div class="grid grid-cols-3 gap-2">
+            <a id="d-call-link" href="tel:04120000000" class="py-2.5 rounded-xl border border-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-50">
+              <i data-lucide="phone" class="w-3.5 h-3.5"></i> Llamar
+            </a>
+            <button onclick="openChatModal('driver')" class="py-2.5 rounded-xl border border-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-50 relative">
+              <i data-lucide="message-square" class="w-3.5 h-3.5"></i> Mensaje
+              <span id="chat-unread-dot" class="hidden w-2 h-2 rounded-full bg-amber-500 absolute top-2 right-2"></span>
+            </button>
+            <button onclick="openExternalMaps()" class="py-2.5 rounded-xl border border-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-50 text-blue-600">
+              <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Maps
+            </button>
+          </div>
+
+          <!-- Botón Principal de Progreso del Viaje -->
+          <button id="d-trip-action-btn" onclick="advanceDriverTripStep()" class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-lg">
+            He llegado
+          </button>
+          <button onclick="cancelDriverTrip()" class="w-full text-center text-xs font-bold text-rose-500 py-1">
+            Cancelar viaje
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         MODAL DE SOLICITUD ENTRANTE AL CONDUCTOR (ESTILO CAPTURE)
+    ========================================================== -->
+    <div id="incoming-request-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end justify-center p-3">
+      <div class="surface-card bg-white w-full max-w-md rounded-3xl p-5 shadow-2xl space-y-4 animate-bounce-once">
+        <div class="flex flex-col items-center text-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-600 text-white font-black text-xl flex items-center justify-center shadow-md" id="inc-initials">EO</div>
+          <div class="text-xs font-extrabold text-amber-500 mt-2">★ 4.9</div>
+          <div class="text-base font-extrabold text-slate-900 mt-0.5" id="inc-passenger-name">Eniuska Quintero</div>
+
+          <div class="mt-3">
+            <div class="text-base font-extrabold text-slate-800" id="inc-pay-method">Pago móvil</div>
+            <div class="text-3xl font-black text-slate-950 mt-0.5" id="inc-fare">$1.10</div>
+            <div class="text-[11px] font-bold text-emerald-600 mt-0.5">Recibes neto (90%): <span id="inc-net">$0.99</span></div>
+          </div>
+
+          <!-- Temporizador Circular -->
+          <div class="mt-3 flex flex-col items-center">
+            <div class="text-[11px] font-semibold text-slate-500 mb-1">Tiempo para aceptar</div>
+            <div class="w-14 h-14 rounded-full border-4 border-slate-900 flex flex-col items-center justify-center leading-none">
+              <span class="text-base font-black" id="inc-timer">15</span>
+              <span class="text-[10px] text-slate-500">seg</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distancias -->
+        <div class="surface-soft bg-slate-100/90 rounded-2xl p-3 text-center space-y-1 text-xs font-bold text-slate-700">
+          <div>Buscar a <span class="text-slate-950 font-black" id="inc-pickup-dist">1,8 km (4 min)</span></div>
+          <div>Luego llevar a <span class="text-slate-950 font-black" id="inc-trip-dist">2,2 km (5 min)</span></div>
+        </div>
+
+        <!-- Desde / Hasta -->
+        <div class="space-y-2 text-xs border-t border-dashed border-slate-200 pt-3">
+          <div class="flex items-start gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 shrink-0"></span>
+            <div>
+              <div class="text-[10px] font-bold text-slate-400">Desde</div>
+              <div class="font-bold text-slate-800" id="inc-origin">Los Samanes, Calle Principal</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 mt-1 shrink-0"></span>
+            <div>
+              <div class="text-[10px] font-bold text-slate-400">Hasta</div>
+              <div class="font-bold text-slate-800" id="inc-dest">Casco Central / Plaza Bolívar</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones Declinar / Aceptar -->
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <button onclick="declineIncomingRide()" class="py-3.5 rounded-2xl bg-slate-100 text-slate-800 font-extrabold text-sm hover:bg-slate-200 transition">
+            Declinar
+          </button>
+          <button onclick="acceptIncomingRide()" class="py-3.5 rounded-2xl bg-emerald-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         VISTA 3: REGISTRO COMPLETO CON DOCUMENTOS (PASAJERO / CONDUCTOR)
+    ========================================================== -->
+    <section id="view-auth" class="hidden flex-1 bg-[#F4F6F9] p-4 overflow-y-auto space-y-4">
+      <div class="flex items-center gap-3">
+        <button onclick="closeAuthView()" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center">
+          <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </button>
+        <div>
+          <h2 class="text-lg font-black">Registro en TaxiGo</h2>
+          <p class="text-xs text-slate-500">Verificación de identidad y documentos</p>
+        </div>
+      </div>
+
+      <!-- Selector Tipo de Registro -->
+      <div class="grid grid-cols-2 gap-2 bg-white p-1.5 rounded-2xl shadow-xs border border-slate-200">
+        <button id="tab-reg-pass" onclick="switchRegTab('passenger')" class="py-2.5 rounded-xl text-xs font-extrabold bg-[#0F172A] text-white">Soy Pasajero</button>
+        <button id="tab-reg-drv" onclick="switchRegTab('driver')" class="py-2.5 rounded-xl text-xs font-extrabold text-slate-600">Soy Conductor</button>
+      </div>
+
+      <!-- Formulario Pasajero -->
+      <form id="form-reg-passenger" onsubmit="submitPassengerRegister(event)" class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-3">
+        <div class="text-xs font-extrabold uppercase tracking-wider text-amber-600">Datos del Pasajero</div>
+        <input required id="reg-p-name" type="text" placeholder="Nombre y Apellido completo" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+        <div class="grid grid-cols-2 gap-2">
+          <input required id="reg-p-cedula" type="text" placeholder="Cédula (Ej: V-28123456)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+          <input required id="reg-p-phone" type="tel" placeholder="Teléfono WhatsApp" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+        </div>
+        <input required id="reg-p-address" type="text" placeholder="Dirección / Sector de residencia" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+
+        <div class="p-3 rounded-2xl bg-slate-50 border border-dashed border-slate-300">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Foto de Cédula de Identidad *</label>
+          <input required id="reg-p-doc-cedula" type="file" accept="image/*" class="text-xs w-full">
+        </div>
+
+        <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#0F172A] text-white font-extrabold text-sm shadow-md">
+          Crear Cuenta de Pasajero
+        </button>
+      </form>
+
+      <!-- Formulario Conductor (7 Documentos) -->
+      <form id="form-reg-driver" onsubmit="submitDriverRegister(event)" class="hidden bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 space-y-3">
+        <div class="text-xs font-extrabold uppercase tracking-wider text-amber-600">Datos del Conductor y Vehículo</div>
+        <input required id="reg-d-name" type="text" placeholder="Nombre y Apellido completo" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+        <div class="grid grid-cols-2 gap-2">
+          <input required id="reg-d-cedula" type="text" placeholder="Cédula (Ej: V-24555111)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+          <input required id="reg-d-phone" type="tel" placeholder="Teléfono WhatsApp" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <select id="reg-d-service" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
+            <option value="Mototaxi">🏍️ Mototaxi</option>
+            <option value="Taxi">🚗 Taxi</option>
+            <option value="Delivery">📦 Delivery</option>
+          </select>
+          <input required id="reg-d-plate" type="text" placeholder="Placa (Ej: AB123CD)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold uppercase">
+        </div>
+        <input required id="reg-d-vehicle" type="text" placeholder="Marca, Modelo y Color (Ej: Bera SBR Naranja)" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold">
+
+        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-500 pt-1">Documentación Obligatoria</div>
+        <div class="space-y-2 text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">1. Foto Selfie del Conductor *</label>
+            <input required id="doc-d-selfie" type="file" accept="image/*" class="w-full">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">2. Cédula de Identidad *</label>
+            <input required id="doc-d-cedula" type="file" accept="image/*" class="w-full">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">3. Licencia de Conducir *</label>
+            <input required id="doc-d-licencia" type="file" accept="image/*" class="w-full">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">4. Certificado Médico Vial *</label>
+            <input required id="doc-d-medico" type="file" accept="image/*" class="w-full">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">5. Carnet de Circulación / Título *</label>
+            <input required id="doc-d-carnet" type="file" accept="image/*" class="w-full">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">6. Póliza RCV Vigente *</label>
+            <input required id="doc-d-rcv" type="file" accept="image/*" class="w-full">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="font-bold block mb-1">7. Foto del Vehículo con Placa *</label>
+            <input required id="doc-d-vehiculo" type="file" accept="image/*" class="w-full">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm shadow-md">
+          Enviar Solicitud de Conductor
+        </button>
+      </form>
+    </section>
+
+    <!-- =========================================================
+         VISTA 4: PERFIL Y AJUSTES (TU CUENTA - SIN CRÉDITOS)
+    ========================================================== -->
+    <section id="view-profile" class="hidden flex-1 bg-[#F4F6F9] p-4 overflow-y-auto space-y-4">
+      <div class="flex items-center gap-3">
+        <button onclick="closeProfileView()" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center">
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        </button>
+        <div>
+          <h2 class="text-base font-black">Tu cuenta</h2>
+          <p class="text-xs text-slate-500">Tu perfil y actividad en TaxiGo</p>
+        </div>
+      </div>
+
+      <!-- Cabecera Avatar -->
+      <div class="flex flex-col items-center text-center pt-1">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-[#0F172A] to-slate-700 text-amber-400 font-black text-2xl flex items-center justify-center shadow-lg relative" id="prof-initials">
+          SO
+          <span class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center absolute -bottom-1 -right-1 border-2 border-white">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          </span>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+          <h3 class="text-lg font-black" id="prof-name">Siolibeth Oranyelis</h3>
+          <span class="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold" id="prof-role-badge">Pasajero</span>
+        </div>
+        <div class="text-xs text-slate-500 font-semibold mt-0.5" id="prof-phone">04121114357</div>
+      </div>
+
+      <!-- Métricas Limpias -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="surface-card bg-white rounded-2xl p-3.5 text-center shadow-xs border border-slate-200/70">
+          <div class="text-lg font-black">5.0 ⭐</div>
+          <div class="text-[11px] text-slate-500 font-medium">Calificación</div>
+        </div>
+        <div class="surface-card bg-white rounded-2xl p-3.5 text-center shadow-xs border border-slate-200/70">
+          <div class="text-lg font-black" id="prof-trips-count">25</div>
+          <div class="text-[11px] text-slate-500 font-medium">Viajes completados</div>
+        </div>
+      </div>
+
+      <!-- Información Personal Verificada -->
+      <div class="space-y-2">
+        <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Información Personal</div>
+        <div class="surface-card bg-white rounded-2xl divide-y divide-slate-100 border border-slate-200/70">
+          <div class="p-3.5 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold">Cédula de identidad</div>
+              <div class="text-xs text-slate-500 mt-0.5" id="prof-cedula">V-30816190</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 text-[10px] font-extrabold">✓ VERIFICADO</span>
+          </div>
+          <div class="p-3.5 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold">Dirección guardada</div>
+              <div class="text-xs text-slate-500 mt-0.5" id="prof-address">Los Samanes, Calle Principal</div>
+            </div>
+            <i data-lucide="map-pin" class="w-4 h-4 text-amber-500"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apariencia -->
+      <div class="space-y-2">
+        <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Apariencia</div>
+        <div class="surface-card bg-white p-1.5 rounded-2xl grid grid-cols-2 gap-1.5 border border-slate-200/70">
+          <button onclick="setTheme('light')" class="py-2 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-900">☀️ Claro</button>
+          <button onclick="setTheme('dark')" class="py-2 rounded-xl text-xs font-extrabold bg-[#0F172A] text-white">🌙 Nocturno</button>
+        </div>
+      </div>
+
+      <!-- Opciones de Actividad -->
+      <div class="surface-card bg-white rounded-2xl divide-y divide-slate-100 border border-slate-200/70">
+        <button onclick="openDriverHistory()" class="w-full p-3.5 flex items-center justify-between text-left">
+          <div class="flex items-center gap-3">
+            <i data-lucide="clock" class="w-4 h-4 text-slate-600"></i>
+            <span class="text-xs font-bold">Historial de viajes</span>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </button>
+        <button onclick="openSupportModal()" class="w-full p-3.5 flex items-center justify-between text-left">
+          <div class="flex items-center gap-3">
+            <i data-lucide="headphones" class="w-4 h-4 text-emerald-600"></i>
+            <span class="text-xs font-bold">Soporte técnico</span>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </button>
+      </div>
+
+      <!-- Banner Conviértete en Conductor -->
+      <button onclick="openAuthView('register_driver')" class="w-full bg-[#0F172A] text-white rounded-2xl p-4 flex items-center justify-between text-left shadow-md">
+        <div>
+          <div class="text-sm font-extrabold">Conviértete en conductor</div>
+          <div class="text-xs text-slate-400 mt-0.5">Maneja con TaxiGo y conserva el 90% de tus carreras</div>
+        </div>
+        <i data-lucide="chevron-right" class="w-5 h-5 text-amber-400"></i>
+      </button>
+    </section>
+
+    <!-- =========================================================
+         VISTA 5: HISTORIAL DE VIAJES (ESTILO CAPTURE)
+    ========================================================== -->
+    <section id="view-history" class="hidden flex-1 bg-[#F4F6F9] p-4 overflow-y-auto space-y-4">
+      <div class="flex items-center gap-3">
+        <button onclick="closeHistoryView()" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center">
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        </button>
+        <div>
+          <h2 class="text-base font-black">Historial de viajes</h2>
+          <p class="text-xs text-slate-500">Viajes realizados</p>
+        </div>
+      </div>
+
+      <div class="surface-card bg-white rounded-3xl p-4 border border-slate-200/80 grid grid-cols-2 gap-4">
+        <div>
+          <div class="text-[10px] font-extrabold uppercase text-slate-400">Ganado neto (90%)</div>
+          <div class="text-2xl font-black text-slate-950 mt-1" id="hist-total-earned">$0.00</div>
+          <div class="text-[11px] text-slate-500 mt-0.5" id="hist-completed-count">0 completados</div>
+        </div>
+        <div>
+          <div class="text-[10px] font-extrabold uppercase text-slate-400">Viajes totales</div>
+          <div class="text-2xl font-black text-slate-950 mt-1" id="hist-total-trips">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">histórico</div>
+        </div>
+      </div>
+
+      <div id="history-list" class="space-y-2.5"></div>
+    </section>
+
+    <!-- =========================================================
+         VISTA 6: PANEL OCULTO DEL DUEÑO (5 TOQUES EN LOGO + PIN 1234)
+    ========================================================== -->
+    <section id="view-owner" class="hidden flex-1 bg-[#0B1120] text-white p-4 overflow-y-auto space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-extrabold uppercase">Acceso Propietario</span>
+          <h2 class="text-lg font-black mt-0.5">Control Central TaxiGo</h2>
+        </div>
+        <button onclick="closeOwnerPanel()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-bold">Cerrar</button>
+      </div>
+
+      <!-- Pestañas del Dueño -->
+      <div class="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800 text-[11px] font-extrabold">
+        <button onclick="switchOwnerTab('caja')" id="otab-caja" class="py-2 rounded-xl bg-amber-500 text-slate-950">10% Caja</button>
+        <button onclick="switchOwnerTab('drivers')" id="otab-drivers" class="py-2 rounded-xl text-slate-400">Conductores</button>
+        <button onclick="switchOwnerTab('passengers')" id="otab-passengers" class="py-2 rounded-xl text-slate-400">Pasajeros</button>
+        <button onclick="switchOwnerTab('radar')" id="otab-radar" class="py-2 rounded-xl text-slate-400">Radar GPS</button>
+      </div>
+
+      <!-- Subvista 1: Caja 10% -->
+      <div id="owner-sub-caja" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
+            <div class="text-[10px] uppercase text-slate-400 font-bold">Tu Ganancia (10%)</div>
+            <div class="text-2xl font-black text-amber-400 mt-1" id="owner-commission-total">$0.00</div>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
+            <div class="text-[10px] uppercase text-slate-400 font-bold">Volumen Bruto</div>
+            <div class="text-2xl font-black text-white mt-1" id="owner-gross-total">$0.00</div>
+          </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
+          <div class="text-xs font-extrabold mb-2">Últimas comisiones generadas</div>
+          <div id="owner-trips-log" class="space-y-2 text-xs text-slate-300"></div>
+        </div>
+      </div>
+
+      <!-- Subvista 2: Conductores -->
+      <div id="owner-sub-drivers" class="hidden space-y-2.5"></div>
+
+      <!-- Subvista 3: Pasajeros -->
+      <div id="owner-sub-passengers" class="hidden space-y-2.5"></div>
+
+      <!-- Subvista 4: Radar GPS en Vivo -->
+      <div id="owner-sub-radar" class="hidden space-y-2">
+        <div class="text-xs text-slate-400">Ubicación en tiempo real de conductores (ámbar) y pasajeros (verde)</div>
+        <div id="owner-radar-map" class="w-full h-80 rounded-2xl overflow-hidden border border-slate-700"></div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         MODAL DE CHAT EN VIVO PASAJERO <-> CONDUCTOR
+    ========================================================== -->
+    <div id="chat-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 flex items-end justify-center">
+      <div class="surface-card bg-white w-full max-w-md rounded-t-3xl p-4 h-[72vh] flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="text-sm font-black" id="chat-peer-name">Chat del viaje</div>
+            <div class="text-[11px] text-emerald-600 font-bold">● Conectado en vivo</div>
+          </div>
+          <button onclick="closeChatModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div id="chat-messages" class="flex-1 overflow-y-auto py-3 space-y-2 text-xs"></div>
+
+        <!-- Respuestas Rápidas (como en tu capture) -->
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-2">
+          <button onclick="sendQuickChat('Voy en camino')" class="px-3 py-1.5 rounded-full bg-slate-100 text-xs font-bold shrink-0">Voy en camino</button>
+          <button onclick="sendQuickChat('Estoy afuera')" class="px-3 py-1.5 rounded-full bg-slate-100 text-xs font-bold shrink-0">Estoy afuera</button>
+          <button onclick="sendQuickChat('Estoy esperando')" class="px-3 py-1.5 rounded-full bg-slate-100 text-xs font-bold shrink-0">Estoy esperando</button>
+        </div>
+
+        <form onsubmit="sendCustomChat(event)" class="flex gap-2 pt-1">
+          <input id="chat-input" type="text" placeholder="Escribe un mensaje..." class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-100 text-xs font-semibold focus:outline-none">
+          <button type="submit" class="px-4 py-2.5 rounded-xl bg-[#0F172A] text-white text-xs font-extrabold">Enviar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL PIN DUEÑO -->
+    <div id="owner-pin-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-700 text-white rounded-3xl p-5 w-full max-w-xs space-y-3 text-center">
+        <div class="text-sm font-black">Acceso Restringido</div>
+        <p class="text-xs text-slate-400">Ingresa el PIN de propietario</p>
+        <input id="owner-pin-input" type="password" maxlength="4" placeholder="••••" class="w-full text-center tracking-[0.6em] text-xl font-black py-2.5 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none">
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="document.getElementById('owner-pin-modal').classList.add('hidden')" class="py-2.5 rounded-xl bg-slate-800 text-xs font-bold">Cancelar</button>
+          <button onclick="verifyOwnerPin()" class="py-2.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-black">Entrar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Inicializar Telegram WebApp si se abre dentro de Telegram
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    // =========================================================
+    // ESTADO GLOBAL Y ALMACENAMIENTO LOCAL
+    // =========================================================
+    const TASA_BCV = 90.00;
+    const OWNER_PIN = "1234";
+    const COMMISSION_RATE = 0.10; // 10% para el dueño
+
+    const DEFAULT_STATE = {
+      passengers: [
+        { id: "p1", name: "Siolibeth Oranyelis", cedula: "V-30816190", phone: "04121114357", address: "Los Samanes, Calle Principal", active: true, lat: 10.2035, lng: -71.3082, trips: 25, docCedula: "Verificada" },
+        { id: "p2", name: "Eniuska Quintero", cedula: "V-27450112", phone: "04146552211", address: "El Menito, Lagunillas", active: true, lat: 10.1885, lng: -71.2980, trips: 11, docCedula: "Verificada" }
+      ],
+      drivers: [
+        { id: "d1", name: "Luis Enrique Mendoza", cedula: "V-24889120", phone: "04246123344", service: "Mototaxi", plate: "AB452CD", vehicle: "Bera SBR 150 Naranja", online: true, approved: true, lat: 10.2010, lng: -71.3110, earnings: 14.85, trips: 11 }
+      ],
+      completedTrips: [
+        { id: "TG-101", date: "16 nov • 01:01", passenger: "Liz Estrada", driver: "Luis Enrique Mendoza", service: "Mototaxi", origin: "Las Morochas", dest: "Av. 41", fare: 1.80, commission: 0.18, net: 1.62, method: "Pago móvil" },
+        { id: "TG-102", date: "16 nov • 00:48", passenger: "Michelle Marcano", driver: "Luis Enrique Mendoza", service: "Taxi", origin: "Los Samanes", dest: "Casco Central", fare: 4.20, commission: 0.42, net: 3.78, method: "Efectivo USD" }
+      ],
+      activeRide: null,
+      chat: []
+    };
+
+    let state = JSON.parse(localStorage.getItem("taxigo_state_v1")) || DEFAULT_STATE;
+    function saveState() {
+      localStorage.setItem("taxigo_state_v1", JSON.stringify(state));
+    }
+
+    let currentRole = "passenger";
+    let selectedService = "Mototaxi";
+    let currentFare = 1.10;
+    let isRoundTrip = false;
+    let incomingTimerInterval = null;
+    let chatSenderRole = "passenger";
+
+    // Coordenadas base Ciudad Ojeda
+    const OJEDA_CENTER = [10.2015, -71.3095];
+    const PLACES_COORDS = {
+      "Casco Central / Plaza Bolívar": [10.1972, -71.3145],
+      "Av. Intercomunal - Las Morochas": [10.1930, -71.3210],
+      "Centro Comercial Ojeda Mall": [10.2065, -71.3160],
+      "Hospital Dr. Pedro García Clara": [10.2090, -71.3040],
+      "Barrio Libertad / Av. 41": [10.2042, -71.3025],
+      "El Menito - Lagunillas": [10.1850, -71.2950],
+      "Terminal de Pasajeros": [10.1995, -71.3185],
+      "Ciudad Urdaneta": [10.2140, -71.2980]
+    };
+
+    // =========================================================
+    // MAPAS GRATUITOS OPENSTREETMAP + LEAFLET + OSRM
+    // =========================================================
+    let pMap, pMarkerOrigin, pMarkerDest, pRouteLine;
+    let dMap, dMarkerSelf, dMarkerTarget, dRouteLine;
+    let ownerMap;
+
+    function initMaps() {
+      // Mapa Pasajero
+      pMap = L.map("passenger-map", { zoomControl: false }).setView(OJEDA_CENTER, 15);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(pMap);
+
+      const originIcon = L.divIcon({
+        html: `<div style="width:18px;height:18px;background:#10B981;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>`,
+        className: ""
+      });
+      pMarkerOrigin = L.marker([10.2035, -71.3082], { icon: originIcon }).addTo(pMap);
+
+      // Mapa Conductor
+      dMap = L.map("driver-map", { zoomControl: false }).setView([10.2010, -71.3110], 15);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(dMap);
+
+      const motoIcon = L.divIcon({
+        html: `<div style="width:28px;height:28px;background:#0F172A;color:#F59E0B;border:2px solid #F59E0B;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,.4)">🏍️</div>`,
+        className: ""
+      });
+      dMarkerSelf = L.marker([10.2010, -71.3110], { icon: motoIcon }).addTo(dMap);
+    }
+
+    async function drawOsrmRoute(mapObj, startCoords, endCoords, existingLine) {
+      if (existingLine) mapObj.removeLayer(existingLine);
+      try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const latlngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+          const line = L.polyline(latlngs, { color: "#0F172A", weight: 5, opacity: 0.85 }).addTo(mapObj);
+          mapObj.fitBounds(line.getBounds(), { padding: [45, 45] });
+          const km = (route.distance / 1000).toFixed(1);
+          const min = Math.max(2, Math.round(route.duration / 60));
+          return { line, km, min };
+        }
+      } catch (e) {}
+      const fallbackLine = L.polyline([startCoords, endCoords], { color: "#0F172A", weight: 4, dashArray: "6,6" }).addTo(mapObj);
+      mapObj.fitBounds(fallbackLine.getBounds(), { padding: [45, 45] });
+      return { line: fallbackLine, km: "2.3", min: 5 };
+    }
+
+    async function recalculateRoute() {
+      const destText = document.getElementById("input-destination").value.trim();
+      const badge = document.getElementById("route-badge");
+      if (!destText) {
+        badge.classList.add("hidden");
+        return;
+      }
+      const destCoords = PLACES_COORDS[destText] || [10.1965, -71.3155];
+      if (pMarkerDest) pMap.removeLayer(pMarkerDest);
+      const destIcon = L.divIcon({
+        html: `<div style="width:18px;height:18px;background:#F59E0B;border:3px solid #0F172A;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>`,
+        className: ""
+      });
+      pMarkerDest = L.marker(destCoords, { icon: destIcon }).addTo(pMap);
+
+      const result = await drawOsrmRoute(pMap, [10.2035, -71.3082], destCoords, pRouteLine);
+      pRouteLine = result.line;
+      badge.classList.remove("hidden");
+      document.getElementById("route-badge-text").textContent = `${result.km} km • ${result.min} min`;
+
+      // Calcular tarifa sugerida arrancando estrictamente desde $1.10
+      const calc = Math.max(1.10, Number((1.10 + (parseFloat(result.km) - 1.5) * 0.35).toFixed(2)));
+      currentFare = isRoundTrip ? Number((calc * 1.8).toFixed(2)) : calc;
+      updateFareUI();
+    }
+
+    function recenterPassengerMap() {
+      pMap.setView([10.2035, -71.3082], 15);
+    }
+
+    function recenterDriverMap() {
+      dMap.setView([10.2010, -71.3110], 15);
+    }
+
+    function useGpsOrigin() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+          pMap.setView([latitude, longitude], 16);
+          pMarkerOrigin.setLatLng([latitude, longitude]);
+          document.getElementById("input-origin").value = `GPS Actual (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+        }, () => {
+          document.getElementById("input-origin").value = "Los Samanes, Ubicación GPS";
+        });
+      }
+    }
+
+    // =========================================================
+    // NAVEGACIÓN ENTRE ROLES Y VISTAS
+    // =========================================================
+    function hideAllViews() {
+      ["view-passenger", "view-driver", "view-auth", "view-profile", "view-history", "view-owner"].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+    }
+
+    function switchRole(role) {
+      currentRole = role;
+      hideAllViews();
+      document.getElementById("sw-passenger").className = role === "passenger"
+        ? "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 transition"
+        : "px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white transition";
+      document.getElementById("sw-driver").className = role === "driver"
+        ? "px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 transition"
+        : "px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-300 hover:text-white transition";
+
+      if (role === "passenger") {
+        document.getElementById("view-passenger").classList.remove("hidden");
+        setTimeout(() => pMap.invalidateSize(), 100);
+      } else {
+        document.getElementById("view-driver").classList.remove("hidden");
+        updateDriverStatsUI();
+        setTimeout(() => dMap.invalidateSize(), 100);
+        // Si hay una solicitud esperando y el conductor entra, mostrar tarjeta
+        if (state.activeRide && state.activeRide.status === "searching") {
+          showIncomingRequestModal(state.activeRide);
+        }
+      }
+    }
+
+    // =========================================================
+    // LÓGICA DEL PASAJERO (TARIFAS DESDE $1.10)
+    // =========================================================
+    function selectService(srv) {
+      selectedService = srv;
+      document.querySelectorAll(".srv-pill").forEach(btn => {
+        btn.className = "srv-pill px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 transition";
+      });
+      document.getElementById("srv-" + srv).className = "srv-pill px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#0F172A] text-white transition";
+      document.getElementById("btn-service-label").textContent = srv;
+    }
+
+    function toggleRoundTrip() {
+      isRoundTrip = !isRoundTrip;
+      const btn = document.getElementById("btn-roundtrip");
+      btn.innerHTML = isRoundTrip ? `<i data-lucide="repeat" class="w-3 h-3"></i> Ida y vuelta` : `<i data-lucide="repeat" class="w-3 h-3"></i> Solo ida`;
+      btn.className = isRoundTrip
+        ? "px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold flex items-center gap-1"
+        : "px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold flex items-center gap-1";
+      lucide.createIcons();
+      recalculateRoute();
+    }
+
+    function adjustFare(delta) {
+      currentFare = Math.max(1.10, Number((currentFare + delta).toFixed(2)));
+      updateFareUI();
+    }
+
+    function updateFareUI() {
+      const formatted = "$" + currentFare.toFixed(2);
+      const bs = (currentFare * TASA_BCV).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById("fare-usd-display").textContent = formatted;
+      document.getElementById("btn-fare-label").textContent = formatted;
+      document.getElementById("fare-bs-display").textContent = `Ref: Bs. ${bs}`;
+    }
+
+    function requestRide() {
+      const origin = document.getElementById("input-origin").value.trim() || "Los Samanes";
+      const dest = document.getElementById("input-destination").value.trim() || "Casco Central / Plaza Bolívar";
+      const method = document.getElementById("payment-method").value;
+      const passenger = state.passengers[0];
+
+      const ride = {
+        id: "TG-" + Math.floor(100 + Math.random() * 900),
+        passengerName: passenger.name,
+        passengerPhone: passenger.phone,
+        service: selectedService,
+        origin,
+        dest,
+        destCoords: PLACES_COORDS[dest] || [10.1972, -71.3145],
+        fare: currentFare,
+        commission: Number((currentFare * COMMISSION_RATE).toFixed(2)),
+        netDriver: Number((currentFare * (1 - COMMISSION_RATE)).toFixed(2)),
+        method,
+        status: "searching",
+        step: 0
+      };
+
+      state.activeRide = ride;
+      state.chat = [];
+      saveState();
+      renderPassengerActiveBox();
+    }
+
+    function renderPassengerActiveBox() {
+      const ride = state.activeRide;
+      if (!ride) {
+        document.getElementById("passenger-form-box").classList.remove("hidden");
+        document.getElementById("passenger-active-box").classList.add("hidden");
+        return;
+      }
+      document.getElementById("passenger-form-box").classList.add("hidden");
+      document.getElementById("passenger-active-box").classList.remove("hidden");
+      document.getElementById("p-ride-fare").textContent = "$" + ride.fare.toFixed(2);
+      document.getElementById("p-ride-origin").textContent = ride.origin;
+      document.getElementById("p-ride-dest").textContent = ride.dest;
+
+      const statusPill = document.getElementById("p-ride-status-pill");
+      const chatBtn = document.getElementById("p-chat-btn");
+
+      if (ride.status === "searching") {
+        statusPill.textContent = "Notificando conductores activos...";
+        statusPill.className = "px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold";
+        document.getElementById("p-driver-name").textContent = "Buscando unidad cercana...";
+        document.getElementById("p-driver-vehicle").textContent = `${ride.service} • ${ride.method}`;
+        chatBtn.classList.add("hidden");
+      } else {
+        const drv = state.drivers[0];
+        statusPill.textContent = ride.step === 0 ? "Conductor en camino a buscarte" : ride.step === 1 ? "Conductor llegó al punto" : "Viaje en curso";
+        statusPill.className = "px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold";
+        document.getElementById("p-driver-initials").textContent = drv.name.split(" ").map(n => n[0]).slice(0, 2).join("");
+        document.getElementById("p-driver-name").textContent = drv.name;
+        document.getElementById("p-driver-vehicle").textContent = `${drv.vehicle} • Placa ${drv.plate}`;
+        chatBtn.classList.remove("hidden");
+      }
+    }
+
+    function cancelPassengerRide() {
+      state.activeRide = null;
+      saveState();
+      renderPassengerActiveBox();
+    }
+
+    // =========================================================
+    // LÓGICA DEL CONDUCTOR (CONECTAR, SOLICITUD ENTRANTE, VIAJE)
+    // =========================================================
+    function toggleDriverOnline() {
+      const drv = state.drivers[0];
+      drv.online = !drv.online;
+      saveState();
+      updateDriverStatsUI();
+
+      if (drv.online && state.activeRide && state.activeRide.status === "searching") {
+        showIncomingRequestModal(state.activeRide);
+      }
+    }
+
+    function updateDriverStatsUI() {
+      const drv = state.drivers[0];
+      const btn = document.getElementById("btn-toggle-online");
+      const text = document.getElementById("btn-online-text");
+      const sw = document.getElementById("driver-online-switch");
+      const wait = document.getElementById("driver-waiting-indicator");
+      const row = document.getElementById("driver-status-row");
+
+      sw.checked = drv.online;
+      if (drv.online) {
+        btn.className = "w-full py-4 rounded-2xl bg-[#334155] text-white font-extrabold text-base shadow-lg flex items-center justify-center gap-2.5 transition";
+        text.textContent = "Desconectarme";
+        wait.classList.remove("hidden");
+        row.classList.add("hidden");
+      } else {
+        btn.className = "w-full py-4 rounded-2xl bg-[#0F172A] text-white font-extrabold text-base shadow-lg flex items-center justify-center gap-2.5 transition";
+        text.textContent = "Conectarme";
+        wait.classList.add("hidden");
+        row.classList.remove("hidden");
+      }
+
+      document.getElementById("d-stat-earnings").textContent = "$" + drv.earnings.toFixed(2);
+      document.getElementById("d-stat-trips").textContent = drv.trips;
+
+      if (state.activeRide && state.activeRide.status === "accepted") {
+        document.getElementById("driver-idle-panel").classList.add("hidden");
+        document.getElementById("driver-trip-panel").classList.remove("hidden");
+        renderDriverActiveTrip();
+      } else {
+        document.getElementById("driver-idle-panel").classList.remove("hidden");
+        document.getElementById("driver-trip-panel").classList.add("hidden");
+      }
+    }
+
+    function showIncomingRequestModal(ride) {
+      const modal = document.getElementById("incoming-request-modal");
+      modal.classList.remove("hidden");
+      document.getElementById("inc-initials").textContent = ride.passengerName.split(" ").map(n => n[0]).slice(0, 2).join("");
+      document.getElementById("inc-passenger-name").textContent = ride.passengerName;
+      document.getElementById("inc-pay-method").textContent = ride.method;
+      document.getElementById("inc-fare").textContent = "$" + ride.fare.toFixed(2).replace(".", ",");
+      document.getElementById("inc-net").textContent = "$" + ride.netDriver.toFixed(2);
+      document.getElementById("inc-origin").textContent = ride.origin;
+      document.getElementById("inc-dest").textContent = ride.dest;
+
+      let sec = 15;
+      document.getElementById("inc-timer").textContent = sec;
+      clearInterval(incomingTimerInterval);
+      incomingTimerInterval = setInterval(() => {
+        sec--;
+        document.getElementById("inc-timer").textContent = sec;
+        if (sec <= 0) {
+          clearInterval(incomingTimerInterval);
+          modal.classList.add("hidden");
+        }
+      }, 1000);
+    }
+
+    function declineIncomingRide() {
+      clearInterval(incomingTimerInterval);
+      document.getElementById("incoming-request-modal").classList.add("hidden");
+    }
+
+    async function acceptIncomingRide() {
+      clearInterval(incomingTimerInterval);
+      document.getElementById("incoming-request-modal").classList.add("hidden");
+      if (!state.activeRide) return;
+      state.activeRide.status = "accepted";
+      state.activeRide.step = 0;
+      saveState();
+      updateDriverStatsUI();
+      renderPassengerActiveBox();
+
+      const result = await drawOsrmRoute(dMap, [10.2010, -71.3110], state.activeRide.destCoords || [10.1972, -71.3145], dRouteLine);
+      dRouteLine = result.line;
+    }
+
+    function renderDriverActiveTrip() {
+      const ride = state.activeRide;
+      if (!ride) return;
+      const bs = (ride.fare * TASA_BCV).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById("d-trip-passenger").textContent = ride.passengerName;
+      document.getElementById("d-trip-service").textContent = ride.service;
+      document.getElementById("d-trip-pickup").textContent = ride.origin;
+      document.getElementById("d-trip-dropoff").textContent = ride.dest;
+      document.getElementById("d-trip-paymethod").textContent = ride.method;
+      document.getElementById("d-trip-fare").textContent = `$${ride.fare.toFixed(2)} / Bs. ${bs}`;
+      document.getElementById("d-trip-net").textContent = `$${ride.netDriver.toFixed(2)}`;
+      document.getElementById("d-trip-fee").textContent = `$${ride.commission.toFixed(2)}`;
+      document.getElementById("d-call-link").href = `tel:${ride.passengerPhone}`;
+
+      const stepLabel = document.getElementById("d-trip-step-label");
+      const actionBtn = document.getElementById("d-trip-action-btn");
+      if (ride.step === 0) {
+        stepLabel.textContent = "Recoge al pasajero";
+        actionBtn.textContent = "He llegado";
+        actionBtn.className = "w-full py-3.5 rounded-2xl bg-amber-500 text-slate-950 font-black text-sm shadow-lg";
+      } else if (ride.step === 1) {
+        stepLabel.textContent = "Pasajero abordando";
+        actionBtn.textContent = "Iniciar viaje";
+        actionBtn.className = "w-full py-3.5 rounded-2xl bg-[#0F172A] text-white font-black text-sm shadow-lg";
+      } else {
+        stepLabel.textContent = "En ruta hacia el destino";
+        actionBtn.textContent = `Finalizar y cobrar $${ride.fare.toFixed(2)}`;
+        actionBtn.className = "w-full py-3.5 rounded-2xl bg-emerald-600 text-white font-black text-sm shadow-lg";
+      }
+    }
+
+    function advanceDriverTripStep() {
+      const ride = state.activeRide;
+      if (!ride) return;
+      if (ride.step < 2) {
+        ride.step++;
+        saveState();
+        renderDriverActiveTrip();
+        renderPassengerActiveBox();
+      } else {
+        // Finalizar viaje y sumar 90% al conductor / 10% al dueño
+        const drv = state.drivers[0];
+        drv.earnings = Number((drv.earnings + ride.netDriver).toFixed(2));
+        drv.trips += 1;
+        state.passengers[0].trips += 1;
+
+        state.completedTrips.unshift({
+          id: ride.id,
+          date: "Hoy • Ahora",
+          passenger: ride.passengerName,
+          driver: drv.name,
+          service: ride.service,
+          origin: ride.origin,
+          dest: ride.dest,
+          fare: ride.fare,
+          commission: ride.commission,
+          net: ride.netDriver,
+          method: ride.method
+        });
+
+        state.activeRide = null;
+        if (dRouteLine) dMap.removeLayer(dRouteLine);
+        saveState();
+        updateDriverStatsUI();
+        renderPassengerActiveBox();
+      }
+    }
+
+    function cancelDriverTrip() {
+      state.activeRide = null;
+      if (dRouteLine) dMap.removeLayer(dRouteLine);
+      saveState();
+      updateDriverStatsUI();
+      renderPassengerActiveBox();
+    }
+
+    function openExternalMaps() {
+      const coords = (state.activeRide && state.activeRide.destCoords) || [10.1972, -71.3145];
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}`, "_blank");
+    }
+
+    // =========================================================
+    // CHAT EN VIVO PASAJERO <-> CONDUCTOR
+    // =========================================================
+    function openChatModal(role) {
+      chatSenderRole = role;
+      document.getElementById("chat-unread-dot").classList.add("hidden");
+      document.getElementById("chat-peer-name").textContent = role === "driver"
+        ? (state.activeRide ? state.activeRide.passengerName : "Pasajero")
+        : state.drivers[0].name;
+      document.getElementById("chat-modal").classList.remove("hidden");
+      renderChatMessages();
+    }
+
+    function closeChatModal() {
+      document.getElementById("chat-modal").classList.add("hidden");
+    }
+
+    function renderChatMessages() {
+      const box = document.getElementById("chat-messages");
+      if (state.chat.length === 0) {
+        box.innerHTML = `<div class="text-center text-slate-400 py-8">Inicia la conversación con un mensaje rápido</div>`;
+        return;
+      }
+      box.innerHTML = state.chat.map(m => {
+        const mine = m.sender === chatSenderRole;
+        return `
+          <div class="flex ${mine ? "justify-end" : "justify-start"}">
+            <div class="max-w-[78%] px-3.5 py-2 rounded-2xl ${mine ? "bg-[#0F172A] text-white" : "bg-slate-100 text-slate-800"}">
+              <div class="font-medium">${m.text}</div>
+              <div class="text-[9px] opacity-60 mt-0.5 text-right">${m.time}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function sendQuickChat(text) {
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
+      state.chat.push({ sender: chatSenderRole, text, time });
+      saveState();
+      renderChatMessages();
+    }
+
+    function sendCustomChat(e) {
+      e.preventDefault();
+      const input = document.getElementById("chat-input");
+      if (!input.value.trim()) return;
+      sendQuickChat(input.value.trim());
+      input.value = "";
+    }
+
+    // =========================================================
+    // PERFIL, HISTORIAL Y REGISTRO CON DOCUMENTOS
+    // =========================================================
+    function openDrawer(role) {
+      hideAllViews();
+      const view = document.getElementById("view-profile");
+      view.classList.remove("hidden");
+      if (role === "driver") {
+        const d = state.drivers[0];
+        document.getElementById("prof-initials").childNodes[0].nodeValue = d.name.split(" ").map(n => n[0]).slice(0, 2).join("");
+        document.getElementById("prof-name").textContent = d.name;
+        document.getElementById("prof-role-badge").textContent = `Conductor • ${d.service}`;
+        document.getElementById("prof-phone").textContent = d.phone;
+        document.getElementById("prof-cedula").textContent = d.cedula;
+        document.getElementById("prof-address").textContent = `${d.vehicle} (${d.plate})`;
+        document.getElementById("prof-trips-count").textContent = d.trips;
+      } else {
+        const p = state.passengers[0];
+        document.getElementById("prof-initials").childNodes[0].nodeValue = p.name.split(" ").map(n => n[0]).slice(0, 2).join("");
+        document.getElementById("prof-name").textContent = p.name;
+        document.getElementById("prof-role-badge").textContent = "Pasajero";
+        document.getElementById("prof-phone").textContent = p.phone;
+        document.getElementById("prof-cedula").textContent = p.cedula;
+        document.getElementById("prof-address").textContent = p.address;
+        document.getElementById("prof-trips-count").textContent = p.trips;
+      }
+    }
+
+    function closeProfileView() {
+      switchRole(currentRole);
+    }
+
+    function openDriverHistory() {
+      hideAllViews();
+      document.getElementById("view-history").classList.remove("hidden");
+      const totalNet = state.completedTrips.reduce((s, t) => s + t.net, 0);
+      document.getElementById("hist-total-earned").textContent = "$" + totalNet.toFixed(2);
+      document.getElementById("hist-completed-count").textContent = `${state.completedTrips.length} completados`;
+      document.getElementById("hist-total-trips").textContent = state.completedTrips.length;
+
+      document.getElementById("history-list").innerHTML = state.completedTrips.map(t => `
+        <div class="surface-card bg-white rounded-2xl p-3.5 border border-slate-200/80 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">✓</div>
+            <div class="min-w-0">
+              <div class="text-xs font-extrabold truncate">${t.origin} → ${t.dest}</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">${t.date} • ${t.passenger}</div>
+              <div class="text-[10px] font-bold text-slate-400">${t.method}</div>
+            </div>
+          </div>
+          <div class="text-right shrink-0 ml-2">
+            <div class="text-sm font-black text-slate-900">$${t.net.toFixed(2)}</div>
+            <div class="text-[10px] text-slate-400">#${t.id}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function closeHistoryView() {
+      switchRole(currentRole);
+    }
+
+    function openAuthView(tab) {
+      hideAllViews();
+      document.getElementById("view-auth").classList.remove("hidden");
+      switchRegTab(tab === "register_driver" ? "driver" : "passenger");
+    }
+
+    function closeAuthView() {
+      switchRole(currentRole);
+    }
+
+    function switchRegTab(type) {
+      const isDriver = type === "driver";
+      document.getElementById("form-reg-passenger").classList.toggle("hidden", isDriver);
+      document.getElementById("form-reg-driver").classList.toggle("hidden", !isDriver);
+      document.getElementById("tab-reg-pass").className = !isDriver ? "py-2.5 rounded-xl text-xs font-extrabold bg-[#0F172A] text-white" : "py-2.5 rounded-xl text-xs font-extrabold text-slate-600";
+      document.getElementById("tab-reg-drv").className = isDriver ? "py-2.5 rounded-xl text-xs font-extrabold bg-[#0F172A] text-white" : "py-2.5 rounded-xl text-xs font-extrabold text-slate-600";
+    }
+
+    function submitPassengerRegister(e) {
+      e.preventDefault();
+      state.passengers.unshift({
+        id: "p" + Date.now(),
+        name: document.getElementById("reg-p-name").value,
+        cedula: document.getElementById("reg-p-cedula").value,
+        phone: document.getElementById("reg-p-phone").value,
+        address: document.getElementById("reg-p-address").value,
+        active: true,
+        lat: 10.2025,
+        lng: -71.3075,
+        trips: 0,
+        docCedula: "Adjuntada"
+      });
+      saveState();
+      switchRole("passenger");
+    }
+
+    function submitDriverRegister(e) {
+      e.preventDefault();
+      state.drivers.unshift({
+        id: "d" + Date.now(),
+        name: document.getElementById("reg-d-name").value,
+        cedula: document.getElementById("reg-d-cedula").value,
+        phone: document.getElementById("reg-d-phone").value,
+        service: document.getElementById("reg-d-service").value,
+        plate: document.getElementById("reg-d-plate").value.toUpperCase(),
+        vehicle: document.getElementById("reg-d-vehicle").value,
+        online: true,
+        approved: false,
+        lat: 10.2005,
+        lng: -71.3125,
+        earnings: 0,
+        trips: 0
+      });
+      saveState();
+      switchRole("driver");
+    }
+
+    function setTheme(mode) {
+      document.body.classList.toggle("theme-dark", mode === "dark");
+    }
+
+    function openSupportModal() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.showAlert("Soporte TaxiGo disponible 24/7 para pasajeros y conductores.");
+      }
+    }
+
+    // =========================================================
+    // PANEL OCULTO DEL DUEÑO (5 TOQUES EN LOGO + PIN 1234)
+    // =========================================================
+    let logoTapCount = 0;
+    let logoTapTimer = null;
+
+    function handleSecretLogoTap() {
+      logoTapCount++;
+      clearTimeout(logoTapTimer);
+      logoTapTimer = setTimeout(() => { logoTapCount = 0; }, 2000);
+      if (logoTapCount >= 5) {
+        logoTapCount = 0;
+        document.getElementById("owner-pin-input").value = "";
+        document.getElementById("owner-pin-modal").classList.remove("hidden");
+      }
+    }
+
+    function verifyOwnerPin() {
+      const val = document.getElementById("owner-pin-input").value;
+      if (val === OWNER_PIN) {
+        document.getElementById("owner-pin-modal").classList.add("hidden");
+        openOwnerPanel();
+      }
+    }
+
+    function openOwnerPanel() {
+      hideAllViews();
+      document.getElementById("view-owner").classList.remove("hidden");
+      switchOwnerTab("caja");
+    }
+
+    function closeOwnerPanel() {
+      switchRole(currentRole);
+    }
+
+    function switchOwnerTab(tab) {
+      ["caja", "drivers", "passengers", "radar"].forEach(t => {
+        document.getElementById("owner-sub-" + t).classList.toggle("hidden", t !== tab);
+        document.getElementById("otab-" + t).className = t === tab
+          ? "py-2 rounded-xl bg-amber-500 text-slate-950"
+          : "py-2 rounded-xl text-slate-400";
+      });
+
+      if (tab === "caja") {
+        const totalGross = state.completedTrips.reduce((s, t) => s + t.fare, 0);
+        const totalComm = state.completedTrips.reduce((s, t) => s + t.commission, 0);
+        document.getElementById("owner-commission-total").textContent = "$" + totalComm.toFixed(2);
+        document.getElementById("owner-gross-total").textContent = "$" + totalGross.toFixed(2);
+        document.getElementById("owner-trips-log").innerHTML = state.completedTrips.map(t => `
+          <div class="flex items-center justify-between py-1.5 border-b border-slate-800">
+            <div>
+              <div class="font-bold text-white">${t.service} • ${t.driver}</div>
+              <div class="text-[11px] text-slate-400">${t.origin} → ${t.dest}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-black text-amber-400">+$${t.commission.toFixed(2)}</div>
+              <div class="text-[10px] text-slate-500">de $${t.fare.toFixed(2)}</div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      if (tab === "drivers") {
+        document.getElementById("owner-sub-drivers").innerHTML = state.drivers.map(d => `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm font-black">${d.name}</div>
+                <div class="text-xs text-slate-400">${d.cedula} • ${d.phone}</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${d.online ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-400"}">
+                ${d.online ? "● EN LÍNEA" : "DESCONECTADO"}
+              </span>
+            </div>
+            <div class="text-xs text-slate-300">${d.service} • ${d.vehicle} • Placa <strong>${d.plate}</strong></div>
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-[11px] text-amber-400 font-bold">7/7 Documentos cargados</span>
+              <button onclick="toggleApproveDriver('${d.id}')" class="px-3 py-1 rounded-lg text-xs font-extrabold ${d.approved ? "bg-emerald-600 text-white" : "bg-amber-500 text-slate-950"}">
+                ${d.approved ? "✓ Aprobado" : "Aprobar ahora"}
+              </button>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      if (tab === "passengers") {
+        document.getElementById("owner-sub-passengers").innerHTML = state.passengers.map(p => `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+            <div>
+              <div class="text-sm font-black">${p.name}</div>
+              <div class="text-xs text-slate-400">${p.cedula} • ${p.phone}</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">${p.address} • Cédula: ${p.docCedula}</div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${p.active ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-400"}">
+              ${p.active ? "● ACTIVO" : "INACTIVO"}
+            </span>
+          </div>
+        `).join("");
+      }
+
+      if (tab === "radar") {
+        setTimeout(() => {
+          if (!ownerMap) {
+            ownerMap = L.map("owner-radar-map", { zoomControl: false }).setView(OJEDA_CENTER, 14);
+            L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(ownerMap);
+          }
+          ownerMap.invalidateSize();
+          state.drivers.forEach(d => {
+            L.circleMarker([d.lat, d.lng], { radius: 8, color: "#F59E0B", fillColor: "#F59E0B", fillOpacity: 0.9 })
+              .bindPopup(`<b>Conductor:</b> ${d.name}<br>${d.service} (${d.plate})`).addTo(ownerMap);
+          });
+          state.passengers.forEach(p => {
+            L.circleMarker([p.lat, p.lng], { radius: 7, color: "#10B981", fillColor: "#10B981", fillOpacity: 0.9 })
+              .bindPopup(`<b>Pasajero:</b> ${p.name}<br>${p.address}`).addTo(ownerMap);
+          });
+        }, 120);
+      }
+    }
+
+    function toggleApproveDriver(id) {
+      const d = state.drivers.find(x => x.id === id);
+      if (d) {
+        d.approved = !d.approved;
+        saveState();
+        switchOwnerTab("drivers");
+      }
+    }
+
+    // =========================================================
+    // ARRANQUE INICIAL
+    // =========================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initMaps();
+      updateFareUI();
+      renderPassengerActiveBox();
+      updateDriverStatsUI();
+    });
+  </script>
+</body>
+</html>
