@@ -2261,10 +2261,21 @@
       updateAllUI();
     });
   </script>
-  <script src="extras-auth.js?v=1"></script>
-<script src="extras-pasajero.js?v=1"></script>
-<script src="extras-conductor.js?v=1"></script>
-<script src="extras-dueno.js?v=1"></script>
-<script src="extras-mapa.js?v=1"></script>
+  <script>
+  (function () {
+    const bust = Date.now();
+    [
+      'extras-auth.js',
+      'extras-pasajero.js',
+      'extras-conductor.js',
+      'extras-dueno.js',
+      'extras-mapa.js'
+    ].forEach(file => {
+      const s = document.createElement('script');
+      s.src = `${file}?t=${bust}`;
+      document.body.appendChild(s);
+    });
+  })();
+</script>
 </body>
 </html>
