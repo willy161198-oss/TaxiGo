@@ -1,5 +1,5 @@
 // =========================================================
-// TAXIGO · EXTRAS.JS v4.0 (PANEL DUEÑO EXACTAMENTE COMO REFERENCIA)
+// TAXIGO · EXTRAS.JS v4.1 (VALIDACIÓN ESTRICTA DE REGISTRO + PANEL DUEÑO)
 // =========================================================
 (function () {
   function initTaxiGoConsolidated() {
@@ -8,7 +8,7 @@
       return;
     }
 
-    // 1. Limpieza segura sin borrar cuentas reales ni inventar datos bancarios
+    // 1. Limpieza segura sin inventar datos bancarios
     if (!Array.isArray(state.users)) state.users = [];
     if (!state.ownerPagoMovil || state.ownerPagoMovil.banco === 'Banesco (0134)') {
       state.ownerPagoMovil = { banco: '', cedula: '', telefono: '', titular: '' };
@@ -107,6 +107,23 @@
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      // Reiniciar las cajas de fotos al abrir un registro nuevo
+      uploadedDocs = { face: '', cedula: '', vehicle: '', license: '' };
+      const labels = {
+        face: '🤳 Toca para subir o tomar foto de tu cara',
+        cedula: '🪪 Toca para subir foto de la cédula',
+        vehicle: '🏍️ Toca para subir foto del vehículo',
+        license: '📄 Toca para subir documentos del vehículo'
+      };
+      Object.keys(labels).forEach(k => {
+        const box = document.getElementById('box-photo-' + k);
+        const prev = document.getElementById('preview-photo-' + k);
+        const inp = document.getElementById('file-photo-' + k);
+        if (box) box.classList.remove('has-file');
+        if (prev) prev.innerHTML = labels[k];
+        if (inp) inp.value = '';
+      });
+
       switchScreen('screen-register');
       if (typeof setRegRole === 'function') setRegRole(role);
     };
@@ -130,23 +147,93 @@
       showToast(`Bienvenido, ${user.name}`);
     };
 
-    const origSubmitReg = window.submitRegistration;
+    // VALIDACIÓN ESTRICTA DE REGISTRO (NO CREA NADA SI FALTAN DATOS O FOTOS)
     window.submitRegistration = function () {
-      origSubmitReg();
-      const user = getActiveUser();
-      if (user) {
-        if (user.role === 'driver' && !user.pagoMovil) user.pagoMovil = { banco: '', cedula: '', telefono: '' };
-        state.isLoggedIn = true;
-        state.mode = user.role;
-        saveState();
-        rebuildCleanDrawer();
-        switchScreen(user.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-        updateAllUI();
+      const name = (document.getElementById('reg-name').value || '').trim();
+      const cedula = (document.getElementById('reg-cedula').value || '').trim();
+      const phone = (document.getElementById('reg-phone').value || '').trim();
+      const address = (document.getElementById('reg-address').value || '').trim();
+
+      if (name.length < 3) {
+        showToast('Escribe tu nombre y apellido completo');
+        return;
       }
+      if (cedula.length < 5) {
+        showToast('Escribe tu número de cédula válido');
+        return;
+      }
+      if (phone.length < 7) {
+        showToast('Escribe tu número de teléfono');
+        return;
+      }
+      if (address.length < 4) {
+        showToast('Escribe tu dirección de residencia');
+        return;
+      }
+
+      const docs = (typeof uploadedDocs !== 'undefined' && uploadedDocs) ? uploadedDocs : {};
+      if (!docs.face) {
+        showToast('Debes subir la foto de tu rostro (Selfie)');
+        return;
+      }
+      if (!docs.cedula) {
+        showToast('Debes subir la foto de tu Cédula');
+        return;
+      }
+
+      const currentRole = (typeof regRole !== 'undefined') ? regRole : 'passenger';
+      const newUser = {
+        id: 'usr-' + Date.now(),
+        role: currentRole,
+        name,
+        cedula,
+        phone,
+        address,
+        status: 'pending',
+        debtUsd: 0,
+        mondayBlocked: false,
+        earnedToday: 0,
+        tripsToday: 0,
+        tripsTotal: 0,
+        joined: 'Hoy',
+        docs: { ...docs }
+      };
+
+      if (currentRole === 'driver') {
+        const plate = (document.getElementById('reg-plate').value || '').trim().toUpperCase();
+        const model = (document.getElementById('reg-model').value || '').trim();
+        const color = (document.getElementById('reg-color').value || '').trim();
+
+        if (!plate || !model || !color) {
+          showToast('Completa placa, modelo y color del vehículo');
+          return;
+        }
+        if (!docs.vehicle || !docs.license) {
+          showToast('Sube las fotos del vehículo y licencia');
+          return;
+        }
+        newUser.vehicleType = document.getElementById('reg-vehicle-type').value;
+        newUser.plate = plate;
+        newUser.model = model;
+        newUser.color = color;
+        newUser.pagoMovil = { banco: '', cedula: '', telefono: '' };
+      }
+
+      state.users.unshift(newUser);
+      state.activeUserId = newUser.id;
+      state.mode = newUser.role;
+      state.isLoggedIn = true;
+      saveState();
+
+      uploadedDocs = { face: '', cedula: '', vehicle: '', license: '' };
+      rebuildCleanDrawer();
+      switchScreen(newUser.role === 'driver' ? 'screen-driver' : 'screen-passenger');
+      updateAllUI();
+      showToast('Registro enviado para aprobación del dueño');
     };
 
     // =========================================================
-    // 4. REDISEÑO DEL PANEL DE DUEÑO (EXACTO COMO TU CAPTURA)
+    // 4. PANEL DE DUEÑO (PASAJEROS | CONDUCTORES | MOVIMIENTOS)
     // =========================================================
     const ownerScreen = document.getElementById('screen-owner');
     if (ownerScreen) {
@@ -159,7 +246,6 @@
           <button type="button" onclick="exitOwnerPanel()" class="px-3.5 py-2 rounded-xl bg-white/10 text-xs font-bold">Salir</button>
         </div>
 
-        <!-- TARJETA VERDE DE GANANCIA + BOTÓN PAGO MÓVIL -->
         <div class="px-4 pt-2 pb-3 bg-[#11131a] text-white">
           <div class="rounded-2xl p-4 bg-gradient-to-br from-[#00a84c] to-[#046c38] shadow-lg mb-3">
             <div class="flex items-center justify-between">
@@ -178,7 +264,6 @@
             </div>
           </div>
 
-          <!-- PESTAÑAS SEPARADAS: PASAJEROS | CONDUCTORES | MOVIMIENTOS -->
           <div class="grid grid-cols-3 gap-1.5 bg-white/10 p-1 rounded-2xl text-xs font-extrabold">
             <button type="button" id="owner-tab-passengers" onclick="setOwnerTab('passengers')" class="py-2 rounded-xl bg-white text-[#11131a] transition">Pasajeros</button>
             <button type="button" id="owner-tab-drivers" onclick="setOwnerTab('drivers')" class="py-2 rounded-xl text-gray-300 transition">Conductores</button>
@@ -187,7 +272,6 @@
         </div>
 
         <div class="scroll-area px-4 py-3">
-          <!-- VISTA 1: PASAJEROS -->
           <div id="owner-view-passengers" class="space-y-3">
             <div class="flex items-center justify-between">
               <h2 class="text-xs font-extrabold uppercase text-gray-500">Pasajeros Registrados</h2>
@@ -196,7 +280,6 @@
             <div id="owner-passengers-list" class="space-y-3"></div>
           </div>
 
-          <!-- VISTA 2: CONDUCTORES (GESTIÓN + DEUDA 10% + CORTE LUNES) -->
           <div id="owner-view-drivers" class="hidden space-y-3">
             <div class="card-surface rounded-2xl p-3 bg-amber-500/5 border-amber-500/30 flex items-center justify-between gap-2">
               <div>
@@ -217,7 +300,6 @@
             <div id="owner-drivers-list" class="space-y-3"></div>
           </div>
 
-          <!-- VISTA 3: MOVIMIENTOS -->
           <div id="owner-view-ledger" class="hidden space-y-2.5">
             <h2 class="text-xs font-extrabold uppercase text-gray-500">Auditoría de Carreras y Comisiones (10%)</h2>
             <div id="owner-ledger-list" class="space-y-2"></div>
@@ -226,7 +308,6 @@
       `;
     }
 
-    // Modal exclusivo para configurar el Pago Móvil del Dueño (campos en blanco para que los llenes tú)
     if (!document.getElementById('owner-pm-modal')) {
       appShell.insertAdjacentHTML('beforeend', `
         <div id="owner-pm-modal" class="hidden absolute inset-0 z-[125] bg-black/70 flex items-center justify-center p-5">
@@ -330,17 +411,14 @@
       document.getElementById('owner-drv-pending-badge').textContent =
         drivers.filter(d => d.status === 'pending').length + ' pendientes';
 
-      // Render Pasajeros
       const passList = document.getElementById('owner-passengers-list');
       passList.innerHTML = passengers.length ? passengers.map(u => buildOwnerUserCard(u)).join('')
         : `<p class="text-xs text-gray-400 text-center py-6">No hay pasajeros registrados.</p>`;
 
-      // Render Conductores
       const drvList = document.getElementById('owner-drivers-list');
       drvList.innerHTML = drivers.length ? drivers.map(u => buildOwnerUserCard(u)).join('')
         : `<p class="text-xs text-gray-400 text-center py-6">No hay conductores registrados.</p>`;
 
-      // Reportes de pago pendientes
       const repBox = document.getElementById('owner-reported-payments-box');
       if (repBox) {
         const pendingReports = (state.paymentReports || []).filter(r => !r.verified);
@@ -359,7 +437,6 @@
         ` : '';
       }
 
-      // Render Movimientos
       const ledgerList = document.getElementById('owner-ledger-list');
       ledgerList.innerHTML = (state.ledger || []).map(m => `
         <div class="card-surface rounded-2xl p-3 flex items-center justify-between">
@@ -655,7 +732,6 @@
       showToast('Carrera aceptada');
     };
 
-    // Modal motivo de cancelación
     if (!document.getElementById('cancel-reason-modal')) {
       appShell.insertAdjacentHTML('beforeend', `
         <div id="cancel-reason-modal" class="hidden absolute inset-0 z-[125] bg-black/70 flex items-end">
@@ -720,7 +796,6 @@
       showToast('Viaje cancelado');
     };
 
-    // Pago Móvil Conductor + Reporte de Comisión 10%
     const settingsScroll = document.querySelector('#screen-settings .scroll-area');
     if (settingsScroll && !document.getElementById('driver-pm-settings-card')) {
       const clearBtn = settingsScroll.querySelector('button[onclick="clearAppCache()"]');
