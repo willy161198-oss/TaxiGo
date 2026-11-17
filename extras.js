@@ -1,20 +1,20 @@
 // =========================================================
-// TAXIGO · EXTRAS.JS v3.0 (CORRECCIÓN EXACTA DEL MENÚ Y SESIONES)
+// TAXIGO · EXTRAS.JS v4.0 (PANEL DUEÑO EXACTAMENTE COMO REFERENCIA)
 // =========================================================
 (function () {
-  function runTaxiGoFix() {
+  function initTaxiGoConsolidated() {
     if (typeof state === 'undefined' || !document.getElementById('app-shell')) {
-      setTimeout(runTaxiGoFix, 60);
+      setTimeout(initTaxiGoConsolidated, 60);
       return;
     }
 
-    // 1. Limpiar usuarios corruptos (como el usuario ".") y datos bancarios inventados
-    state.users = (state.users || []).filter(u => u && u.name && u.name.trim().length > 1);
+    // 1. Limpieza segura sin borrar cuentas reales ni inventar datos bancarios
+    if (!Array.isArray(state.users)) state.users = [];
     if (!state.ownerPagoMovil || state.ownerPagoMovil.banco === 'Banesco (0134)') {
       state.ownerPagoMovil = { banco: '', cedula: '', telefono: '', titular: '' };
     }
     state.users.forEach(u => {
-      if (u.role === 'driver' && (!u.pagoMovil || u.pagoMovil.banco === 'Banco de Venezuela (0102)')) {
+      if (u && u.role === 'driver' && (!u.pagoMovil || u.pagoMovil.banco === 'Banco de Venezuela (0102)')) {
         u.pagoMovil = { banco: '', cedula: '', telefono: '' };
       }
     });
@@ -24,24 +24,28 @@
     if (typeof state.isLoggedIn === 'undefined') state.isLoggedIn = false;
     saveState();
 
-    // 2. Garantizar PIN de dueño 2026 tras 5 toques al logo
+    const appShell = document.getElementById('app-shell');
+
+    // =========================================================
+    // 2. PIN DE DUEÑO (2026) GARANTIZADO TRAS 5 TOQUES AL LOGO
+    // =========================================================
     window.verifyOwnerPin = function () {
       const inp = document.getElementById('owner-pin-input');
       const val = inp ? String(inp.value).replace(/\s+/g, '').trim() : '';
       if (val === '2026') {
         if (typeof closeOwnerPinModal === 'function') closeOwnerPinModal();
         if (typeof closeDrawer === 'function') closeDrawer();
-        if (typeof renderOwnerDashboard === 'function') renderOwnerDashboard();
         switchScreen('screen-owner');
+        renderOwnerDashboard();
         showToast('Panel de Dueño desbloqueado');
       } else {
         showToast('Clave incorrecta');
       }
     };
 
-    const appShell = document.getElementById('app-shell');
-
-    // 3. Pantalla de Inicio / Login / Registro separado
+    // =========================================================
+    // 3. PANTALLA DE INICIO SEPARADA (LOGIN Y REGISTRO)
+    // =========================================================
     if (!document.getElementById('screen-auth')) {
       appShell.insertAdjacentHTML('beforeend', `
         <section id="screen-auth" class="screen" style="background: linear-gradient(165deg, #11131a 0%, #1b2030 65%, #2a1218 100%); color: #fff;">
@@ -54,14 +58,14 @@
             </div>
 
             <div class="my-4">
-              <span class="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400">Acceso independiente</span>
+              <span class="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400">Plataforma de Movilidad</span>
               <h1 class="text-2xl font-extrabold leading-tight mt-1">Inicia sesión o crea tu cuenta</h1>
-              <p class="text-xs text-gray-300 mt-1">Pasajeros y conductores entran cada uno por separado.</p>
+              <p class="text-xs text-gray-300 mt-1">Cada pasajero y conductor opera con su propia sesión independiente.</p>
             </div>
 
             <div class="rounded-3xl p-4 bg-white text-[#11131a] shadow-xl space-y-3 mb-4">
               <p class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Ya tengo cuenta</p>
-              <input id="login-identifier" type="text" placeholder="Teléfono o Cédula" class="w-full bg-gray-100 rounded-2xl px-4 py-3 text-sm font-bold text-gray-900 focus:outline-none" />
+              <input id="login-identifier" type="text" placeholder="Ingresa tu teléfono o Cédula" class="w-full bg-gray-100 rounded-2xl px-4 py-3 text-sm font-bold text-gray-900 focus:outline-none" />
               <button type="button" onclick="loginWithAccount()" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
                 Iniciar sesión
               </button>
@@ -87,7 +91,344 @@
       `);
     }
 
-    // 4. RECONSTRUIR EL MENÚ LATERAL EXACTAMENTE COMO PEDISTE (SIN CAMBIO DE MODO NI PANTALLA DE INICIO, SOLO CERRAR SESIÓN)
+    const regBackBtn = document.querySelector('#screen-register button[onclick*="switchScreen"]');
+    if (regBackBtn) regBackBtn.setAttribute('onclick', 'handleRegisterBack()');
+
+    window.handleRegisterBack = function () {
+      if (state.isLoggedIn) {
+        switchScreen(state.mode === 'driver' ? 'screen-driver' : 'screen-passenger');
+      } else {
+        switchScreen('screen-auth');
+      }
+    };
+
+    window.goCreateAccount = function (role) {
+      ['reg-name', 'reg-cedula', 'reg-phone', 'reg-address', 'reg-plate', 'reg-model', 'reg-color'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      switchScreen('screen-register');
+      if (typeof setRegRole === 'function') setRegRole(role);
+    };
+
+    window.loginWithAccount = function () {
+      const query = (document.getElementById('login-identifier').value || '').trim().toLowerCase();
+      if (!query) { showToast('Escribe tu teléfono o cédula'); return; }
+      const user = state.users.find(u =>
+        (u.phone && u.phone.toLowerCase().includes(query)) ||
+        (u.cedula && u.cedula.toLowerCase().includes(query))
+      );
+      if (!user) { showToast('Cuenta no encontrada. Regístrate abajo'); return; }
+
+      state.activeUserId = user.id;
+      state.mode = user.role;
+      state.isLoggedIn = true;
+      saveState();
+      rebuildCleanDrawer();
+      switchScreen(user.role === 'driver' ? 'screen-driver' : 'screen-passenger');
+      updateAllUI();
+      showToast(`Bienvenido, ${user.name}`);
+    };
+
+    const origSubmitReg = window.submitRegistration;
+    window.submitRegistration = function () {
+      origSubmitReg();
+      const user = getActiveUser();
+      if (user) {
+        if (user.role === 'driver' && !user.pagoMovil) user.pagoMovil = { banco: '', cedula: '', telefono: '' };
+        state.isLoggedIn = true;
+        state.mode = user.role;
+        saveState();
+        rebuildCleanDrawer();
+        switchScreen(user.role === 'driver' ? 'screen-driver' : 'screen-passenger');
+        updateAllUI();
+      }
+    };
+
+    // =========================================================
+    // 4. REDISEÑO DEL PANEL DE DUEÑO (EXACTO COMO TU CAPTURA)
+    // =========================================================
+    const ownerScreen = document.getElementById('screen-owner');
+    if (ownerScreen) {
+      ownerScreen.innerHTML = `
+        <div class="px-4 pt-4 pb-3 bg-[#11131a] text-white flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">Acceso Privado · Administración</span>
+            <h1 class="text-lg font-extrabold">Panel de Dueño · TaxiGo</h1>
+          </div>
+          <button type="button" onclick="exitOwnerPanel()" class="px-3.5 py-2 rounded-xl bg-white/10 text-xs font-bold">Salir</button>
+        </div>
+
+        <!-- TARJETA VERDE DE GANANCIA + BOTÓN PAGO MÓVIL -->
+        <div class="px-4 pt-2 pb-3 bg-[#11131a] text-white">
+          <div class="rounded-2xl p-4 bg-gradient-to-br from-[#00a84c] to-[#046c38] shadow-lg mb-3">
+            <div class="flex items-center justify-between">
+              <p class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-100">Ganancia Neta del Dueño (10%)</p>
+              <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-black/25">Solo visible para ti</span>
+            </div>
+            <div class="flex items-center justify-between mt-1.5">
+              <p id="owner-net-profit" class="text-3xl font-extrabold">$0.00</p>
+              <button type="button" onclick="openOwnerPMModal()" class="px-4 py-2 rounded-xl bg-[#11131a] text-white text-xs font-extrabold shadow-md active:scale-95 transition">
+                Pago movil
+              </button>
+            </div>
+            <div class="flex items-center justify-between text-xs text-emerald-100 mt-3 pt-2.5 border-t border-white/15">
+              <span>Por cobrar (semana): <strong id="owner-pending-collect">$0.00</strong></span>
+              <span>Ya cobrado: <strong id="owner-collected-total">$0.00</strong></span>
+            </div>
+          </div>
+
+          <!-- PESTAÑAS SEPARADAS: PASAJEROS | CONDUCTORES | MOVIMIENTOS -->
+          <div class="grid grid-cols-3 gap-1.5 bg-white/10 p-1 rounded-2xl text-xs font-extrabold">
+            <button type="button" id="owner-tab-passengers" onclick="setOwnerTab('passengers')" class="py-2 rounded-xl bg-white text-[#11131a] transition">Pasajeros</button>
+            <button type="button" id="owner-tab-drivers" onclick="setOwnerTab('drivers')" class="py-2 rounded-xl text-gray-300 transition">Conductores</button>
+            <button type="button" id="owner-tab-ledger" onclick="setOwnerTab('ledger')" class="py-2 rounded-xl text-gray-300 transition">Movimientos</button>
+          </div>
+        </div>
+
+        <div class="scroll-area px-4 py-3">
+          <!-- VISTA 1: PASAJEROS -->
+          <div id="owner-view-passengers" class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xs font-extrabold uppercase text-gray-500">Pasajeros Registrados</h2>
+              <span id="owner-pass-pending-badge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600">0 pendientes</span>
+            </div>
+            <div id="owner-passengers-list" class="space-y-3"></div>
+          </div>
+
+          <!-- VISTA 2: CONDUCTORES (GESTIÓN + DEUDA 10% + CORTE LUNES) -->
+          <div id="owner-view-drivers" class="hidden space-y-3">
+            <div class="card-surface rounded-2xl p-3 bg-amber-500/5 border-amber-500/30 flex items-center justify-between gap-2">
+              <div>
+                <p class="text-xs font-extrabold">Corte Semanal (Lunes)</p>
+                <p class="text-[10px] text-gray-500">Bloquea conductores con saldo 10% pendiente</p>
+              </div>
+              <button type="button" onclick="runMondayCutoff()" class="shrink-0 px-3 py-2 rounded-xl bg-[#e51d2e] text-white text-[11px] font-extrabold shadow active:scale-95">
+                Ejecutar Corte Lunes
+              </button>
+            </div>
+
+            <div id="owner-reported-payments-box" class="space-y-2"></div>
+
+            <div class="flex items-center justify-between">
+              <h2 class="text-xs font-extrabold uppercase text-gray-500">Conductores Registrados</h2>
+              <span id="owner-drv-pending-badge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600">0 pendientes</span>
+            </div>
+            <div id="owner-drivers-list" class="space-y-3"></div>
+          </div>
+
+          <!-- VISTA 3: MOVIMIENTOS -->
+          <div id="owner-view-ledger" class="hidden space-y-2.5">
+            <h2 class="text-xs font-extrabold uppercase text-gray-500">Auditoría de Carreras y Comisiones (10%)</h2>
+            <div id="owner-ledger-list" class="space-y-2"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Modal exclusivo para configurar el Pago Móvil del Dueño (campos en blanco para que los llenes tú)
+    if (!document.getElementById('owner-pm-modal')) {
+      appShell.insertAdjacentHTML('beforeend', `
+        <div id="owner-pm-modal" class="hidden absolute inset-0 z-[125] bg-black/70 flex items-center justify-center p-5">
+          <div class="w-full max-w-sm bg-white dark:bg-[#1e2233] rounded-3xl p-5 shadow-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-extrabold">📱 Mi Pago Móvil (Dueño)</h3>
+              <button type="button" onclick="document.getElementById('owner-pm-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold">✕</button>
+            </div>
+            <p class="text-xs text-gray-500">Ingresa tus datos bancarios donde los conductores reportarán su comisión del 10%:</p>
+            <input id="own-pm-bank" type="text" placeholder="Nombre del Banco" class="w-full input-surface rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none" />
+            <input id="own-pm-cedula" type="text" placeholder="Cédula o RIF" class="w-full input-surface rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none" />
+            <input id="own-pm-phone" type="tel" placeholder="Teléfono afiliado a Pago Móvil" class="w-full input-surface rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none" />
+            <input id="own-pm-titular" type="text" placeholder="Nombre del Titular" class="w-full input-surface rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none" />
+            <button type="button" onclick="saveOwnerPagoMovil()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow-lg active:scale-95 transition">
+              Guardar datos de Pago Móvil
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    let activeOwnerTab = 'drivers';
+
+    window.exitOwnerPanel = function () {
+      if (state.isLoggedIn) {
+        switchScreen(state.mode === 'driver' ? 'screen-driver' : 'screen-passenger');
+      } else {
+        switchScreen('screen-auth');
+      }
+    };
+
+    window.openOwnerPMModal = function () {
+      const o = state.ownerPagoMovil || {};
+      document.getElementById('own-pm-bank').value = o.banco || '';
+      document.getElementById('own-pm-cedula').value = o.cedula || '';
+      document.getElementById('own-pm-phone').value = o.telefono || '';
+      document.getElementById('own-pm-titular').value = o.titular || '';
+      document.getElementById('owner-pm-modal').classList.remove('hidden');
+    };
+
+    window.saveOwnerPagoMovil = function () {
+      const banco = document.getElementById('own-pm-bank').value.trim();
+      const cedula = document.getElementById('own-pm-cedula').value.trim();
+      const telefono = document.getElementById('own-pm-phone').value.trim();
+      const titular = document.getElementById('own-pm-titular').value.trim();
+
+      if (!banco || !cedula || !telefono) {
+        showToast('Completa Banco, Cédula y Teléfono');
+        return;
+      }
+      state.ownerPagoMovil = { banco, cedula, telefono, titular };
+      saveState();
+      document.getElementById('owner-pm-modal').classList.add('hidden');
+      showToast('Pago Móvil del dueño guardado');
+    };
+
+    window.setOwnerTab = function (tab) {
+      activeOwnerTab = tab;
+      ['passengers', 'drivers', 'ledger'].forEach(t => {
+        const view = document.getElementById('owner-view-' + t);
+        const btn = document.getElementById('owner-tab-' + t);
+        if (view) view.classList.toggle('hidden', t !== tab);
+        if (btn) {
+          if (t === tab) {
+            btn.className = t === 'drivers'
+              ? 'py-2 rounded-xl bg-[#f97316] text-white transition'
+              : 'py-2 rounded-xl bg-white text-[#11131a] transition';
+          } else {
+            btn.className = 'py-2 rounded-xl text-gray-300 transition';
+          }
+        }
+      });
+    };
+
+    window.deleteUserFromOwner = function (userId) {
+      const target = state.users.find(u => u.id === userId);
+      if (!target) return;
+      state.users = state.users.filter(u => u.id !== userId);
+      if (state.activeUserId === userId) {
+        state.isLoggedIn = false;
+        state.activeUserId = state.users[0] ? state.users[0].id : '';
+      }
+      saveState();
+      renderOwnerDashboard();
+      showToast(`Usuario "${target.name}" eliminado`);
+    };
+
+    window.renderOwnerDashboard = function () {
+      const passengers = state.users.filter(u => u.role === 'passenger');
+      const drivers = state.users.filter(u => u.role === 'driver');
+
+      const pendingCollect = drivers.reduce((acc, d) => acc + (d.debtUsd || 0), 0);
+      const netProfit = (state.ownerCollectedTotal || 0) + pendingCollect;
+
+      document.getElementById('owner-net-profit').textContent = '$' + netProfit.toFixed(2);
+      document.getElementById('owner-pending-collect').textContent = '$' + pendingCollect.toFixed(2);
+      document.getElementById('owner-collected-total').textContent = '$' + (state.ownerCollectedTotal || 0).toFixed(2);
+
+      document.getElementById('owner-pass-pending-badge').textContent =
+        passengers.filter(p => p.status === 'pending').length + ' pendientes';
+      document.getElementById('owner-drv-pending-badge').textContent =
+        drivers.filter(d => d.status === 'pending').length + ' pendientes';
+
+      // Render Pasajeros
+      const passList = document.getElementById('owner-passengers-list');
+      passList.innerHTML = passengers.length ? passengers.map(u => buildOwnerUserCard(u)).join('')
+        : `<p class="text-xs text-gray-400 text-center py-6">No hay pasajeros registrados.</p>`;
+
+      // Render Conductores
+      const drvList = document.getElementById('owner-drivers-list');
+      drvList.innerHTML = drivers.length ? drivers.map(u => buildOwnerUserCard(u)).join('')
+        : `<p class="text-xs text-gray-400 text-center py-6">No hay conductores registrados.</p>`;
+
+      // Reportes de pago pendientes
+      const repBox = document.getElementById('owner-reported-payments-box');
+      if (repBox) {
+        const pendingReports = (state.paymentReports || []).filter(r => !r.verified);
+        repBox.innerHTML = pendingReports.length ? `
+          <p class="text-xs font-extrabold uppercase text-emerald-600">Pagos reportados por verificar (${pendingReports.length})</p>
+          ${pendingReports.map(r => `
+            <div class="card-surface rounded-2xl p-3 border-emerald-500/40 bg-emerald-500/5 flex items-center justify-between gap-2">
+              <div>
+                <p class="text-xs font-extrabold">${r.driverName} · $${Number(r.amountUsd).toFixed(2)}</p>
+                <p class="text-[11px] font-bold">Ref: ${r.ref}</p>
+                <p class="text-[10px] text-gray-500">${r.note}</p>
+              </div>
+              <button type="button" onclick="approveReportedPayment('${r.id}')" class="px-3 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">Aprobar pago</button>
+            </div>
+          `).join('')}
+        ` : '';
+      }
+
+      // Render Movimientos
+      const ledgerList = document.getElementById('owner-ledger-list');
+      ledgerList.innerHTML = (state.ledger || []).map(m => `
+        <div class="card-surface rounded-2xl p-3 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-extrabold">${m.desc}</p>
+            <p class="text-[10px] text-gray-400">${m.date} · Total: $${Number(m.totalFare || 0).toFixed(2)}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-extrabold text-emerald-600">+$${Number(m.ownerCut || 0).toFixed(2)}</p>
+            <p class="text-[9px] text-gray-400">10% Dueño</p>
+          </div>
+        </div>
+      `).join('');
+
+      setOwnerTab(activeOwnerTab);
+    };
+
+    function buildOwnerUserCard(u) {
+      const statusBadge = u.status === 'approved'
+        ? `<span class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600">✓ Autorizado</span>`
+        : u.status === 'blocked'
+          ? `<span class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-red-500/15 text-red-600">⛔ Bloqueado</span>`
+          : `<span class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600">⏳ Pendiente</span>`;
+
+      const subtitle = u.role === 'driver'
+        ? `🏍️ Conductor · ${u.vehicleType || 'Moto Go'} (${u.plate || 'S/P'})`
+        : `🧍 Pasajero`;
+
+      const debtInfo = u.role === 'driver'
+        ? `<p class="text-[11px] font-bold text-amber-600 mt-0.5">Deuda 10%: $${Number(u.debtUsd || 0).toFixed(2)} ${u.debtUsd > 0 ? `<button type="button" onclick="settleDriverDebt('${u.id}')" class="ml-1 underline text-emerald-600 font-extrabold">Saldar</button>` : ''}</p>`
+        : '';
+
+      return `
+        <div class="card-surface rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-sm font-extrabold">${u.name}</p>
+              <p class="text-[11px] font-bold text-gray-600 dark:text-gray-300">${subtitle}</p>
+              <p class="text-[11px] text-gray-400">CI: ${u.cedula || 'S/C'} · Tel: ${u.phone || 'S/T'}</p>
+              <p class="text-[11px] text-gray-400">Dir: ${u.address || 'Ciudad Ojeda'}</p>
+              ${debtInfo}
+            </div>
+            ${statusBadge}
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 pt-1">
+            <button type="button" onclick="viewUserDocs('${u.id}')" class="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">
+              👁️ Ver fotos/docs
+            </button>
+            ${u.status !== 'approved' ? `<button type="button" onclick="setUserStatus('${u.id}', 'approved')" class="px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">✓ Autorizar</button>` : ''}
+            ${u.status !== 'blocked' ? `<button type="button" onclick="setUserStatus('${u.id}', 'blocked')" class="px-3 py-1.5 rounded-xl bg-red-500/15 text-red-600 text-[11px] font-bold">Bloquear</button>` : ''}
+            <button type="button" onclick="deleteUserFromOwner('${u.id}')" class="px-3 py-1.5 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    window.approveReportedPayment = function (reportId) {
+      const rep = state.paymentReports.find(r => r.id === reportId);
+      if (!rep) return;
+      rep.verified = true;
+      settleDriverDebt(rep.driverId);
+    };
+
+    // =========================================================
+    // 5. MENÚ LATERAL LIMPIO POR ROL CON BOTÓN DE CERRAR SESIÓN
+    // =========================================================
     function rebuildCleanDrawer() {
       const u = getActiveUser();
       const drawerMenu = document.querySelector('#side-drawer .flex-1');
@@ -153,60 +494,168 @@
       showToast('Sesión cerrada');
     };
 
-    window.goCreateAccount = function (role) {
-      ['reg-name', 'reg-cedula', 'reg-phone', 'reg-address', 'reg-plate', 'reg-model', 'reg-color'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      switchScreen('screen-register');
-      if (typeof setRegRole === 'function') setRegRole(role);
-    };
+    // =========================================================
+    // 6. FLUJO REAL PASAJERO <-> CONDUCTOR + CANCELACIÓN CON MOTIVO + PAGO MÓVIL
+    // =========================================================
+    let passengerPollInterval = null;
 
-    const regBackBtn = document.querySelector('#screen-register button[onclick*="switchScreen"]');
-    if (regBackBtn) regBackBtn.setAttribute('onclick', 'handleRegisterBack()');
-    window.handleRegisterBack = function () {
-      if (state.isLoggedIn) {
-        switchScreen(state.mode === 'driver' ? 'screen-driver' : 'screen-passenger');
-      } else {
-        switchScreen('screen-auth');
-      }
-    };
-
-    window.loginWithAccount = function () {
-      const query = (document.getElementById('login-identifier').value || '').trim().toLowerCase();
-      if (!query) { showToast('Escribe tu teléfono o cédula'); return; }
-      const user = state.users.find(u =>
-        (u.phone && u.phone.toLowerCase().includes(query)) ||
-        (u.cedula && u.cedula.toLowerCase().includes(query))
-      );
-      if (!user) { showToast('Cuenta no encontrada. Regístrate abajo'); return; }
-
-      state.activeUserId = user.id;
-      state.mode = user.role;
-      state.isLoggedIn = true;
-      saveState();
-      rebuildCleanDrawer();
-      switchScreen(user.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-      updateAllUI();
-      showToast(`Bienvenido, ${user.name}`);
-    };
-
-    const origSubmitReg = window.submitRegistration;
-    window.submitRegistration = function () {
-      origSubmitReg();
+    window.startSearchingDriver = function () {
       const user = getActiveUser();
-      if (user) {
-        if (user.role === 'driver' && !user.pagoMovil) user.pagoMovil = { banco: '', cedula: '', telefono: '' };
-        state.isLoggedIn = true;
-        state.mode = user.role;
-        saveState();
-        rebuildCleanDrawer();
-        switchScreen(user.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-        updateAllUI();
+      const chosen = calculateFares().find(v => v.name === state.selectedVehicle) || calculateFares()[0];
+
+      const newReq = {
+        id: 'REQ-' + Date.now(),
+        passengerId: user.id,
+        passengerName: user.name,
+        passengerPhone: user.phone,
+        origin: document.getElementById('input-origin').value || 'Ciudad Ojeda',
+        destination: state.destinationText || 'Casco Central, Ciudad Ojeda',
+        vehicleType: state.selectedVehicle,
+        paymentMethod: state.paymentMethod,
+        fareUsd: chosen.usd,
+        fareBs: chosen.bs,
+        distanceKm: state.distanceKm || 2.4,
+        durationMin: state.durationMin || 6,
+        status: 'waiting',
+        driverId: null,
+        driverName: null,
+        driverPlate: null,
+        driverPagoMovil: null
+      };
+
+      state.openRequests = (state.openRequests || []).filter(r => r.passengerId !== user.id || r.status === 'completed');
+      state.openRequests.unshift(newReq);
+      saveState();
+
+      document.getElementById('step-payment').classList.add('hidden');
+      document.getElementById('step-searching').classList.remove('hidden');
+      document.getElementById('searching-vehicle-icon').textContent = state.selectedVehicle === 'Moto Go' ? '🏍️' : '🚗';
+
+      clearInterval(passengerPollInterval);
+      passengerPollInterval = setInterval(() => {
+        const fresh = loadStateSafe();
+        const mine = (fresh.openRequests || []).find(r => r.id === newReq.id);
+        if (mine && mine.status === 'accepted') {
+          clearInterval(passengerPollInterval);
+          state = fresh;
+          showAcceptedRideToPassenger(mine);
+        }
+      }, 1500);
+    };
+
+    function showAcceptedRideToPassenger(req) {
+      document.getElementById('step-searching').classList.add('hidden');
+      document.getElementById('step-active-passenger').classList.remove('hidden');
+      document.getElementById('active-ride-fare').textContent = '$' + Number(req.fareUsd).toFixed(2);
+      document.getElementById('assigned-driver-name').textContent = req.driverName || 'Conductor asignado';
+      document.getElementById('assigned-driver-vehicle').textContent = `${req.vehicleType} · Placa ${req.driverPlate || 'S/P'} · ★ 5.0`;
+
+      const pmBox = document.getElementById('passenger-driver-pm-box');
+      const pmText = document.getElementById('passenger-driver-pm-text');
+      if (pmBox && pmText) {
+        if (req.paymentMethod === 'Pago Móvil') {
+          pmBox.classList.remove('hidden');
+          const pm = req.driverPagoMovil || {};
+          pmText.textContent = (pm.banco && pm.telefono)
+            ? `${pm.banco} · CI: ${pm.cedula} · Tel: ${pm.telefono}`
+            : 'El conductor aún no ha cargado sus datos de Pago Móvil.';
+        } else {
+          pmBox.classList.add('hidden');
+        }
+      }
+      showToast(`¡${req.driverName} aceptó tu viaje!`);
+    }
+
+    const driverBottomSheet = document.querySelector('#screen-driver .bottom-sheet');
+    if (driverBottomSheet && !document.getElementById('driver-real-requests-box')) {
+      driverBottomSheet.insertAdjacentHTML('beforeend', `
+        <div id="driver-real-requests-box" class="hidden mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 space-y-2 max-h-48 overflow-y-auto">
+          <p class="text-xs font-extrabold uppercase text-gray-500">Solicitudes Cercanas Disponibles</p>
+          <div id="driver-real-requests-list" class="space-y-2"></div>
+        </div>
+      `);
+    }
+
+    let driverPollInterval = null;
+    const origToggleDriver = window.toggleDriverOnline;
+    window.toggleDriverOnline = function () {
+      const user = getActiveUser();
+      if (user.status !== 'approved' || user.mondayBlocked) {
+        origToggleDriver();
+        return;
+      }
+      origToggleDriver();
+      clearTimeout(requestTimeout);
+
+      const reqBox = document.getElementById('driver-real-requests-box');
+      if (driverOnline) {
+        if (reqBox) reqBox.classList.remove('hidden');
+        renderRealDriverRequests();
+        driverPollInterval = setInterval(renderRealDriverRequests, 1500);
+      } else {
+        if (reqBox) reqBox.classList.add('hidden');
+        clearInterval(driverPollInterval);
       }
     };
 
-    // 5. Cancelación inmediata con motivo
+    function renderRealDriverRequests() {
+      const fresh = loadStateSafe();
+      state.openRequests = fresh.openRequests || [];
+      const driver = getActiveUser();
+      const listEl = document.getElementById('driver-real-requests-list');
+      if (!listEl) return;
+
+      const available = state.openRequests.filter(r =>
+        r.status === 'waiting' &&
+        r.passengerId !== driver.id &&
+        (!driver.vehicleType || r.vehicleType === driver.vehicleType)
+      );
+
+      if (available.length === 0) {
+        listEl.innerHTML = `<p class="text-[11px] text-gray-400 text-center py-2">No hay pasajeros solicitando ${driver.vehicleType || 'viajes'} en este momento.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = available.map(r => `
+        <div class="card-surface rounded-2xl p-3 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-xs font-extrabold">${r.vehicleType} (${r.distanceKm} km) · ${r.passengerName}</p>
+            <p class="text-[11px] text-gray-500 truncate max-w-[200px]">📍 ${r.origin} → ${r.destination}</p>
+            <p class="text-[10px] font-bold text-emerald-600 mt-0.5">Pago: ${r.paymentMethod}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-sm font-extrabold text-[#00b14f]">$${Number(r.fareUsd).toFixed(2)}</p>
+            <button type="button" onclick="acceptRealPassengerRequest('${r.id}')" class="mt-1 px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold shadow active:scale-95">
+              Aceptar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.acceptRealPassengerRequest = function (reqId) {
+      const driver = getActiveUser();
+      const req = (state.openRequests || []).find(r => r.id === reqId);
+      if (!req || req.status !== 'waiting') { showToast('Esta solicitud ya no está disponible'); return; }
+
+      req.status = 'accepted';
+      req.driverId = driver.id;
+      req.driverName = driver.name;
+      req.driverPlate = driver.plate || 'Sin placa';
+      req.driverPagoMovil = driver.pagoMovil || { banco: '', cedula: '', telefono: '' };
+      saveState();
+
+      document.getElementById('active-trip-passenger').textContent = req.passengerName;
+      document.getElementById('active-trip-address').textContent = req.origin;
+      document.getElementById('active-trip-fare').textContent = `$${Number(req.fareUsd).toFixed(2)} / Bs. ${Number(req.fareBs).toLocaleString('es-VE', { minimumFractionDigits: 2 })}`;
+      document.getElementById('active-trip-method-badge').textContent = req.paymentMethod;
+      document.getElementById('active-trip-stage-label').textContent = 'Recoge al pasajero';
+      document.getElementById('btn-driver-trip-progress').textContent = 'He llegado';
+      document.getElementById('driver-active-trip-sheet').classList.remove('hidden');
+      showToast('Carrera aceptada');
+    };
+
+    // Modal motivo de cancelación
     if (!document.getElementById('cancel-reason-modal')) {
       appShell.insertAdjacentHTML('beforeend', `
         <div id="cancel-reason-modal" class="hidden absolute inset-0 z-[125] bg-black/70 flex items-end">
@@ -244,6 +693,8 @@
       if (!reason) { showToast('Escribe o selecciona el motivo'); return; }
       if (txtEl) txtEl.blur();
       document.getElementById('cancel-reason-modal').classList.add('hidden');
+      clearInterval(passengerPollInterval);
+
       ['step-searching', 'step-active-passenger', 'step-payment', 'step-vehicles'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -254,6 +705,9 @@
       if (drvSheet) drvSheet.classList.add('hidden');
 
       const u = getActiveUser();
+      (state.openRequests || []).forEach(r => {
+        if ((r.passengerId === u.id || r.driverId === u.id) && r.status !== 'completed') r.status = 'cancelled';
+      });
       state.ledger.unshift({
         id: 'CAN-' + Math.floor(100 + Math.random() * 899),
         desc: `Cancelado por ${u ? u.name : 'Usuario'}: ${reason}`,
@@ -266,7 +720,7 @@
       showToast('Viaje cancelado');
     };
 
-    // 6. Pago Móvil en blanco (Conductor y Dueño)
+    // Pago Móvil Conductor + Reporte de Comisión 10%
     const settingsScroll = document.querySelector('#screen-settings .scroll-area');
     if (settingsScroll && !document.getElementById('driver-pm-settings-card')) {
       const clearBtn = settingsScroll.querySelector('button[onclick="clearAppCache()"]');
@@ -298,13 +752,96 @@
       showToast('Pago Móvil guardado');
     };
 
+    const activePassStep = document.getElementById('step-active-passenger');
+    if (activePassStep && !document.getElementById('passenger-driver-pm-box')) {
+      const actionBtns = activePassStep.querySelector('.flex.gap-2');
+      if (actionBtns) {
+        actionBtns.insertAdjacentHTML('beforebegin', `
+          <div id="passenger-driver-pm-box" class="hidden mb-3 rounded-2xl p-3 bg-blue-500/10 border border-blue-500/25 text-xs">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-extrabold text-blue-700 dark:text-blue-300">📱 Pago Móvil del Conductor</span>
+              <button type="button" onclick="copyDriverPM()" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-extrabold">Copiar</button>
+            </div>
+            <p id="passenger-driver-pm-text" class="text-[11px] font-semibold text-gray-700 dark:text-gray-200"></p>
+          </div>
+        `);
+      }
+    }
+
+    window.copyDriverPM = function () {
+      const txt = document.getElementById('passenger-driver-pm-text').textContent;
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+      showToast('Datos copiados');
+    };
+
+    if (!document.getElementById('driver-report-pay-modal')) {
+      appShell.insertAdjacentHTML('beforeend', `
+        <div id="driver-report-pay-modal" class="hidden absolute inset-0 z-[120] bg-black/65 backdrop-blur-xs flex items-end">
+          <div class="w-full bg-white dark:bg-[#1e2233] rounded-t-3xl p-5 shadow-2xl">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-base font-extrabold">Reportar pago de comisión (10%)</h3>
+              <button type="button" onclick="document.getElementById('driver-report-pay-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold">✕</button>
+            </div>
+            <div class="rounded-2xl p-3.5 bg-emerald-500/10 border border-emerald-500/30 mb-3">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300">Pago Móvil del Dueño</span>
+                <button type="button" onclick="copyOwnerPM()" class="px-2.5 py-1 rounded-lg bg-[#00b14f] text-white text-[10px] font-extrabold">Copiar</button>
+              </div>
+              <p id="modal-owner-pm-info" class="text-xs font-bold"></p>
+              <p class="text-[11px] text-gray-500 mt-1">Saldo pendiente: <strong id="modal-driver-debt-amt">$0.00</strong></p>
+            </div>
+            <input id="rep-pay-ref" type="text" placeholder="Número de referencia bancaria *" class="w-full input-surface rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none mb-2.5" />
+            <textarea id="rep-pay-note" rows="2" placeholder="Monto transferido y comentario..." class="w-full input-surface rounded-xl p-3 text-xs font-semibold focus:outline-none mb-3"></textarea>
+            <button type="button" onclick="submitDriverCommissionReport()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow-lg">Enviar reporte al dueño</button>
+          </div>
+        </div>
+      `);
+    }
+
+    window.copyOwnerPM = function () {
+      const o = state.ownerPagoMovil;
+      if (!o || !o.banco || !o.telefono) { showToast('El dueño aún no ha cargado sus datos bancarios'); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(`${o.banco} · ${o.cedula} · ${o.telefono}`).catch(() => {});
+      showToast('Datos del dueño copiados');
+    };
+
+    window.openDriverReportPaymentModal = function () {
+      const u = getActiveUser();
+      const o = state.ownerPagoMovil || {};
+      const infoEl = document.getElementById('modal-owner-pm-info');
+      infoEl.textContent = (o.banco && o.telefono)
+        ? `${o.banco} · CI: ${o.cedula} · Tel: ${o.telefono} (${o.titular})`
+        : 'El administrador aún no ha registrado sus datos de Pago Móvil.';
+      document.getElementById('modal-driver-debt-amt').textContent = '$' + (u.debtUsd || 0).toFixed(2);
+      document.getElementById('driver-report-pay-modal').classList.remove('hidden');
+    };
+
+    window.submitDriverCommissionReport = function () {
+      const ref = (document.getElementById('rep-pay-ref').value || '').trim();
+      const note = (document.getElementById('rep-pay-note').value || '').trim();
+      if (!ref) { showToast('Escribe la referencia del pago'); return; }
+      const u = getActiveUser();
+      state.paymentReports.unshift({
+        id: 'REP-' + Date.now(),
+        driverId: u.id,
+        driverName: u.name,
+        amountUsd: u.debtUsd || 0,
+        ref,
+        note: note || 'Liquidación comisión semanal',
+        verified: false
+      });
+      saveState();
+      document.getElementById('driver-report-pay-modal').classList.add('hidden');
+      showToast('Reporte enviado al dueño');
+    };
+
     const origUpdateUI = window.updateAllUI;
     window.updateAllUI = function () {
       origUpdateUI();
       rebuildCleanDrawer();
       const u = getActiveUser();
       const pmCard = document.getElementById('driver-pm-settings-card');
-      if (pmCard) {
+      if (pmCard && u) {
         pmCard.classList.toggle('hidden', u.role !== 'driver');
         if (u.role === 'driver') {
           const pm = u.pagoMovil || {};
@@ -325,8 +862,8 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', runTaxiGoFix);
+    document.addEventListener('DOMContentLoaded', initTaxiGoConsolidated);
   } else {
-    runTaxiGoFix();
+    initTaxiGoConsolidated();
   }
 })();
