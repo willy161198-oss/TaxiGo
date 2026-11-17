@@ -1,72 +1,77 @@
 // =========================================================
-// TAXIGO · EXTRAS-MAPA.JS v2.0 (MAPA MUNDIAL GRATIS SIN API KEY + RUTAS)
+// TAXIGO · EXTRAS-MAPA.JS v3.0 (INTERCEPTOR DIRECTO DE TESELAS OSM + RUTA MUNDIAL)
 // =========================================================
 (function () {
+  // 1. Interceptar L.tileLayer a nivel global para bloquear cualquier URL de Carto
+  function patchLeafletTileLayer() {
+    if (typeof L === 'undefined' || !L.tileLayer || L.tileLayer._taxiGoPatched) return;
+
+    const origTileLayer = L.tileLayer;
+    L.tileLayer = function (urlTemplate, options) {
+      if (typeof urlTemplate === 'string' && urlTemplate.includes('cartocdn')) {
+        urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        options = Object.assign({}, options, {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        });
+      }
+      return origTileLayer.call(this, urlTemplate, options);
+    };
+    L.tileLayer._taxiGoPatched = true;
+  }
+
+  patchLeafletTileLayer();
+
   function initGlobalMapModule() {
-    if (typeof state === 'undefined' || typeof mapPassenger === 'undefined' || !mapPassenger) {
-      setTimeout(initGlobalMapModule, 120);
+    patchLeafletTileLayer();
+
+    const passMapEl = document.getElementById('map-passenger');
+    const drvMapEl = document.getElementById('map-driver');
+    if (!passMapEl || typeof L === 'undefined') {
+      setTimeout(initGlobalMapModule, 100);
       return;
     }
 
-    // 1. Reemplazar capas de Carto ("API KEY REQUIRED") por OpenStreetMap 100% gratuito
-    function applyFreeOsmTiles(mapInstance) {
-      if (!mapInstance) return;
-      mapInstance.eachLayer(layer => {
-        if (layer && layer._url && layer._url.includes('cartocdn')) {
-          mapInstance.removeLayer(layer);
+    // Reemplazar cualquier imagen de mosaico (tile) de Carto que ya se haya pintado en el DOM
+    function swapExistingCartoImages() {
+      document.querySelectorAll('img.leaflet-tile').forEach(img => {
+        if (img.src && img.src.includes('cartocdn')) {
+          const match = img.src.match(/\/(\d+)\/(\d+)\/(\d+)(?:@2x)?\.png/);
+          if (match) {
+            img.src = `https://tile.openstreetmap.org/${match[1]}/${match[2]}/${match[3]}.png`;
+          }
         }
       });
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(mapInstance);
     }
 
-    applyFreeOsmTiles(mapPassenger);
-    if (typeof mapDriver !== 'undefined' && mapDriver) {
-      applyFreeOsmTiles(mapDriver);
-    }
+    swapExistingCartoImages();
+    setInterval(swapExistingCartoImages, 800);
 
-    // Evitar que cambiar tema oscuro/claro vuelva a poner la capa bloqueada de Carto
-    if (typeof setTheme === 'function') {
-      const origSetTheme = window.setTheme;
-      window.setTheme = function (theme) {
-        origSetTheme(theme);
-        applyFreeOsmTiles(mapPassenger);
-        if (typeof mapDriver !== 'undefined' && mapDriver) applyFreeOsmTiles(mapDriver);
-      };
-    }
+    // 2. Obtener instancia real de Leaflet o crear una limpia si es necesario
+    let activePassMap = null;
+    try {
+      // Buscar instancia interna de Leaflet en el contenedor DOM
+      if (passMapEl._leaflet_id && L.Map) {
+        // Si ya existe en el scope global como mapPassenger (por si fue var/window)
+        if (window.mapPassenger) activePassMap = window.mapPassenger;
+      }
+    } catch (e) {}
 
     let originCoords = [10.2016, -71.3148];
     let destCoords = null;
     let routeLayer = null;
     let searchTimer = null;
 
-    // 2. Quitar límites geográficos para navegar por todo el mundo
-    mapPassenger.setMaxBounds(null);
-    mapPassenger.setMinZoom(2);
-    mapPassenger.setMaxZoom(19);
-
-    if (typeof mapDriver !== 'undefined' && mapDriver) {
-      mapDriver.setMaxBounds(null);
-      mapDriver.setMinZoom(2);
-      mapDriver.setMaxZoom(19);
-    }
-
     // 3. Ubicación GPS real del usuario
     window.locateUserGlobal = function () {
       if (!navigator.geolocation) {
-        showToast('Tu navegador no soporta GPS');
+        if (typeof showToast === 'function') showToast('Tu navegador no soporta GPS');
         return;
       }
-      showToast('Obteniendo ubicación GPS...');
+      if (typeof showToast === 'function') showToast('Obteniendo ubicación GPS...');
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           originCoords = [pos.coords.latitude, pos.coords.longitude];
-          mapPassenger.setView(originCoords, 15);
-          if (typeof markerOrigin !== 'undefined' && markerOrigin) {
-            markerOrigin.setLatLng(originCoords);
-          }
           try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${originCoords[0]}&lon=${originCoords[1]}`);
             const data = await res.json();
@@ -76,9 +81,11 @@
               if (origInput) origInput.value = shortName;
             }
           } catch (e) {}
-          showToast('Ubicación actualizada');
+          if (typeof showToast === 'function') showToast('Ubicación actualizada');
         },
-        () => showToast('Activa el GPS del teléfono para ubicarte'),
+        () => {
+          if (typeof showToast === 'function') showToast('Activa el GPS del teléfono');
+        },
         { enableHighAccuracy: true, timeout: 8000 }
       );
     };
@@ -86,7 +93,7 @@
     const gpsBtn = document.querySelector('#screen-passenger button[onclick*="centerPassengerMap"]');
     if (gpsBtn) gpsBtn.setAttribute('onclick', 'locateUserGlobal()');
 
-    // 4. Buscador global en vivo (cualquier calle, ciudad, estado o país)
+    // 4. Buscador mundial de direcciones (cualquier ciudad, estado o país)
     const destInput = document.getElementById('input-destination');
     const stepDest = document.getElementById('step-destination');
 
@@ -107,7 +114,7 @@
 
         searchTimer = setTimeout(async () => {
           try {
-            drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Buscando "${q}" en el mundo...</p>`;
+            drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Buscando "${q}"...</p>`;
             drop.classList.remove('hidden');
 
             const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encodeURIComponent(q)}`;
@@ -115,7 +122,7 @@
             const results = await res.json();
 
             if (!Array.isArray(results) || results.length === 0) {
-              drop.innerHTML = `<p class="p-3 text-xs text-gray-400">No se encontraron lugares. Puedes tocar directamente el mapa.</p>`;
+              drop.innerHTML = `<p class="p-3 text-xs text-gray-400">No se encontraron lugares.</p>`;
               return;
             }
 
@@ -137,104 +144,59 @@
       });
     }
 
-    // 5. Seleccionar destino mundial y trazar ruta real por carretera
+    // 5. Calcular ruta real entre ciudades/estados con OSRM
     window.selectGlobalDestination = async function (lat, lon, label) {
       const drop = document.getElementById('global-places-dropdown');
       if (drop) drop.classList.add('hidden');
 
       destCoords = [parseFloat(lat), parseFloat(lon)];
-      state.destinationText = label;
+      if (typeof state !== 'undefined') state.destinationText = label;
       if (destInput) destInput.value = label;
-
-      if (typeof markerDest !== 'undefined' && markerDest) {
-        markerDest.setLatLng(destCoords).addTo(mapPassenger);
-      }
-
-      await calculateAndDrawGlobalRoute(originCoords, destCoords);
-    };
-
-    mapPassenger.off('click');
-    mapPassenger.on('click', async function (e) {
-      const stepD = document.getElementById('step-destination');
-      if (stepD && stepD.classList.contains('hidden')) return;
-
-      destCoords = [e.latlng.lat, e.latlng.lng];
-      if (typeof markerDest !== 'undefined' && markerDest) {
-        markerDest.setLatLng(destCoords).addTo(mapPassenger);
-      }
-
-      let label = `Punto en mapa (${destCoords[0].toFixed(4)}, ${destCoords[1].toFixed(4)})`;
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${destCoords[0]}&lon=${destCoords[1]}`);
-        const data = await res.json();
-        if (data && data.display_name) {
-          label = data.display_name.split(',').slice(0, 3).join(',');
-        }
-      } catch (err) {}
-
-      state.destinationText = label;
-      if (destInput) destInput.value = label;
-      await calculateAndDrawGlobalRoute(originCoords, destCoords);
-    });
-
-    // 6. Cálculo real de km, minutos y dibujo de ruta en el mapa
-    async function calculateAndDrawGlobalRoute(start, end) {
-      if (routeLayer) {
-        mapPassenger.removeLayer(routeLayer);
-        routeLayer = null;
-      }
 
       let distKm = 0;
       let durMin = 0;
-      let polyCoords = [start, end];
 
       try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${destCoords[1]},${destCoords[0]}?overview=false`;
         const res = await fetch(osrmUrl);
         const data = await res.json();
 
         if (data && data.routes && data.routes[0]) {
-          const r = data.routes[0];
-          distKm = Math.max(0.5, Number((r.distance / 1000).toFixed(1)));
-          durMin = Math.max(2, Math.round(r.duration / 60));
-          polyCoords = r.geometry.coordinates.map(c => [c[1], c[0]]);
+          distKm = Math.max(0.5, Number((data.routes[0].distance / 1000).toFixed(1)));
+          durMin = Math.max(2, Math.round(data.routes[0].duration / 60));
         } else {
-          throw new Error('Fallback distancia');
+          throw new Error('Fallback');
         }
       } catch (err) {
         const R = 6371;
-        const dLat = ((end[0] - start[0]) * Math.PI) / 180;
-        const dLon = ((end[1] - start[1]) * Math.PI) / 180;
+        const dLat = ((destCoords[0] - originCoords[0]) * Math.PI) / 180;
+        const dLon = ((destCoords[1] - originCoords[1]) * Math.PI) / 180;
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos((start[0] * Math.PI) / 180) *
-            Math.cos((end[0] * Math.PI) / 180) *
+          Math.cos((originCoords[0] * Math.PI) / 180) *
+            Math.cos((destCoords[0] * Math.PI) / 180) *
             Math.sin(dLon / 2) *
             Math.sin(dLon / 2);
         distKm = Math.max(0.5, Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.25).toFixed(1)));
         durMin = Math.max(2, Math.round(distKm * 1.5));
       }
 
-      state.distanceKm = distKm;
-      state.durationMin = durMin;
-
-      routeLayer = L.polyline(polyCoords, {
-        color: '#00b14f',
-        weight: 5,
-        opacity: 0.9
-      }).addTo(mapPassenger);
-
-      mapPassenger.fitBounds(routeLayer.getBounds(), { padding: [45, 45] });
+      if (typeof state !== 'undefined') {
+        state.distanceKm = distKm;
+        state.durationMin = durMin;
+      }
 
       document.getElementById('step-destination').classList.add('hidden');
       document.getElementById('step-vehicles').classList.remove('hidden');
       if (typeof renderVehicleOptions === 'function') {
         renderVehicleOptions();
       }
-      showToast(`Ruta calculada: ${distKm} km · ~${durMin} min`);
-    }
+      if (typeof showToast === 'function') {
+        showToast(`Ruta calculada: ${distKm} km · ~${durMin} min`);
+      }
+    };
   }
 
   window.addEventListener('load', initGlobalMapModule);
-  setTimeout(initGlobalMapModule, 200);
+  setTimeout(initGlobalMapModule, 150);
 })();
