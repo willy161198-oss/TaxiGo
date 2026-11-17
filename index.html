@@ -39,7 +39,7 @@
     /* PORTADA LIMPIA */
     .splash-screen {
       min-height: 100vh;
-      padding: 36px 16px 28px;
+      padding: 28px 16px 36px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -51,31 +51,31 @@
       background: var(--bg-dark);
       color: #ffffff;
       border-radius: 22px;
-      padding: 20px 28px;
+      padding: 18px 26px;
       display: flex;
       align-items: center;
       gap: 14px;
       box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       cursor: pointer;
       user-select: none;
     }
 
     .hero-icon {
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       background: var(--accent);
       border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
+      font-size: 25px;
       color: #0f172a;
       font-weight: 900;
     }
 
     .hero-title {
-      font-size: 28px;
+      font-size: 27px;
       font-weight: 900;
       letter-spacing: -0.5px;
       line-height: 1.1;
@@ -95,32 +95,34 @@
 
     .card-panel {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       background: #ffffff;
       border-radius: 22px;
-      padding: 20px 18px;
+      padding: 18px 16px;
       box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
       border: 1px solid #e2e8f0;
     }
 
     .auth-tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       background: #f1f5f9;
       padding: 4px;
-      border-radius: 999px;
-      margin-bottom: 18px;
+      border-radius: 14px;
+      gap: 4px;
+      margin-bottom: 16px;
     }
 
     .auth-tab {
       border: none;
       background: transparent;
-      padding: 10px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
+      padding: 9px 4px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 800;
       color: #64748b;
       cursor: pointer;
+      line-height: 1.2;
     }
 
     .auth-tab.active {
@@ -129,24 +131,24 @@
     }
 
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 11px;
     }
 
     .form-group label {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       color: #0f172a;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .form-group input, .form-group select {
       width: 100%;
       background: #f1f5f9;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 14px;
+      border-radius: 11px;
+      padding: 11px 12px;
+      font-size: 13px;
       color: #0f172a;
       outline: none;
     }
@@ -156,12 +158,104 @@
       background: #ffffff;
     }
 
+    .vehicle-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .veh-btn {
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .veh-btn.active {
+      border-color: #0f172a;
+      background: #fef3c7;
+      color: #0f172a;
+    }
+
+    .cop-box {
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .cop-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: #0f172a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cop-desc {
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .doc-upload-item {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .doc-info {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .doc-status {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .doc-status.ok {
+      color: #10b981;
+    }
+
+    .file-label-btn {
+      background: var(--bg-dark);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
     .primary-btn {
       width: 100%;
       border: none;
       background: var(--bg-dark);
       color: #ffffff;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
       padding: 14px;
       border-radius: 14px;
@@ -240,13 +334,6 @@
       color: #ffffff;
     }
 
-    .support-btn {
-      position: fixed;
-      left: 12px;
-      bottom: 274px;
-      z-index: 500;
-    }
-
     .bottom-sheet {
       position: fixed;
       left: 0;
@@ -256,8 +343,10 @@
       background: #ffffff;
       border-top-left-radius: 22px;
       border-top-right-radius: 22px;
-      padding: 10px 16px 18px;
+      padding: 10px 16px 16px;
       box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12);
+      max-height: 78vh;
+      overflow-y: auto;
     }
 
     .sheet-handle {
@@ -265,18 +354,18 @@
       height: 4px;
       background: #cbd5e1;
       border-radius: 999px;
-      margin: 0 auto 10px;
+      margin: 0 auto 8px;
     }
 
     .sheet-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .sheet-header h2 {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
     }
 
@@ -295,11 +384,11 @@
       background: #f8fafc;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 10px 12px;
+      padding: 9px 12px;
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 7px;
     }
 
     .dot {
@@ -328,6 +417,24 @@
       color: #d97706;
     }
 
+    .km-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f1f5f9;
+      border-radius: 11px;
+      padding: 7px 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .km-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .fare-row {
       display: grid;
       grid-template-columns: 1.25fr 1fr;
@@ -335,8 +442,8 @@
       background: #f8fafc;
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 10px;
-      margin-bottom: 10px;
+      padding: 9px 10px;
+      margin-bottom: 9px;
     }
 
     .fare-label {
@@ -344,28 +451,28 @@
       font-weight: 800;
       color: var(--text-muted);
       text-transform: uppercase;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .fare-stepper {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .step-btn {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 8px;
       border: 1px solid #cbd5e1;
       background: #ffffff;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       cursor: pointer;
     }
 
     .fare-amount {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 900;
       color: #0f172a;
     }
@@ -389,6 +496,38 @@
       outline: none;
     }
 
+    /* Tarjeta de Viaje Asignado y Pago Móvil del Conductor (Solo visible al Pasajero) */
+    .active-ride-card {
+      display: none;
+      background: #ecfdf5;
+      border: 1.5px solid #10b981;
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .driver-pm-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 9px 10px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .copy-pm-btn {
+      background: var(--bg-dark);
+      color: #facc15;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 6px;
+      width: 100%;
+    }
+
     /* Vista Conductor */
     .driver-view {
       display: none;
@@ -403,7 +542,7 @@
     .driver-card {
       background: #ffffff;
       border-radius: 16px;
-      padding: 16px;
+      padding: 15px;
       margin-bottom: 12px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
@@ -455,15 +594,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
     }
 
     .owner-header h2 {
       font-size: 16px;
       font-weight: 900;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .owner-close {
@@ -585,8 +720,36 @@
     .entity-meta {
       font-size: 12px;
       color: #475569;
-      line-height: 1.4;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+
+    .cop-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
       margin-bottom: 10px;
+    }
+
+    .cop-thumb {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 6px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .cop-thumb img {
+      width: 100%;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-bottom: 3px;
+      display: block;
     }
 
     .badge {
@@ -610,7 +773,7 @@
 
     .mini-btn {
       flex: 1;
-      min-width: 80px;
+      min-width: 78px;
       border: none;
       border-radius: 10px;
       padding: 8px 10px;
@@ -623,12 +786,42 @@
     .btn-block { background: #f59e0b; color: #0f172a; }
     .btn-delete { background: #fee2e2; color: #b91c1c; }
 
+    /* Modal Visor de Documentos COP */
+    .doc-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 3500;
+      background: rgba(15, 23, 42, 0.85);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .doc-modal-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .doc-modal-card img {
+      width: 100%;
+      max-height: 65vh;
+      object-fit: contain;
+      border-radius: 10px;
+      margin: 10px 0;
+      background: #0f172a;
+    }
+
     .toast {
       position: fixed;
-      top: 18px;
+      top: 16px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 4000;
+      z-index: 4500;
       background: #0f172a;
       color: #facc15;
       padding: 10px 16px;
@@ -659,14 +852,15 @@
     <div class="card-panel">
       <div class="auth-tabs">
         <button class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">Iniciar Sesión</button>
-        <button class="auth-tab" id="tabRegister" onclick="setAuthMode('register')">Registrarse</button>
+        <button class="auth-tab" id="tabRegPassenger" onclick="setAuthMode('regPassenger')">Reg. Pasajero</button>
+        <button class="auth-tab" id="tabRegDriver" onclick="setAuthMode('regDriver')">Reg. Conductor</button>
       </div>
 
-      <!-- Formulario Login -->
+      <!-- 1. INICIAR SESIÓN -->
       <div id="loginForm">
         <div class="form-group">
-          <label>Usuario o Teléfono</label>
-          <input type="text" id="loginUser" placeholder="Ej: @usuario o 0414..." />
+          <label>Nombre o Teléfono</label>
+          <input type="text" id="loginUser" placeholder="Ej: 0414-0000000 o tu nombre" />
         </div>
         <div class="form-group">
           <label>PIN de Acceso</label>
@@ -675,32 +869,100 @@
         <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
       </div>
 
-      <!-- Formulario Registro -->
-      <div id="registerForm" style="display:none;">
+      <!-- 2. REGISTRO DE PASAJERO -->
+      <div id="regPassengerForm" style="display:none;">
         <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" id="regName" placeholder="Tu nombre y apellido" />
+          <label>Nombre y Apellido</label>
+          <input type="text" id="pasName" placeholder="Ej: Ana García" />
         </div>
         <div class="form-group">
           <label>Teléfono / WhatsApp</label>
-          <input type="tel" id="regPhone" placeholder="Ej: 0414-1234567" />
-        </div>
-        <div class="form-group">
-          <label>Tipo de cuenta</label>
-          <select id="regRole" onchange="toggleDriverExtra()">
-            <option value="passenger">Pasajero (Pedir viajes / envíos)</option>
-            <option value="driver">Conductor (Moto / Carro)</option>
-          </select>
-        </div>
-        <div class="form-group" id="driverVehicleGroup" style="display:none;">
-          <label>Vehículo y Placa (Solo Conductores)</label>
-          <input type="text" id="regVehicle" placeholder="Ej: Moto Bera 150cc • Placa AA1B23" />
+          <input type="tel" id="pasPhone" placeholder="Ej: 0414-1234567" />
         </div>
         <div class="form-group">
           <label>Crea tu PIN de Acceso</label>
-          <input type="password" id="regPin" placeholder="Ej: 1234" />
+          <input type="password" id="pasPin" placeholder="Ej: 1234" />
         </div>
-        <button class="primary-btn" onclick="handleRegister()">Crear cuenta y entrar</button>
+        <button class="primary-btn" onclick="registerPassenger()">Completar Registro de Pasajero</button>
+      </div>
+
+      <!-- 3. REGISTRO DE CONDUCTOR + VEHÍCULO + PAGO MÓVIL + COP -->
+      <div id="regDriverForm" style="display:none;">
+        <div class="form-group">
+          <label>Nombre y Apellido del Conductor</label>
+          <input type="text" id="drvName" placeholder="Ej: Carlos Pérez" />
+        </div>
+        <div class="form-group">
+          <label>Teléfono / WhatsApp</label>
+          <input type="tel" id="drvPhone" placeholder="Ej: 0414-1234567" />
+        </div>
+
+        <div class="form-group">
+          <label>Selecciona tu Vehículo</label>
+          <div class="vehicle-selector">
+            <button type="button" class="veh-btn active" id="vehMotoBtn" onclick="selectVehicleType('Moto')">🏍️ Moto</button>
+            <button type="button" class="veh-btn" id="vehCarroBtn" onclick="selectVehicleType('Carro')">🚗 Carro</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Modelo, Color y Placa</label>
+          <input type="text" id="drvVehicleDetail" placeholder="Ej: Bera SBR Roja • Placa AB1C23" />
+        </div>
+
+        <div class="form-group">
+          <label>Tu Pago Móvil (Para recibir pagos de pasajeros)</label>
+          <input type="text" id="drvPagoMovil" placeholder="Banco • Cédula • Teléfono Pago Móvil" />
+        </div>
+
+        <!-- C.O.P. DOCUMENTOS Y VERIFICACIÓN -->
+        <div class="cop-box">
+          <div class="cop-title">
+            <span>📋 C.O.P. — Verificación de Documentos</span>
+            <span style="font-size:10px;color:#d97706;">Obligatorio</span>
+          </div>
+          <p class="cop-desc">Sube fotos claras de tus documentos para la aprobación del administrador.</p>
+
+          <div class="doc-upload-item">
+            <div class="doc-info">
+              1. Cédula y Licencia
+              <span class="doc-status" id="statusDocId">Sin adjuntar</span>
+            </div>
+            <label class="file-label-btn">
+              📷 Subir
+              <input type="file" accept="image/*" style="display:none;" onchange="handleDocUpload(this, 'docId', 'statusDocId')" />
+            </label>
+          </div>
+
+          <div class="doc-upload-item">
+            <div class="doc-info">
+              2. Carnet de Circulación / Título
+              <span class="doc-status" id="statusDocReg">Sin adjuntar</span>
+            </div>
+            <label class="file-label-btn">
+              📷 Subir
+              <input type="file" accept="image/*" style="display:none;" onchange="handleDocUpload(this, 'docReg', 'statusDocReg')" />
+            </label>
+          </div>
+
+          <div class="doc-upload-item">
+            <div class="doc-info">
+              3. Foto del Vehículo y Placa
+              <span class="doc-status" id="statusDocVeh">Sin adjuntar</span>
+            </div>
+            <label class="file-label-btn">
+              📷 Subir
+              <input type="file" accept="image/*" style="display:none;" onchange="handleDocUpload(this, 'docVeh', 'statusDocVeh')" />
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Crea tu PIN de Acceso</label>
+          <input type="password" id="drvPin" placeholder="Ej: 1234" />
+        </div>
+
+        <button class="primary-btn" onclick="registerDriver()">Enviar Registro y C.O.P.</button>
       </div>
     </div>
   </main>
@@ -713,44 +975,65 @@
       <button class="circle-btn" onclick="goHome('login')" title="Salir">←</button>
 
       <div class="service-pills">
-        <button class="service-pill active" id="pillMoto" onclick="selectService(this, 'Mototaxi')">🏍️ Mototaxi</button>
-        <button class="service-pill" id="pillTaxi" onclick="selectService(this, 'Taxi')">🚗 Taxi</button>
-        <button class="service-pill" id="pillEnvio" onclick="selectService(this, 'Envío')">📦 Envío</button>
+        <button class="service-pill active" onclick="selectService(this, 'Mototaxi')">🏍️ Mototaxi</button>
+        <button class="service-pill" onclick="selectService(this, 'Taxi')">🚗 Taxi</button>
+        <button class="service-pill" onclick="selectService(this, 'Envío')">📦 Envío</button>
       </div>
 
-      <button class="circle-btn" onclick="locateUser()">⌖</button>
+      <button class="circle-btn" onclick="locateUser()" title="Mi ubicación GPS">⌖</button>
     </div>
-
-    <button class="circle-btn support-btn" id="supportBtn" onclick="openSupport()">🎧</button>
 
     <section class="bottom-sheet" id="passengerSheet">
       <div class="sheet-handle"></div>
       <div class="sheet-header">
-        <h2>¿A dónde iremos hoy?</h2>
+        <h2>¿A dónde vamos?</h2>
         <button class="trip-type-btn" id="tripTypeBtn" onclick="toggleTripType()">⇄ Solo ida</button>
+      </div>
+
+      <!-- TARJETA DE VIAJE ACEPTADO: MUESTRA PAGO MÓVIL DEL CONDUCTOR SOLO AL PASAJERO -->
+      <div class="active-ride-card" id="activeRideCard">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="font-size:13px;color:#065f46;" id="assignedDriverTitle">✅ Conductor en camino</strong>
+          <button onclick="finishActiveRide()" style="border:none;background:#065f46;color:#fff;font-size:10px;font-weight:800;padding:4px 8px;border-radius:6px;cursor:pointer;">Finalizar</button>
+        </div>
+        <p style="font-size:12px;color:#047857;margin-top:3px;" id="assignedDriverSub"></p>
+        <div class="driver-pm-box" id="assignedDriverPMBox" style="display:none;">
+          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Datos Pago Móvil del Conductor:</div>
+          <div style="font-weight:800;color:#0f172a;margin-top:2px;" id="assignedDriverPMText"></div>
+          <button class="copy-pm-btn" onclick="copyDriverPM()">📋 Copiar datos de Pago Móvil</button>
+        </div>
       </div>
 
       <div class="input-box">
         <span class="dot green"></span>
-        <input type="text" id="originInput" value="Los Samanes, Calle Principal" />
-        <span class="gps-tag">GPS</span>
+        <input type="text" id="originInput" placeholder="Punto de salida (o toca GPS ⌖)" />
+        <span class="gps-tag">ORIGEN</span>
       </div>
 
       <div class="input-box">
         <span class="dot orange"></span>
-        <input type="text" id="destInput" placeholder="Escribir aquí tu destino..." />
-        <span>☆</span>
+        <input type="text" id="destInput" placeholder="Toca el mapa para fijar destino..." />
+        <span>📍</span>
+      </div>
+
+      <!-- Selector de Distancia en Kilómetros ($0.75/km, mínimo $1.10) -->
+      <div class="km-bar">
+        <span>📏 Distancia: <b id="kmDisplay">1.5</b> km (<span style="color:#64748b;font-size:11px;">$<span id="rateKmLabel">0.75</span>/km</span>)</span>
+        <div class="km-controls">
+          <button class="step-btn" onclick="adjustKm(-0.5)">−</button>
+          <button class="step-btn" onclick="adjustKm(0.5)">+</button>
+        </div>
       </div>
 
       <div class="fare-row">
         <div>
-          <div class="fare-label">Tarifa ofrecida (Mín. $<span id="minFareLabel">1.10</span>)</div>
+          <div class="fare-label">Tarifa calculada (Mín. $<span id="minFareLabel">1.10</span>)</div>
           <div class="fare-stepper">
             <button class="step-btn" onclick="adjustFare(-0.10)">−</button>
-            <span class="fare-amount">$<span id="fareDisplay">1.10</span></span>
+            <span class="fare-amount">$<span id="fareDisplay">1.13</span></span>
             <button class="step-btn" onclick="adjustFare(0.10)">+</button>
           </div>
-          <div class="fare-bs">Ref: Bs. <span id="bsDisplay">1005,42</span></div>
+          <div class="fare-bs">Ref: Bs. <span id="bsDisplay">1032,84</span></div>
         </div>
 
         <div>
@@ -771,14 +1054,14 @@
         <div class="status-row">
           <div>
             <h3 style="font-size:16px;font-weight:800;" id="driverGreeting">Panel de Conductor</h3>
-            <p style="font-size:12px;color:#64748b;" id="driverStatusText">Disponible para recibir carreras</p>
+            <p style="font-size:12px;color:#64748b;" id="driverVehicleSub">Disponible para carreras</p>
           </div>
           <button class="toggle-online" id="onlineToggle" onclick="toggleOnline()">En línea</button>
         </div>
       </div>
 
       <div class="driver-card">
-        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Solicitudes cercanas (Ciudad Ojeda)</h4>
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Solicitudes disponibles</h4>
         <div id="requestsList"></div>
       </div>
 
@@ -789,7 +1072,7 @@
   <!-- PANEL COMPLETO DEL DUEÑO (5 TOQUES AL LOGO + PIN 1234) -->
   <section class="owner-screen" id="ownerScreen">
     <div class="owner-header">
-      <h2>👑 Control Total TaxiGo</h2>
+      <h2>👑 Panel Dueño TaxiGo</h2>
       <button class="owner-close" onclick="closeOwnerPanel()">✕ Cerrar</button>
     </div>
 
@@ -809,7 +1092,7 @@
     </nav>
 
     <div class="owner-body">
-      <!-- TAB 1: RESUMEN, TASA Y TARIFAS -->
+      <!-- TAB 1: TASA Y PRECIO POR KM -->
       <div id="osec-summary">
         <div class="stats-grid">
           <div class="stat-box">
@@ -818,11 +1101,11 @@
           </div>
           <div class="stat-box">
             <div class="stat-num" style="color:#d97706;" id="statDriversPending">0</div>
-            <div class="stat-lbl">Pendientes por aprobar</div>
+            <div class="stat-lbl">C.O.P. por revisar</div>
           </div>
           <div class="stat-box">
             <div class="stat-num" id="statUsersTotal">0</div>
-            <div class="stat-lbl">Usuarios registrados</div>
+            <div class="stat-lbl">Pasajeros registrados</div>
           </div>
           <div class="stat-box">
             <div class="stat-num" style="color:#10b981;" id="statRidesTotal">0</div>
@@ -831,47 +1114,30 @@
         </div>
 
         <div class="admin-card">
-          <h3>💱 Tasa de Cambio y Tarifas Mínimas</h3>
+          <h3>💱 Tasa BCV y Cálculo por Kilómetro</h3>
           <div class="form-group">
             <label>Tasa BCV / Referencia (Bs. por $1)</label>
             <input type="number" id="adminRateInput" step="0.01" />
           </div>
           <div class="grid-2">
             <div class="form-group">
-              <label>Mín. Mototaxi ($)</label>
-              <input type="number" id="adminMinMoto" step="0.10" />
+              <label>Precio por Kilómetro ($)</label>
+              <input type="number" id="adminPricePerKm" step="0.05" />
             </div>
             <div class="form-group">
-              <label>Mín. Taxi ($)</label>
-              <input type="number" id="adminMinTaxi" step="0.10" />
+              <label>Tarifa Mínima Base ($)</label>
+              <input type="number" id="adminMinFare" step="0.10" />
             </div>
-          </div>
-          <div class="form-group">
-            <label>Mín. Envío / Delivery ($)</label>
-            <input type="number" id="adminMinEnvio" step="0.10" />
           </div>
           <button class="primary-btn" onclick="saveAdminSettings()">💾 Guardar Tasa y Tarifas</button>
         </div>
-
-        <div class="admin-card">
-          <h3>📲 Datos de Pago Móvil y Soporte</h3>
-          <div class="form-group">
-            <label>Datos Pago Móvil de la Central</label>
-            <input type="text" id="adminPagoMovil" placeholder="Banco • Cédula • Teléfono" />
-          </div>
-          <div class="form-group">
-            <label>Teléfono / WhatsApp Soporte</label>
-            <input type="text" id="adminSupportPhone" placeholder="Ej: 0414-0000000" />
-          </div>
-          <button class="primary-btn" style="background:#1e293b;" onclick="saveAdminSettings()">Guardar Datos de Contacto</button>
-        </div>
       </div>
 
-      <!-- TAB 2: CONDUCTORES -->
+      <!-- TAB 2: CONDUCTORES Y REVISIÓN C.O.P. -->
       <div id="osec-drivers" style="display:none;">
         <div class="admin-card" style="padding:12px;">
-          <h3 style="margin-bottom:4px;">🏍️ Gestión de Conductores</h3>
-          <p style="font-size:12px;color:#64748b;">Aprueba nuevos ingresos, suspende cuentas o revisa vehículos.</p>
+          <h3 style="margin-bottom:3px;">🏍️ Conductores y Documentos C.O.P.</h3>
+          <p style="font-size:12px;color:#64748b;">Revisa cédula, circulación y vehículo antes de aprobar.</p>
         </div>
         <div id="adminDriversList"></div>
       </div>
@@ -879,8 +1145,8 @@
       <!-- TAB 3: USUARIOS / PASAJEROS -->
       <div id="osec-users" style="display:none;">
         <div class="admin-card" style="padding:12px;">
-          <h3 style="margin-bottom:4px;">🙋‍♀️ Gestión de Usuarios (Pasajeros)</h3>
-          <p style="font-size:12px;color:#64748b;">Activa, bloquea o elimina cuentas de clientes.</p>
+          <h3 style="margin-bottom:3px;">🙋‍♀️ Pasajeros Registrados</h3>
+          <p style="font-size:12px;color:#64748b;">Activa, bloquea o elimina cuentas de usuarios.</p>
         </div>
         <div id="adminUsersList"></div>
       </div>
@@ -889,8 +1155,8 @@
       <div id="osec-rides" style="display:none;">
         <div class="admin-card" style="padding:12px;display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <h3 style="margin-bottom:2px;">🚕 Historial de Solicitudes</h3>
-            <p style="font-size:12px;color:#64748b;">Carreras pedidas en la plataforma.</p>
+            <h3 style="margin-bottom:2px;">🚕 Historial de Viajes</h3>
+            <p style="font-size:12px;color:#64748b;">Carreras solicitadas y conductor asignado.</p>
           </div>
           <button class="owner-close" onclick="clearRidesHistory()">Limpiar</button>
         </div>
@@ -899,6 +1165,15 @@
     </div>
   </section>
 
+  <!-- Modal Visor de Documentos COP -->
+  <div class="doc-modal" id="docModal" onclick="this.style.display='none'">
+    <div class="doc-modal-card" onclick="event.stopPropagation()">
+      <strong id="docModalTitle" style="font-size:14px;color:#0f172a;">Documento C.O.P.</strong>
+      <img id="docModalImg" src="" alt="Documento" />
+      <button class="primary-btn" style="padding:10px;" onclick="document.getElementById('docModal').style.display='none'">Cerrar vista</button>
+    </div>
+  </div>
+
   <script>
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg) {
@@ -906,29 +1181,31 @@
       tg.expand();
     }
 
-    const STORAGE_KEY = 'taxigo_db_v2';
+    const STORAGE_KEY = 'taxigo_db_v4';
 
     const defaultDB = {
       settings: {
         rate: 914.02,
-        minMoto: 1.10,
-        minTaxi: 2.50,
-        minEnvio: 1.50,
-        pagoMovil: 'Banesco • V-27.000.000 • 0414-0000000',
-        supportPhone: '0414-0000000'
+        pricePerKm: 0.75,
+        minFare: 1.10
       },
       drivers: [
-        { id: 'd1', name: 'Luis Mendoza', phone: '0414-6521100', vehicle: 'Moto Bera SBR 150cc • Placa AB4K92', pin: '1234', status: 'approved' },
-        { id: 'd2', name: 'Carlos Pérez', phone: '0424-6189932', vehicle: 'Moto Empire Owen • Placa AC9M11', pin: '1234', status: 'pending' },
-        { id: 'd3', name: 'José Gregorio', phone: '0412-7741209', vehicle: 'Chevrolet Aveo Gris • Placa AE204X', pin: '1234', status: 'pending' }
+        {
+          id: 'd1',
+          name: 'Luis Mendoza',
+          phone: '0414-6521100',
+          vehicleType: 'Moto',
+          vehicleDetail: 'Bera SBR 150cc • Placa AB4K92',
+          pagoMovil: 'Banesco • V-26.441.200 • 0414-6521100',
+          pin: '1234',
+          status: 'approved',
+          docs: { docId: '', docReg: '', docVeh: '' }
+        }
       ],
       users: [
-        { id: 'u1', name: 'Siolibeth O.', phone: '0414-6012233', pin: '1234', status: 'approved' },
-        { id: 'u2', name: 'María Fernanda', phone: '0424-6904411', pin: '1234', status: 'approved' }
+        { id: 'u1', name: 'Ana García', phone: '0414-6012233', pin: '1234', status: 'approved' }
       ],
-      rides: [
-        { id: 'r1', service: 'Mototaxi', origin: 'Los Samanes', dest: 'Centro Ciudad Ojeda', fare: 1.50, pay: 'Pago móvil', trip: 'Solo ida', status: 'Pendiente' }
-      ]
+      rides: []
     };
 
     function loadDB() {
@@ -940,7 +1217,7 @@
           settings: Object.assign({}, defaultDB.settings, parsed.settings || {}),
           drivers: Array.isArray(parsed.drivers) ? parsed.drivers : defaultDB.drivers,
           users: Array.isArray(parsed.users) ? parsed.users : defaultDB.users,
-          rides: Array.isArray(parsed.rides) ? parsed.rides : defaultDB.rides
+          rides: Array.isArray(parsed.rides) ? parsed.rides : []
         };
       } catch (e) {
         return JSON.parse(JSON.stringify(defaultDB));
@@ -948,30 +1225,42 @@
     }
 
     let db = loadDB();
-
     function saveDB() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
     }
 
+    let selectedVehicleType = 'Moto';
+    let tempDocs = { docId: '', docReg: '', docVeh: '' };
+    let currentDriverSession = null;
     let currentService = 'Mototaxi';
-    let minFare = db.settings.minMoto;
-    let currentFare = db.settings.minMoto;
+    let distanceKm = 1.5;
+    let minFare = Number(db.settings.minFare) || 1.10;
+    let currentFare = calculateFareByKm(distanceKm);
     let roundTrip = false;
     let isOnline = true;
     let mapInitialized = false;
     let map = null;
     let userMarker = null;
+    let destMarker = null;
     let logoClicks = 0;
     let clickTimer = null;
+    let lastAssignedPM = '';
 
-    const defaultCoords = [10.2016, -71.3125];
+    let originCoords = [10.2016, -71.3125];
+
+    function calculateFareByKm(km) {
+      const perKm = Number(db.settings.pricePerKm) || 0.75;
+      const baseMin = Number(db.settings.minFare) || 1.10;
+      const raw = Math.round(km * perKm * 100) / 100;
+      return Math.max(baseMin, raw);
+    }
 
     function initMapOnce() {
       if (mapInitialized) {
         setTimeout(() => map.invalidateSize(), 150);
         return;
       }
-      map = L.map('map', { zoomControl: false }).setView(defaultCoords, 15);
+      map = L.map('map', { zoomControl: false }).setView(originCoords, 15);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap'
@@ -984,165 +1273,248 @@
         iconAnchor: [9, 9]
       });
 
-      userMarker = L.marker(defaultCoords, { icon: userIcon }).addTo(map);
+      userMarker = L.marker(originCoords, { icon: userIcon }).addTo(map);
+
+      // PIN INTERACTIVO MOVIBLE EN EL MAPA PARA EL PASAJERO
+      map.on('click', (e) => {
+        const destLatLng = [e.latlng.lat, e.latlng.lng];
+        if (destMarker) {
+          destMarker.setLatLng(destLatLng);
+        } else {
+          const destIcon = L.divIcon({
+            className: 'custom-dest-pin',
+            html: '<div style="width:20px;height:20px;background:#f59e0b;border:3px solid #fff;border-radius:50%;box-shadow:0 0 12px rgba(245,158,11,0.9);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+          destMarker = L.marker(destLatLng, { icon: destIcon, draggable: true }).addTo(map);
+          destMarker.on('dragend', (ev) => {
+            const pos = ev.target.getLatLng();
+            updateDestCoordinates([pos.lat, pos.lng]);
+          });
+        }
+        updateDestCoordinates(destLatLng);
+      });
+
       mapInitialized = true;
+      locateUser(true);
       setTimeout(() => map.invalidateSize(), 200);
     }
 
-    function setAuthMode(mode) {
-      const isLogin = mode === 'login';
-      document.getElementById('tabLogin').classList.toggle('active', isLogin);
-      document.getElementById('tabRegister').classList.toggle('active', !isLogin);
-      document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
-      document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
+    function updateDestCoordinates(latLng) {
+      document.getElementById('destInput').value = `Destino (${latLng[0].toFixed(4)}, ${latLng[1].toFixed(4)})`;
+      const meters = map.distance(originCoords, latLng);
+      const kmCalc = Math.max(1.0, Math.round((meters / 1000) * 10) / 10);
+      distanceKm = kmCalc;
+      recalcFromKm();
+      showToast(`Destino fijado • ${distanceKm.toFixed(1)} km`);
     }
 
-    function toggleDriverExtra() {
-      const role = document.getElementById('regRole').value;
-      document.getElementById('driverVehicleGroup').style.display = role === 'driver' ? 'block' : 'none';
+    function setAuthMode(mode) {
+      document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+      document.getElementById('tabRegPassenger').classList.toggle('active', mode === 'regPassenger');
+      document.getElementById('tabRegDriver').classList.toggle('active', mode === 'regDriver');
+
+      document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+      document.getElementById('regPassengerForm').style.display = mode === 'regPassenger' ? 'block' : 'none';
+      document.getElementById('regDriverForm').style.display = mode === 'regDriver' ? 'block' : 'none';
+    }
+
+    function selectVehicleType(type) {
+      selectedVehicleType = type;
+      document.getElementById('vehMotoBtn').classList.toggle('active', type === 'Moto');
+      document.getElementById('vehCarroBtn').classList.toggle('active', type === 'Carro');
+    }
+
+    function handleDocUpload(input, key, statusId) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxW = 600;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          tempDocs[key] = canvas.toDataURL('image/jpeg', 0.7);
+          const st = document.getElementById(statusId);
+          st.textContent = '✓ Documento cargado';
+          st.classList.add('ok');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function registerPassenger() {
+      const name = document.getElementById('pasName').value.trim();
+      const phone = document.getElementById('pasPhone').value.trim();
+      const pin = document.getElementById('pasPin').value.trim() || '1234';
+
+      if (!name || !phone) {
+        showToast('Completa tu nombre y teléfono');
+        return;
+      }
+
+      db.users.unshift({
+        id: 'u' + Date.now(),
+        name,
+        phone,
+        pin,
+        status: 'approved'
+      });
+      saveDB();
+      enterApp('passenger', { name, phone });
+    }
+
+    function registerDriver() {
+      const name = document.getElementById('drvName').value.trim();
+      const phone = document.getElementById('drvPhone').value.trim();
+      const vehicleDetail = document.getElementById('drvVehicleDetail').value.trim();
+      const pagoMovil = document.getElementById('drvPagoMovil').value.trim();
+      const pin = document.getElementById('drvPin').value.trim() || '1234';
+
+      if (!name || !phone || !vehicleDetail || !pagoMovil) {
+        showToast('Completa todos los campos y tu Pago Móvil');
+        return;
+      }
+
+      if (!tempDocs.docId || !tempDocs.docReg || !tempDocs.docVeh) {
+        showToast('Debes subir los 3 documentos del C.O.P.');
+        return;
+      }
+
+      db.drivers.unshift({
+        id: 'd' + Date.now(),
+        name,
+        phone,
+        vehicleType: selectedVehicleType,
+        vehicleDetail,
+        pagoMovil,
+        pin,
+        status: 'pending',
+        docs: { ...tempDocs }
+      });
+      saveDB();
+
+      tempDocs = { docId: '', docReg: '', docVeh: '' };
+      ['statusDocId', 'statusDocReg', 'statusDocVeh'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = 'Sin adjuntar';
+        el.classList.remove('ok');
+      });
+
+      showToast('Registro y C.O.P. enviados con éxito. Espera aprobación');
+      setAuthMode('login');
+    }
+
+    function handleLogin() {
+      const q = document.getElementById('loginUser').value.trim();
+      if (!q) {
+        showToast('Ingresa tu nombre o teléfono');
+        return;
+      }
+      const lower = q.toLowerCase();
+
+      const foundDriver = db.drivers.find(d => d.name.toLowerCase().includes(lower) || d.phone.includes(q));
+      if (foundDriver) {
+        if (foundDriver.status === 'pending') {
+          showToast('Tu C.O.P. está en revisión por el administrador');
+          return;
+        }
+        if (foundDriver.status === 'blocked') {
+          showToast('Cuenta de conductor suspendida');
+          return;
+        }
+        enterApp('driver', foundDriver);
+        return;
+      }
+
+      const foundUser = db.users.find(u => u.name.toLowerCase().includes(lower) || u.phone.includes(q));
+      if (foundUser) {
+        if (foundUser.status === 'blocked') {
+          showToast('Usuario bloqueado por administración');
+          return;
+        }
+        enterApp('passenger', foundUser);
+        return;
+      }
+
+      showToast('Usuario no registrado. Regístrate como Pasajero o Conductor');
     }
 
     function goHome(mode) {
+      currentDriverSession = null;
       document.getElementById('splashScreen').style.display = 'flex';
       document.getElementById('appScreen').style.display = 'none';
       setAuthMode(mode || 'login');
     }
 
-    function enterApp(role, userName) {
+    function enterApp(role, profile) {
       document.getElementById('splashScreen').style.display = 'none';
       document.getElementById('appScreen').style.display = 'block';
 
       const isPass = role === 'passenger';
       document.getElementById('passengerControls').style.display = isPass ? 'flex' : 'none';
-      document.getElementById('supportBtn').style.display = isPass ? 'flex' : 'none';
       document.getElementById('passengerSheet').style.display = isPass ? 'block' : 'none';
       document.getElementById('driverView').style.display = isPass ? 'none' : 'block';
 
-      if (!isPass && userName) {
-        document.getElementById('driverGreeting').textContent = `Conductor: ${userName}`;
+      if (isPass) {
+        checkAssignedRideForPassenger();
+      } else {
+        currentDriverSession = profile;
+        document.getElementById('driverGreeting').textContent = `${profile.vehicleType === 'Moto' ? '🏍️' : '🚗'} ${profile.name}`;
+        document.getElementById('driverVehicleSub').textContent = `${profile.vehicleType} • ${profile.vehicleDetail}`;
       }
 
       renderDriverRequests();
       initMapOnce();
-      if (userName) showToast(`Bienvenido, ${userName}`);
+      showToast(`Bienvenido, ${profile.name}`);
     }
 
-    function handleLogin() {
-      const q = document.getElementById('loginUser').value.trim();
-      const pin = document.getElementById('loginPin').value.trim();
-      if (!q) {
-        showToast('Ingresa tu usuario o teléfono');
-        return;
-      }
-
-      const lower = q.toLowerCase();
-
-      // Buscar en conductores registrados
-      const foundDriver = db.drivers.find(d => d.name.toLowerCase().includes(lower) || d.phone.includes(q));
-      if (foundDriver) {
-        if (foundDriver.status === 'pending') {
-          showToast('Tu cuenta de conductor está pendiente de aprobación del dueño');
-          return;
-        }
-        if (foundDriver.status === 'blocked') {
-          showToast('Tu cuenta de conductor está suspendida. Contacta soporte');
-          return;
-        }
-        enterApp('driver', foundDriver.name);
-        return;
-      }
-
-      // Buscar en usuarios pasajeros
-      const foundUser = db.users.find(u => u.name.toLowerCase().includes(lower) || u.phone.includes(q));
-      if (foundUser) {
-        if (foundUser.status === 'blocked') {
-          showToast('Tu usuario está bloqueado por administración');
-          return;
-        }
-        enterApp('passenger', foundUser.name);
-        return;
-      }
-
-      // Acceso directo si escribe palabra clave moto/cond o cualquier usuario nuevo rápido
-      if (lower.includes('moto') || lower.includes('cond')) {
-        enterApp('driver', q);
-      } else {
-        enterApp('passenger', q);
-      }
-    }
-
-    function handleRegister() {
-      const name = document.getElementById('regName').value.trim();
-      const phone = document.getElementById('regPhone').value.trim() || 'Sin teléfono';
-      const role = document.getElementById('regRole').value;
-      const vehicle = document.getElementById('regVehicle').value.trim() || 'Vehículo por verificar';
-      const pin = document.getElementById('regPin').value.trim() || '1234';
-
-      if (!name) {
-        showToast('Escribe tu nombre completo');
-        return;
-      }
-
-      if (role === 'driver') {
-        db.drivers.unshift({
-          id: 'd' + Date.now(),
-          name,
-          phone,
-          vehicle,
-          pin,
-          status: 'pending'
-        });
-        saveDB();
-        showToast('Registro enviado. El dueño debe aprobar tu cuenta de conductor');
-        setAuthMode('login');
-      } else {
-        db.users.unshift({
-          id: 'u' + Date.now(),
-          name,
-          phone,
-          pin,
-          status: 'approved'
-        });
-        saveDB();
-        enterApp('passenger', name);
-      }
-    }
-
-    function locateUser() {
+    function locateUser(silent) {
       if (!navigator.geolocation) {
-        showToast('GPS no disponible');
+        if (!silent) showToast('GPS no disponible');
         return;
       }
-      showToast('Ubicando tu GPS...');
+      if (!silent) showToast('Obteniendo ubicación GPS...');
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const coords = [pos.coords.latitude, pos.coords.longitude];
-          map.setView(coords, 16);
-          userMarker.setLatLng(coords);
-          document.getElementById('originInput').value = `GPS (${coords[0].toFixed(4)}, ${coords[1].toFixed(4)})`;
-          showToast('Ubicación actualizada');
+          originCoords = [pos.coords.latitude, pos.coords.longitude];
+          map.setView(originCoords, 15);
+          userMarker.setLatLng(originCoords);
+          document.getElementById('originInput').value = `Mi ubicación GPS (${originCoords[0].toFixed(4)}, ${originCoords[1].toFixed(4)})`;
+          if (!silent) showToast('Ubicación GPS actualizada');
         },
         () => {
-          map.setView(defaultCoords, 15);
-          showToast('Centrado en Ciudad Ojeda');
+          if (!silent) showToast('Activa el GPS de tu teléfono');
         }
       );
-    }
-
-    function getMinForService(serviceName) {
-      if (serviceName === 'Taxi') return Number(db.settings.minTaxi) || 2.50;
-      if (serviceName === 'Envío') return Number(db.settings.minEnvio) || 1.50;
-      return Number(db.settings.minMoto) || 1.10;
     }
 
     function selectService(el, name) {
       document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
       currentService = name;
-      minFare = getMinForService(name);
-      currentFare = roundTrip ? Math.round(minFare * 1.8 * 100) / 100 : minFare;
-      updateFareUI();
       document.getElementById('requestBtn').textContent = `Solicitar ${name}`;
+    }
+
+    function adjustKm(delta) {
+      const next = Math.round((distanceKm + delta) * 10) / 10;
+      if (next >= 0.5) {
+        distanceKm = next;
+        recalcFromKm();
+      }
+    }
+
+    function recalcFromKm() {
+      const base = calculateFareByKm(distanceKm);
+      currentFare = roundTrip ? Math.round(base * 1.8 * 100) / 100 : base;
+      updateFareUI();
     }
 
     function adjustFare(delta) {
@@ -1158,50 +1530,50 @@
     function toggleTripType() {
       roundTrip = !roundTrip;
       document.getElementById('tripTypeBtn').textContent = roundTrip ? '⇄ Ida y vuelta' : '⇄ Solo ida';
-      currentFare = roundTrip ? Math.round(currentFare * 1.8 * 100) / 100 : minFare;
-      updateFareUI();
+      recalcFromKm();
     }
 
     function updateFareUI() {
       const rate = Number(db.settings.rate) || 914.02;
+      const perKm = Number(db.settings.pricePerKm) || 0.75;
+      minFare = Number(db.settings.minFare) || 1.10;
+
+      document.getElementById('kmDisplay').textContent = distanceKm.toFixed(1);
+      document.getElementById('rateKmLabel').textContent = perKm.toFixed(2);
       document.getElementById('minFareLabel').textContent = minFare.toFixed(2);
       document.getElementById('fareDisplay').textContent = currentFare.toFixed(2);
       document.getElementById('bsDisplay').textContent = (currentFare * rate).toFixed(2).replace('.', ',');
     }
 
-    function openSupport() {
-      showToast(`Soporte TaxiGo: ${db.settings.supportPhone}`);
-    }
-
     function requestRide() {
-      const origin = document.getElementById('originInput').value.trim();
+      const origin = document.getElementById('originInput').value.trim() || 'Ubicación GPS';
       const dest = document.getElementById('destInput').value.trim();
       const pay = document.getElementById('paymentMethod').value;
 
-      if (!dest) {
-        showToast('Escribe tu destino primero');
-        document.getElementById('destInput').focus();
+      if (!dest || dest.includes('Toca el mapa')) {
+        showToast('Toca el mapa para fijar tu destino');
         return;
       }
 
-      db.rides.unshift({
+      const ride = {
         id: 'r' + Date.now(),
         service: currentService,
         origin,
         dest,
+        km: distanceKm,
         fare: currentFare,
         pay,
         trip: roundTrip ? 'Ida y vuelta' : 'Solo ida',
-        status: 'Buscando conductor'
-      });
+        status: 'Pendiente',
+        driverName: '',
+        driverVehicle: '',
+        driverPagoMovil: ''
+      };
+
+      db.rides.unshift(ride);
       saveDB();
       renderDriverRequests();
-
-      if (pay === 'Pago móvil') {
-        showToast(`Buscando ${currentService} ($${currentFare.toFixed(2)}) • Pago Móvil: ${db.settings.pagoMovil}`);
-      } else {
-        showToast(`Buscando ${currentService} por $${currentFare.toFixed(2)} en Efectivo...`);
-      }
+      showToast(`Solicitud enviada (${distanceKm.toFixed(1)} km • $${currentFare.toFixed(2)})`);
     }
 
     function renderDriverRequests() {
@@ -1210,24 +1582,69 @@
       list.innerHTML = db.rides.map((r, idx) => `
         <div class="ride-request-item">
           <div style="display:flex;justify-content:space-between;font-weight:800;font-size:13px;">
-            <span>${r.service} • ${r.origin} → ${r.dest}</span>
+            <span>${r.service} (${r.km} km) • ${r.dest}</span>
             <span style="color:#10b981;">$${Number(r.fare).toFixed(2)}</span>
           </div>
-          <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: ${r.pay} • ${r.trip} • Estado: <b>${r.status}</b></p>
+          <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">
+            Pago: <b>${r.pay}</b> • ${r.trip} • Estado: <b>${r.status}</b>
+          </p>
           <button class="primary-btn" style="padding:9px;font-size:12px;background:${r.status === 'Aceptada' ? '#0f172a' : '#10b981'};" ${r.status === 'Aceptada' ? 'disabled' : ''} onclick="acceptRide(${idx})">
-            ${r.status === 'Aceptada' ? '✓ Carrera aceptada (En camino)' : 'Aceptar carrera'}
+            ${r.status === 'Aceptada' ? `✓ Aceptada por ${r.driverName}` : 'Aceptar carrera'}
           </button>
         </div>
-      `).join('');
+      `).join('') || '<p style="font-size:12px;color:#64748b;margin-top:8px;">No hay solicitudes activas.</p>';
     }
 
     function acceptRide(idx) {
-      if (db.rides[idx]) {
-        db.rides[idx].status = 'Aceptada';
-        saveDB();
-        renderDriverRequests();
-        showToast('¡Carrera asignada!');
+      const r = db.rides[idx];
+      if (!r) return;
+      const drv = currentDriverSession || db.drivers.find(d => d.status === 'approved') || db.drivers[0];
+      r.status = 'Aceptada';
+      r.driverName = drv ? drv.name : 'Conductor';
+      r.driverVehicle = drv ? `${drv.vehicleType} • ${drv.vehicleDetail}` : '';
+      r.driverPagoMovil = drv ? drv.pagoMovil : '';
+      saveDB();
+      renderDriverRequests();
+      showToast('¡Carrera aceptada! El pasajero ya ve tus datos');
+    }
+
+    function checkAssignedRideForPassenger() {
+      const active = db.rides.find(r => r.status === 'Aceptada');
+      const card = document.getElementById('activeRideCard');
+      if (!active) {
+        card.style.display = 'none';
+        return;
       }
+      card.style.display = 'block';
+      document.getElementById('assignedDriverTitle').textContent = `✅ Conductor: ${active.driverName}`;
+      document.getElementById('assignedDriverSub').textContent = `${active.driverVehicle} • Tarifa: $${Number(active.fare).toFixed(2)} (${active.pay})`;
+
+      const pmBox = document.getElementById('assignedDriverPMBox');
+      if (active.pay === 'Pago móvil' && active.driverPagoMovil) {
+        pmBox.style.display = 'block';
+        lastAssignedPM = active.driverPagoMovil;
+        document.getElementById('assignedDriverPMText').textContent = active.driverPagoMovil;
+      } else {
+        pmBox.style.display = 'none';
+      }
+    }
+
+    function copyDriverPM() {
+      if (!lastAssignedPM) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(lastAssignedPM);
+      }
+      showToast('Datos de Pago Móvil copiados');
+    }
+
+    function finishActiveRide() {
+      const active = db.rides.find(r => r.status === 'Aceptada');
+      if (active) {
+        active.status = 'Completada';
+        saveDB();
+      }
+      document.getElementById('activeRideCard').style.display = 'none';
+      showToast('Viaje finalizado');
     }
 
     function toggleOnline() {
@@ -1235,17 +1652,16 @@
       const btn = document.getElementById('onlineToggle');
       btn.textContent = isOnline ? 'En línea' : 'Desconectado';
       btn.classList.toggle('offline', !isOnline);
-      document.getElementById('driverStatusText').textContent = isOnline ? 'Disponible para recibir carreras' : 'No recibirás solicitudes nuevas';
     }
 
-    /* ACTIVACIÓN PANEL DEL DUEÑO (5 TOQUES AL LOGO + PIN 1234) */
+    /* PANEL DUEÑO (5 toques al logo + PIN 1234) */
     document.getElementById('logoTrigger').addEventListener('click', () => {
       logoClicks++;
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => { logoClicks = 0; }, 1500);
       if (logoClicks >= 5) {
         logoClicks = 0;
-        const pin = prompt('Acceso Dueño TaxiGo - Ingresa el PIN:');
+        const pin = prompt('PIN Dueño:');
         if (pin === '1234') {
           openOwnerPanel();
         } else if (pin !== null) {
@@ -1256,12 +1672,8 @@
 
     function openOwnerPanel() {
       document.getElementById('adminRateInput').value = db.settings.rate;
-      document.getElementById('adminMinMoto').value = db.settings.minMoto;
-      document.getElementById('adminMinTaxi').value = db.settings.minTaxi;
-      document.getElementById('adminMinEnvio').value = db.settings.minEnvio;
-      document.getElementById('adminPagoMovil').value = db.settings.pagoMovil;
-      document.getElementById('adminSupportPhone').value = db.settings.supportPhone;
-
+      document.getElementById('adminPricePerKm').value = db.settings.pricePerKm;
+      document.getElementById('adminMinFare').value = db.settings.minFare;
       renderOwnerDashboard();
       document.getElementById('ownerScreen').style.display = 'flex';
     }
@@ -1278,6 +1690,16 @@
       renderOwnerDashboard();
     }
 
+    function viewCopDoc(title, src) {
+      if (!src) {
+        showToast('Documento sin foto');
+        return;
+      }
+      document.getElementById('docModalTitle').textContent = title;
+      document.getElementById('docModalImg').src = src;
+      document.getElementById('docModal').style.display = 'flex';
+    }
+
     function renderOwnerDashboard() {
       const approvedDrivers = db.drivers.filter(d => d.status === 'approved').length;
       const pendingDrivers = db.drivers.filter(d => d.status === 'pending').length;
@@ -1287,20 +1709,32 @@
       document.getElementById('statUsersTotal').textContent = db.users.length;
       document.getElementById('statRidesTotal').textContent = db.rides.length;
 
-      // Render Conductores
       const dList = document.getElementById('adminDriversList');
       dList.innerHTML = db.drivers.map((d, i) => {
         const badgeClass = d.status === 'approved' ? 'badge-approved' : (d.status === 'pending' ? 'badge-pending' : 'badge-blocked');
-        const badgeText = d.status === 'approved' ? 'Aprobado' : (d.status === 'pending' ? 'Pendiente' : 'Suspendido');
+        const badgeText = d.status === 'approved' ? 'Aprobado' : (d.status === 'pending' ? 'C.O.P. Pendiente' : 'Suspendido');
+        const docs = d.docs || {};
         return `
           <div class="entity-item">
             <div class="entity-top">
-              <div class="entity-name">🏍️ ${d.name}</div>
+              <div class="entity-name">${d.vehicleType === 'Moto' ? '🏍️' : '🚗'} ${d.name} (${d.vehicleType})</div>
               <span class="badge ${badgeClass}">${badgeText}</span>
             </div>
             <div class="entity-meta">
               📞 ${d.phone}<br/>
-              🚘 ${d.vehicle}
+              🚘 ${d.vehicleDetail}<br/>
+              📲 Pago Móvil: <b>${d.pagoMovil || 'No registrado'}</b>
+            </div>
+            <div class="cop-preview-grid">
+              <div class="cop-thumb" onclick="viewCopDoc('Cédula/Licencia - ${d.name}', '${docs.docId || ''}')">
+                ${docs.docId ? `<img src="${docs.docId}" />` : '📄<br/>'}Cédula
+              </div>
+              <div class="cop-thumb" onclick="viewCopDoc('Circulación - ${d.name}', '${docs.docReg || ''}')">
+                ${docs.docReg ? `<img src="${docs.docReg}" />` : '📄<br/>'}Circulación
+              </div>
+              <div class="cop-thumb" onclick="viewCopDoc('Vehículo - ${d.name}', '${docs.docVeh || ''}')">
+                ${docs.docVeh ? `<img src="${docs.docVeh}" />` : '📷<br/>'}Vehículo
+              </div>
             </div>
             <div class="action-row">
               ${d.status !== 'approved' ? `<button class="mini-btn btn-approve" onclick="setDriverStatus(${i}, 'approved')">✅ Aprobar</button>` : ''}
@@ -1309,9 +1743,8 @@
             </div>
           </div>
         `;
-      }).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay conductores registrados.</p>';
+      }).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay conductores.</p>';
 
-      // Render Usuarios
       const uList = document.getElementById('adminUsersList');
       uList.innerHTML = db.users.map((u, i) => {
         const badgeClass = u.status === 'approved' ? 'badge-approved' : 'badge-blocked';
@@ -1330,21 +1763,21 @@
             </div>
           </div>
         `;
-      }).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay usuarios registrados.</p>';
+      }).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay pasajeros.</p>';
 
-      // Render Viajes
       const rList = document.getElementById('adminRidesList');
       rList.innerHTML = db.rides.map(r => `
         <div class="entity-item">
           <div class="entity-top">
-            <div class="entity-name">${r.service}: ${r.origin} → ${r.dest}</div>
+            <div class="entity-name">${r.service} (${r.km} km): ${r.dest}</div>
             <span class="badge badge-approved">$${Number(r.fare).toFixed(2)}</span>
           </div>
           <div class="entity-meta">
-            Pago: <b>${r.pay}</b> (${r.trip}) • Estado: <b>${r.status}</b>
+            Pago: <b>${r.pay}</b> • Estado: <b>${r.status}</b>
+            ${r.driverName ? `<br/>Conductor: <b>${r.driverName}</b>` : ''}
           </div>
         </div>
-      `).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">Aún no hay viajes registrados.</p>';
+      `).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay viajes.</p>';
     }
 
     function setDriverStatus(idx, status) {
@@ -1380,32 +1813,32 @@
       saveDB();
       renderOwnerDashboard();
       renderDriverRequests();
-      showToast('Historial de viajes limpiado');
+      showToast('Historial limpiado');
     }
 
     function saveAdminSettings() {
       const rate = parseFloat(document.getElementById('adminRateInput').value);
-      const minMoto = parseFloat(document.getElementById('adminMinMoto').value);
-      const minTaxi = parseFloat(document.getElementById('adminMinTaxi').value);
-      const minEnvio = parseFloat(document.getElementById('adminMinEnvio').value);
+      const perKm = parseFloat(document.getElementById('adminPricePerKm').value);
+      const baseMin = parseFloat(document.getElementById('adminMinFare').value);
 
       if (rate > 0) db.settings.rate = rate;
-      if (minMoto > 0) db.settings.minMoto = minMoto;
-      if (minTaxi > 0) db.settings.minTaxi = minTaxi;
-      if (minEnvio > 0) db.settings.minEnvio = minEnvio;
-      db.settings.pagoMovil = document.getElementById('adminPagoMovil').value.trim();
-      db.settings.supportPhone = document.getElementById('adminSupportPhone').value.trim();
+      if (perKm > 0) db.settings.pricePerKm = perKm;
+      if (baseMin > 0) db.settings.minFare = baseMin;
 
       saveDB();
-      minFare = getMinForService(currentService);
-      currentFare = minFare;
-      updateFareUI();
-      showToast('✅ Configuración y tarifas actualizadas');
+      recalcFromKm();
+      showToast('✅ Tarifas guardadas');
     }
 
-    minFare = getMinForService(currentService);
-    currentFare = minFare;
-    updateFareUI();
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    recalcFromKm();
     renderDriverRequests();
   </script>
 </body>
