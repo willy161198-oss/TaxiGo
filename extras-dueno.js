@@ -1,5 +1,5 @@
 // =========================================================
-// TAXIGO · EXTRAS-DUENO.JS (PANEL DE ADMINISTRACIÓN DEL DUEÑO)
+// TAXIGO · EXTRAS-DUENO.JS v2.0 (CONFIRMACIÓN CON PIN 2026 EN TODA ACCIÓN)
 // =========================================================
 (function () {
   function initOwnerModule() {
@@ -9,8 +9,9 @@
     }
 
     const appShell = document.getElementById('app-shell');
+    let pendingSecurityAction = null;
 
-    // PIN 2026 tras 5 toques al logo TaxiGo
+    // 1. PIN 2026 tras 5 toques al logo TaxiGo
     window.verifyOwnerPin = function () {
       const inp = document.getElementById('owner-pin-input');
       const val = inp ? String(inp.value).replace(/\s+/g, '').trim() : '';
@@ -25,6 +26,54 @@
       }
     };
 
+    // 2. Modal de confirmación de seguridad con PIN (2026) para acciones críticas
+    if (!document.getElementById('owner-action-pin-modal')) {
+      appShell.insertAdjacentHTML('beforeend', `
+        <div id="owner-action-pin-modal" class="hidden absolute inset-0 z-[140] bg-black/75 flex items-center justify-center p-5">
+          <div class="w-full max-w-xs bg-white dark:bg-[#1e2233] rounded-3xl p-5 shadow-2xl space-y-3 text-center">
+            <div class="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center text-xl mx-auto">🔐</div>
+            <h3 class="text-base font-extrabold">Confirmar acción</h3>
+            <p id="owner-action-pin-desc" class="text-xs text-gray-500">Ingresa tu código PIN de dueño para continuar:</p>
+            <input id="owner-action-pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••" class="w-full input-surface rounded-2xl px-4 py-3 text-center text-lg font-extrabold tracking-widest focus:outline-none" />
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="closeOwnerActionPinModal()" class="py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-xs font-bold">Cancelar</button>
+              <button type="button" onclick="confirmOwnerActionPin()" class="py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    window.requireOwnerPinAction = function (description, callbackFn) {
+      pendingSecurityAction = callbackFn;
+      const descEl = document.getElementById('owner-action-pin-desc');
+      const inp = document.getElementById('owner-action-pin-input');
+      const modal = document.getElementById('owner-action-pin-modal');
+      if (descEl) descEl.textContent = description || 'Ingresa tu código PIN de dueño para confirmar:';
+      if (inp) inp.value = '';
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(() => { if (inp) inp.focus(); }, 100);
+    };
+
+    window.closeOwnerActionPinModal = function () {
+      pendingSecurityAction = null;
+      const modal = document.getElementById('owner-action-pin-modal');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.confirmOwnerActionPin = function () {
+      const inp = document.getElementById('owner-action-pin-input');
+      const val = inp ? String(inp.value).replace(/\s+/g, '').trim() : '';
+      if (val !== '2026') {
+        showToast('Código PIN incorrecto. Acción cancelada');
+        return;
+      }
+      const fn = pendingSecurityAction;
+      closeOwnerActionPinModal();
+      if (typeof fn === 'function') fn();
+    };
+
+    // 3. Estructura del Panel de Dueño
     const ownerScreen = document.getElementById('screen-owner');
     if (ownerScreen) {
       ownerScreen.innerHTML = `
@@ -76,7 +125,7 @@
                 <p class="text-xs font-extrabold">Corte Semanal (Lunes)</p>
                 <p class="text-[10px] text-gray-500">Bloquea conductores con saldo 10% pendiente</p>
               </div>
-              <button type="button" onclick="runMondayCutoff()" class="shrink-0 px-3 py-2 rounded-xl bg-[#e51d2e] text-white text-[11px] font-extrabold shadow active:scale-95">
+              <button type="button" onclick="protectedRunMondayCutoff()" class="shrink-0 px-3 py-2 rounded-xl bg-[#e51d2e] text-white text-[11px] font-extrabold shadow active:scale-95">
                 Ejecutar Corte Lunes
               </button>
             </div>
@@ -145,10 +194,13 @@
       const titular = document.getElementById('own-pm-titular').value.trim();
 
       if (!banco || !cedula || !telefono) { showToast('Completa Banco, Cédula y Teléfono'); return; }
-      state.ownerPagoMovil = { banco, cedula, telefono, titular };
-      saveState();
-      document.getElementById('owner-pm-modal').classList.add('hidden');
-      showToast('Pago Móvil del dueño guardado');
+
+      requireOwnerPinAction('Ingresa tu PIN para guardar o modificar tus datos de Pago Móvil:', () => {
+        state.ownerPagoMovil = { banco, cedula, telefono, titular };
+        saveState();
+        document.getElementById('owner-pm-modal').classList.add('hidden');
+        showToast('Pago Móvil del dueño guardado');
+      });
     };
 
     window.setOwnerTab = function (tab) {
@@ -169,17 +221,56 @@
       });
     };
 
-    window.deleteUserFromOwner = function (userId) {
+    // Acciones protegidas con PIN obligatorio
+    window.protectedSetUserStatus = function (userId, newStatus) {
       const target = state.users.find(u => u.id === userId);
       if (!target) return;
-      state.users = state.users.filter(u => u.id !== userId);
-      if (state.activeUserId === userId) {
-        state.isLoggedIn = false;
-        state.activeUserId = state.users[0] ? state.users[0].id : '';
-      }
-      saveState();
-      renderOwnerDashboard();
-      showToast(`Usuario "${target.name}" eliminado`);
+      const label = newStatus === 'approved' ? `Autorizar a ${target.name}` : `Bloquear a ${target.name}`;
+      requireOwnerPinAction(`Confirmar: ${label}`, () => {
+        setUserStatus(userId, newStatus);
+        renderOwnerDashboard();
+      });
+    };
+
+    window.protectedDeleteUser = function (userId) {
+      const target = state.users.find(u => u.id === userId);
+      if (!target) return;
+      requireOwnerPinAction(`⚠️ Eliminar definitivamente a "${target.name}". Ingresa tu PIN:`, () => {
+        state.users = state.users.filter(u => u.id !== userId);
+        if (state.activeUserId === userId) {
+          state.isLoggedIn = false;
+          state.activeUserId = state.users[0] ? state.users[0].id : '';
+        }
+        saveState();
+        renderOwnerDashboard();
+        showToast(`Usuario "${target.name}" eliminado`);
+      });
+    };
+
+    window.protectedSettleDriverDebt = function (userId) {
+      const target = state.users.find(u => u.id === userId);
+      if (!target) return;
+      requireOwnerPinAction(`Confirmar que recibiste $${Number(target.debtUsd || 0).toFixed(2)} de ${target.name}:`, () => {
+        settleDriverDebt(userId);
+        renderOwnerDashboard();
+      });
+    };
+
+    window.protectedApproveReportedPayment = function (reportId) {
+      const rep = state.paymentReports.find(r => r.id === reportId);
+      if (!rep) return;
+      requireOwnerPinAction(`Confirmar pago reportado de ${rep.driverName} (Ref: ${rep.ref} · $${Number(rep.amountUsd).toFixed(2)}):`, () => {
+        rep.verified = true;
+        settleDriverDebt(rep.driverId);
+        renderOwnerDashboard();
+      });
+    };
+
+    window.protectedRunMondayCutoff = function () {
+      requireOwnerPinAction('Ejecutar Corte Semanal (Lunes) y bloquear deudores:', () => {
+        runMondayCutoff();
+        renderOwnerDashboard();
+      });
     };
 
     window.renderOwnerDashboard = function () {
@@ -218,7 +309,7 @@
                 <p class="text-[11px] font-bold">Ref: ${r.ref}</p>
                 <p class="text-[10px] text-gray-500">${r.note}</p>
               </div>
-              <button type="button" onclick="approveReportedPayment('${r.id}')" class="px-3 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">Aprobar pago</button>
+              <button type="button" onclick="protectedApproveReportedPayment('${r.id}')" class="px-3 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">Aprobar pago</button>
             </div>
           `).join('')}
         ` : '';
@@ -253,7 +344,7 @@
         : `🧍 Pasajero`;
 
       const debtInfo = u.role === 'driver'
-        ? `<p class="text-[11px] font-bold text-amber-600 mt-0.5">Deuda 10%: $${Number(u.debtUsd || 0).toFixed(2)} ${u.debtUsd > 0 ? `<button type="button" onclick="settleDriverDebt('${u.id}')" class="ml-1 underline text-emerald-600 font-extrabold">Saldar</button>` : ''}</p>`
+        ? `<p class="text-[11px] font-bold text-amber-600 mt-0.5">Deuda 10%: $${Number(u.debtUsd || 0).toFixed(2)} ${u.debtUsd > 0 ? `<button type="button" onclick="protectedSettleDriverDebt('${u.id}')" class="ml-1 underline text-emerald-600 font-extrabold">Saldar</button>` : ''}</p>`
         : '';
 
       return `
@@ -273,22 +364,15 @@
             <button type="button" onclick="viewUserDocs('${u.id}')" class="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">
               👁️ Ver fotos/docs
             </button>
-            ${u.status !== 'approved' ? `<button type="button" onclick="setUserStatus('${u.id}', 'approved')" class="px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">✓ Autorizar</button>` : ''}
-            ${u.status !== 'blocked' ? `<button type="button" onclick="setUserStatus('${u.id}', 'blocked')" class="px-3 py-1.5 rounded-xl bg-red-500/15 text-red-600 text-[11px] font-bold">Bloquear</button>` : ''}
-            <button type="button" onclick="deleteUserFromOwner('${u.id}')" class="px-3 py-1.5 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold">
+            ${u.status !== 'approved' ? `<button type="button" onclick="protectedSetUserStatus('${u.id}', 'approved')" class="px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">✓ Autorizar</button>` : ''}
+            ${u.status !== 'blocked' ? `<button type="button" onclick="protectedSetUserStatus('${u.id}', 'blocked')" class="px-3 py-1.5 rounded-xl bg-red-500/15 text-red-600 text-[11px] font-bold">Bloquear</button>` : ''}
+            <button type="button" onclick="protectedDeleteUser('${u.id}')" class="px-3 py-1.5 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold">
               Eliminar
             </button>
           </div>
         </div>
       `;
     }
-
-    window.approveReportedPayment = function (reportId) {
-      const rep = state.paymentReports.find(r => r.id === reportId);
-      if (!rep) return;
-      rep.verified = true;
-      settleDriverDebt(rep.driverId);
-    };
   }
 
   if (document.readyState === 'loading') {
