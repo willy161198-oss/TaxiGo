@@ -1,16 +1,16 @@
 // =========================================================
-// TAXIGO · EXTRAS-PASAJERO.JS v2.0 (PERFIL LIMPIO, HISTORIAL REAL Y CANCELACIÓN)
+// TAXIGO · EXTRAS-PASAJERO.JS v2.1 (SIN NUEVO REGISTRO EN PERFIL + HISTORIAL LIMPIO)
 // =========================================================
 (function () {
   function initPassengerModule() {
     if (typeof state === 'undefined' || !document.getElementById('app-shell')) {
-      setTimeout(initPassengerModule, 70);
+      setTimeout(initPassengerModule, 60);
       return;
     }
 
     const appShell = document.getElementById('app-shell');
 
-    // 1. Limpiar historial de viajes inventados y dejar solo los viajes reales del pasajero
+    // 1. Limpiar historial de viajes inventados
     if (!Array.isArray(state.passengerHistory)) {
       state.passengerHistory = [];
     } else {
@@ -20,12 +20,18 @@
     }
     saveState();
 
-    // 2. Quitar la fila "Nuevo registro / Documentos" de "Tu cuenta" y limpiar textos de actividad
+    // 2. Eliminar "Nuevo registro / Documentos" (sea div o button) y limpiar textos del historial
     function cleanPassengerAccountAndHistory() {
-      const regRow = document.querySelector('#screen-account button[onclick*="screen-register"]');
-      if (regRow) {
-        regRow.remove();
-      }
+      const regElements = document.querySelectorAll('#screen-account [onclick*="screen-register"]');
+      regElements.forEach(el => el.remove());
+
+      // También buscar por texto exacto por si no tiene onclick inline
+      document.querySelectorAll('#screen-account p').forEach(p => {
+        if (p.textContent && p.textContent.includes('Nuevo registro / Documentos')) {
+          const row = p.closest('div[onclick]') || p.parentElement?.parentElement;
+          if (row) row.remove();
+        }
+      });
 
       const u = getActiveUser();
       const realTripsCount = (state.passengerHistory || []).filter(
@@ -41,10 +47,21 @@
       if (historySub && u && u.role === 'passenger') {
         historySub.textContent = realTripsCount === 1 ? '1 viaje realizado' : `${realTripsCount} viajes realizados`;
       }
+
+      // Limpiar cualquier encabezado o subtítulo en pantalla de historial que diga "movimientos"
+      const histScreen = document.getElementById('screen-passenger-history');
+      if (histScreen) {
+        histScreen.querySelectorAll('p, span, h2').forEach(el => {
+          if (el.children.length === 0 && /movimiento/i.test(el.textContent)) {
+            el.textContent = 'Tus viajes realizados en TaxiGo';
+          }
+        });
+      }
     }
 
-    // Sobrescribir renderPassengerHistory para mostrar solo viajes limpios del pasajero
+    // Sobrescribir renderPassengerHistory para mostrar solo los viajes del pasajero
     window.renderPassengerHistory = function () {
+      cleanPassengerAccountAndHistory();
       const u = getActiveUser();
       const listEl = document.getElementById('passenger-history-list');
       if (!listEl) return;
@@ -54,7 +71,7 @@
       );
 
       if (myTrips.length === 0) {
-        listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Aún no has realizado viajes en TaxiGo.</p>`;
+        listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Aún no has realizado viajes.</p>`;
         return;
       }
 
@@ -69,13 +86,10 @@
       `).join('');
     };
 
-    // Guardar passengerId al completar un viaje del pasajero
     const origCompletePass = window.completePassengerRide;
     window.completePassengerRide = function () {
       const u = getActiveUser();
-      if (typeof origCompletePass === 'function') {
-        origCompletePass();
-      }
+      if (typeof origCompletePass === 'function') origCompletePass();
       if (state.passengerHistory && state.passengerHistory[0] && u) {
         state.passengerHistory[0].passengerId = u.id;
         saveState();
@@ -90,6 +104,7 @@
     };
 
     cleanPassengerAccountAndHistory();
+    setTimeout(cleanPassengerAccountAndHistory, 250);
 
     // 3. Cuadro de Pago Móvil del conductor dentro de viaje activo del pasajero
     const activePassStep = document.getElementById('step-active-passenger');
@@ -247,9 +262,6 @@
     };
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPassengerModule);
-  } else {
-    initPassengerModule();
-  }
+  window.addEventListener('load', initPassengerModule);
+  setTimeout(initPassengerModule, 120);
 })();
