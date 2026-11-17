@@ -1,5 +1,5 @@
 // =========================================================
-// TAXIGO · EXTRAS-MAPA.JS (MAPA MUNDIAL, BÚSQUEDA Y RUTAS REALES)
+// TAXIGO · EXTRAS-MAPA.JS v2.0 (MAPA MUNDIAL GRATIS SIN API KEY + RUTAS)
 // =========================================================
 (function () {
   function initGlobalMapModule() {
@@ -8,12 +8,41 @@
       return;
     }
 
-    let originCoords = [10.2016, -71.3148]; // Punto de partida por defecto (se actualiza con GPS)
+    // 1. Reemplazar capas de Carto ("API KEY REQUIRED") por OpenStreetMap 100% gratuito
+    function applyFreeOsmTiles(mapInstance) {
+      if (!mapInstance) return;
+      mapInstance.eachLayer(layer => {
+        if (layer && layer._url && layer._url.includes('cartocdn')) {
+          mapInstance.removeLayer(layer);
+        }
+      });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(mapInstance);
+    }
+
+    applyFreeOsmTiles(mapPassenger);
+    if (typeof mapDriver !== 'undefined' && mapDriver) {
+      applyFreeOsmTiles(mapDriver);
+    }
+
+    // Evitar que cambiar tema oscuro/claro vuelva a poner la capa bloqueada de Carto
+    if (typeof setTheme === 'function') {
+      const origSetTheme = window.setTheme;
+      window.setTheme = function (theme) {
+        origSetTheme(theme);
+        applyFreeOsmTiles(mapPassenger);
+        if (typeof mapDriver !== 'undefined' && mapDriver) applyFreeOsmTiles(mapDriver);
+      };
+    }
+
+    let originCoords = [10.2016, -71.3148];
     let destCoords = null;
     let routeLayer = null;
     let searchTimer = null;
 
-    // 1. Quitar cualquier límite geográfico del mapa para permitir navegar por todo el mundo
+    // 2. Quitar límites geográficos para navegar por todo el mundo
     mapPassenger.setMaxBounds(null);
     mapPassenger.setMinZoom(2);
     mapPassenger.setMaxZoom(19);
@@ -24,7 +53,7 @@
       mapDriver.setMaxZoom(19);
     }
 
-    // 2. Obtener ubicación GPS real del usuario si el teléfono la permite
+    // 3. Ubicación GPS real del usuario
     window.locateUserGlobal = function () {
       if (!navigator.geolocation) {
         showToast('Tu navegador no soporta GPS');
@@ -54,11 +83,10 @@
       );
     };
 
-    // Enlazar el botón de ubicación GPS del mapa pasajero
     const gpsBtn = document.querySelector('#screen-passenger button[onclick*="centerPassengerMap"]');
     if (gpsBtn) gpsBtn.setAttribute('onclick', 'locateUserGlobal()');
 
-    // 3. Buscador global en vivo (cualquier calle, ciudad, estado o país)
+    // 4. Buscador global en vivo (cualquier calle, ciudad, estado o país)
     const destInput = document.getElementById('input-destination');
     const stepDest = document.getElementById('step-destination');
 
@@ -109,7 +137,7 @@
       });
     }
 
-    // 4. Seleccionar destino mundial y trazar ruta real por carretera (OSRM)
+    // 5. Seleccionar destino mundial y trazar ruta real por carretera
     window.selectGlobalDestination = async function (lat, lon, label) {
       const drop = document.getElementById('global-places-dropdown');
       if (drop) drop.classList.add('hidden');
@@ -125,7 +153,6 @@
       await calculateAndDrawGlobalRoute(originCoords, destCoords);
     };
 
-    // Permitir también tocar cualquier punto del mapa mundial como destino
     mapPassenger.off('click');
     mapPassenger.on('click', async function (e) {
       const stepD = document.getElementById('step-destination');
@@ -150,7 +177,7 @@
       await calculateAndDrawGlobalRoute(originCoords, destCoords);
     });
 
-    // 5. Cálculo real de kilómetros, tiempo y trazado de línea de ruta entre ciudades/estados
+    // 6. Cálculo real de km, minutos y dibujo de ruta en el mapa
     async function calculateAndDrawGlobalRoute(start, end) {
       if (routeLayer) {
         mapPassenger.removeLayer(routeLayer);
@@ -172,10 +199,9 @@
           durMin = Math.max(2, Math.round(r.duration / 60));
           polyCoords = r.geometry.coordinates.map(c => [c[1], c[0]]);
         } else {
-          throw new Error('Fallback distancia lineal');
+          throw new Error('Fallback distancia');
         }
       } catch (err) {
-        // Cálculo geodésico (Haversine) si no hay carretera directa
         const R = 6371;
         const dLat = ((end[0] - start[0]) * Math.PI) / 180;
         const dLon = ((end[1] - start[1]) * Math.PI) / 180;
@@ -200,7 +226,6 @@
 
       mapPassenger.fitBounds(routeLayer.getBounds(), { padding: [45, 45] });
 
-      // Avanzar automáticamente a la selección de vehículo con la tarifa calculada por km real
       document.getElementById('step-destination').classList.add('hidden');
       document.getElementById('step-vehicles').classList.remove('hidden');
       if (typeof renderVehicleOptions === 'function') {
