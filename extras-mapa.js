@@ -1,68 +1,60 @@
 // =========================================================
-// TAXIGO · EXTRAS-MAPA.JS v3.0 (INTERCEPTOR DIRECTO DE TESELAS OSM + RUTA MUNDIAL)
+// TAXIGO · EXTRAS-MAPA.JS v4.0 (SOLUCIÓN DEFINITIVA DE MAPA OSM + RUTA MUNDIAL)
 // =========================================================
 (function () {
-  // 1. Interceptar L.tileLayer a nivel global para bloquear cualquier URL de Carto
-  function patchLeafletTileLayer() {
-    if (typeof L === 'undefined' || !L.tileLayer || L.tileLayer._taxiGoPatched) return;
+  // 1. Parchear el núcleo de Leaflet (TileLayer.prototype.getTileUrl)
+  // Esto obliga a que CUALQUIER mapa (pasajero, conductor, zoom o arrastre) use OpenStreetMap gratis
+  function forceOpenStreetMapCore() {
+    if (typeof L === 'undefined' || !L.TileLayer) return false;
 
-    const origTileLayer = L.tileLayer;
-    L.tileLayer = function (urlTemplate, options) {
-      if (typeof urlTemplate === 'string' && urlTemplate.includes('cartocdn')) {
-        urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-        options = Object.assign({}, options, {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap'
-        });
+    if (!L.TileLayer.prototype._taxiGoOsmForced) {
+      const origGetTileUrl = L.TileLayer.prototype.getTileUrl;
+      L.TileLayer.prototype.getTileUrl = function (coords) {
+        let url = origGetTileUrl.call(this, coords);
+        if (typeof url === 'string' && (url.includes('cartocdn') || url.includes('basemaps'))) {
+          const z = coords.z;
+          const x = coords.x;
+          const y = coords.y;
+          return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+        }
+        return url;
+      };
+      L.TileLayer.prototype._taxiGoOsmForced = true;
+    }
+
+    // Cambiar al instante todas las imágenes que ya estaban pintadas en pantalla
+    document.querySelectorAll('img.leaflet-tile').forEach(img => {
+      if (img.src && (img.src.includes('cartocdn') || img.src.includes('basemaps'))) {
+        const match = img.src.match(/\/(\d+)\/(\d+)\/(\d+)(?:@2x)?\.png/);
+        if (match) {
+          img.src = `https://tile.openstreetmap.org/${match[1]}/${match[2]}/${match[3]}.png`;
+        }
       }
-      return origTileLayer.call(this, urlTemplate, options);
-    };
-    L.tileLayer._taxiGoPatched = true;
+    });
+
+    return true;
   }
 
-  patchLeafletTileLayer();
+  // Ejecutar inmediatamente y vigilar cada 300ms durante los primeros segundos
+  forceOpenStreetMapCore();
+  const bootWatcher = setInterval(forceOpenStreetMapCore, 300);
+  setTimeout(() => clearInterval(bootWatcher), 10000);
 
-  function initGlobalMapModule() {
-    patchLeafletTileLayer();
+  function initGlobalMapFeatures() {
+    forceOpenStreetMapCore();
 
-    const passMapEl = document.getElementById('map-passenger');
-    const drvMapEl = document.getElementById('map-driver');
-    if (!passMapEl || typeof L === 'undefined') {
-      setTimeout(initGlobalMapModule, 100);
+    const destInput = document.getElementById('input-destination');
+    const stepDest = document.getElementById('step-destination');
+    if (!destInput || !stepDest) {
+      setTimeout(initGlobalMapFeatures, 150);
       return;
     }
 
-    // Reemplazar cualquier imagen de mosaico (tile) de Carto que ya se haya pintado en el DOM
-    function swapExistingCartoImages() {
-      document.querySelectorAll('img.leaflet-tile').forEach(img => {
-        if (img.src && img.src.includes('cartocdn')) {
-          const match = img.src.match(/\/(\d+)\/(\d+)\/(\d+)(?:@2x)?\.png/);
-          if (match) {
-            img.src = `https://tile.openstreetmap.org/${match[1]}/${match[2]}/${match[3]}.png`;
-          }
-        }
-      });
-    }
-
-    swapExistingCartoImages();
-    setInterval(swapExistingCartoImages, 800);
-
-    // 2. Obtener instancia real de Leaflet o crear una limpia si es necesario
-    let activePassMap = null;
-    try {
-      // Buscar instancia interna de Leaflet en el contenedor DOM
-      if (passMapEl._leaflet_id && L.Map) {
-        // Si ya existe en el scope global como mapPassenger (por si fue var/window)
-        if (window.mapPassenger) activePassMap = window.mapPassenger;
-      }
-    } catch (e) {}
-
     let originCoords = [10.2016, -71.3148];
     let destCoords = null;
-    let routeLayer = null;
     let searchTimer = null;
 
-    // 3. Ubicación GPS real del usuario
+    // 2. Ubicación GPS real del usuario
     window.locateUserGlobal = function () {
       if (!navigator.geolocation) {
         if (typeof showToast === 'function') showToast('Tu navegador no soporta GPS');
@@ -93,11 +85,8 @@
     const gpsBtn = document.querySelector('#screen-passenger button[onclick*="centerPassengerMap"]');
     if (gpsBtn) gpsBtn.setAttribute('onclick', 'locateUserGlobal()');
 
-    // 4. Buscador mundial de direcciones (cualquier ciudad, estado o país)
-    const destInput = document.getElementById('input-destination');
-    const stepDest = document.getElementById('step-destination');
-
-    if (destInput && stepDest && !document.getElementById('global-places-dropdown')) {
+    // 3. Buscador global de direcciones (cualquier ciudad, estado o país)
+    if (!document.getElementById('global-places-dropdown')) {
       destInput.insertAdjacentHTML('afterend', `
         <div id="global-places-dropdown" class="hidden mt-1.5 rounded-2xl bg-white dark:bg-[#1e2233] border border-gray-200 dark:border-gray-700 shadow-xl max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800 z-50"></div>
       `);
@@ -144,7 +133,7 @@
       });
     }
 
-    // 5. Calcular ruta real entre ciudades/estados con OSRM
+    // 4. Calcular ruta real entre ciudades/estados con OSRM
     window.selectGlobalDestination = async function (lat, lon, label) {
       const drop = document.getElementById('global-places-dropdown');
       if (drop) drop.classList.add('hidden');
@@ -197,6 +186,6 @@
     };
   }
 
-  window.addEventListener('load', initGlobalMapModule);
-  setTimeout(initGlobalMapModule, 150);
+  window.addEventListener('load', initGlobalMapFeatures);
+  setTimeout(initGlobalMapFeatures, 150);
 })();
