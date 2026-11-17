@@ -35,56 +35,24 @@
       overflow-x: hidden;
     }
 
-    .topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1200;
-      background: var(--bg-dark);
-      color: #fff;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    /* Ocultar widget flotante de Netlify si intenta inyectarse */
+    [data-netlify-deploy-id],
+    iframe[src*="netlify"],
+    div[id*="netlify"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
 
-    .topbar-label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #e2e8f0;
-    }
-
-    .top-pills {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .top-pill {
-      border: none;
-      background: #1e293b;
-      color: #cbd5e1;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 999px;
-      cursor: pointer;
-    }
-
-    .top-pill.active {
-      background: #334155;
-      color: #ffffff;
-      box-shadow: inset 0 0 0 1px #475569;
-    }
-
+    /* PANTALLA DE PORTADA LIMPIA */
     .splash-screen {
       min-height: 100vh;
-      padding: 72px 16px 28px;
+      padding: 36px 16px 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       background: #f8fafc;
     }
 
@@ -92,12 +60,12 @@
       background: var(--bg-dark);
       color: #ffffff;
       border-radius: 22px;
-      padding: 20px 26px;
+      padding: 20px 28px;
       display: flex;
       align-items: center;
       gap: 14px;
       box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-      margin-top: 10px;
+      margin-bottom: 24px;
       cursor: pointer;
       user-select: none;
     }
@@ -132,17 +100,6 @@
       letter-spacing: 1px;
       color: #cbd5e1;
       margin-top: 3px;
-    }
-
-    .tagline {
-      margin: 16px 0 22px;
-      font-size: 13px;
-      color: #475569;
-      text-align: center;
-    }
-
-    .tagline b {
-      color: #0f172a;
     }
 
     .card-panel {
@@ -221,6 +178,7 @@
       margin-top: 4px;
     }
 
+    /* PANTALLA APP EN VIVO */
     .app-screen {
       display: none;
       width: 100%;
@@ -230,17 +188,14 @@
 
     #map {
       position: fixed;
-      top: 48px;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       z-index: 1;
       background: #e2e8f0;
     }
 
     .map-controls {
       position: fixed;
-      top: 60px;
+      top: 14px;
       left: 12px;
       right: 12px;
       z-index: 500;
@@ -443,13 +398,11 @@
       outline: none;
     }
 
+    /* Vista Conductor */
     .driver-view {
       display: none;
       position: fixed;
-      top: 48px;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       z-index: 700;
       background: #f1f5f9;
       padding: 16px;
@@ -493,6 +446,7 @@
       background: #f8fafc;
     }
 
+    /* Modales */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -523,7 +477,7 @@
 
     .toast {
       position: fixed;
-      top: 60px;
+      top: 18px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 3000;
@@ -543,15 +497,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <header class="topbar">
-    <span class="topbar-label">Vista activa:</span>
-    <div class="top-pills">
-      <button class="top-pill active" id="navPassenger" onclick="enterApp('passenger', '')">🙋‍♀️ Pasajero</button>
-      <button class="top-pill" id="navDriver" onclick="enterApp('driver', '')">🏍️ Conductor</button>
-      <button class="top-pill" id="navRegister" onclick="goHome('register')">Registro</button>
-    </div>
-  </header>
-
+  <!-- PORTADA LIMPIA SIN BARRA SUPERIOR NI TEXTO EXTRA -->
   <main class="splash-screen" id="splashScreen">
     <div class="hero-card" id="logoTrigger">
       <div class="hero-icon">❖</div>
@@ -560,8 +506,6 @@
         <div class="hero-sub">MOVILIDAD Y ENVÍOS</div>
       </div>
     </div>
-
-    <p class="tagline">Mototaxi, Taxi y Delivery seguro a partir de <b>$1.10</b></p>
 
     <div class="card-panel">
       <div class="auth-tabs">
@@ -602,11 +546,12 @@
     </div>
   </main>
 
+  <!-- APP EN VIVO -->
   <section class="app-screen" id="appScreen">
     <div id="map"></div>
 
     <div class="map-controls" id="passengerControls">
-      <button class="circle-btn" onclick="goHome('login')" title="Volver al inicio">←</button>
+      <button class="circle-btn" onclick="goHome('login')" title="Salir">←</button>
 
       <div class="service-pills">
         <button class="service-pill active" onclick="selectService(this, 'Mototaxi', 1.10)">🏍️ Mototaxi</button>
@@ -686,10 +631,11 @@
         </div>
       </div>
 
-      <button class="primary-btn" style="background:#334155;" onclick="goHome('login')">← Volver a la portada</button>
+      <button class="primary-btn" style="background:#334155;" onclick="goHome('login')">← Cerrar sesión</button>
     </section>
   </section>
 
+  <!-- Panel Oculto del Dueño (5 toques al logo TaxiGo + PIN 1234) -->
   <div class="modal-backdrop" id="ownerModal">
     <div class="modal-box">
       <div class="modal-title">
@@ -763,9 +709,6 @@
     function goHome(mode) {
       document.getElementById('splashScreen').style.display = 'flex';
       document.getElementById('appScreen').style.display = 'none';
-      document.getElementById('navRegister').classList.toggle('active', mode === 'register');
-      document.getElementById('navPassenger').classList.remove('active');
-      document.getElementById('navDriver').classList.remove('active');
       setAuthMode(mode || 'login');
     }
 
@@ -774,10 +717,6 @@
       document.getElementById('appScreen').style.display = 'block';
 
       const isPass = role === 'passenger';
-      document.getElementById('navPassenger').classList.toggle('active', isPass);
-      document.getElementById('navDriver').classList.toggle('active', !isPass);
-      document.getElementById('navRegister').classList.remove('active');
-
       document.getElementById('passengerControls').style.display = isPass ? 'flex' : 'none';
       document.getElementById('supportBtn').style.display = isPass ? 'flex' : 'none';
       document.getElementById('passengerSheet').style.display = isPass ? 'block' : 'none';
