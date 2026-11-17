@@ -2,681 +2,2264 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>TaxiGo - Movilidad y Envíos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>TaxiGo · Movilidad y Envíos</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg-dark: #0f172a;
-      --bg-card: #1e293b;
-      --accent: #f59e0b;
-      --yellow: #facc15;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --green: #10b981;
-      --red: #ef4444;
-      --border: #e2e8f0;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f4f5f7;
+      --bg-card: #ffffff;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-dark: #11131a;
+      --accent-green: #00b14f;
+      --accent-red: #e51d2e;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-    body, html { width: 100%; height: 100%; background: #f8fafc; color: var(--text-main); overflow-x: hidden; }
+    body.dark-mode {
+      --bg-primary: #0f111a;
+      --bg-secondary: #181b28;
+      --bg-card: #1e2233;
+      --text-primary: #f9fafb;
+      --text-secondary: #9ca3af;
+      --border-color: #2d3348;
+    }
 
-    /* PORTADA Y REGISTROS */
-    .splash-screen { min-height: 100vh; padding: 24px 16px 36px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; }
-    .hero-card { background: var(--bg-dark); color: #fff; border-radius: 22px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 10px 25px rgba(15,23,42,0.2); margin-bottom: 18px; cursor: pointer; user-select: none; }
-    .hero-icon { width: 46px; height: 46px; background: var(--accent); border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #0f172a; font-weight: 900; }
-    .hero-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; line-height: 1.1; }
-    .hero-title span { color: var(--accent); }
-    .hero-sub { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #cbd5e1; margin-top: 3px; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-    .card-panel { width: 100%; max-width: 410px; background: #fff; border-radius: 22px; padding: 18px 16px; box-shadow: 0 6px 20px rgba(15,23,42,0.07); border: 1px solid #e2e8f0; max-height: 82vh; overflow-y: auto; }
-    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #f1f5f9; padding: 4px; border-radius: 14px; gap: 4px; margin-bottom: 14px; }
-    .auth-tab { border: none; background: transparent; padding: 8px 2px; border-radius: 10px; font-size: 10px; font-weight: 800; color: #64748b; cursor: pointer; text-align: center; }
-    .auth-tab.active { background: var(--bg-dark); color: #fff; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: #0b0d13;
+      color: var(--text-primary);
+    }
 
-    .form-group { margin-bottom: 10px; }
-    .form-group label { display: block; font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 3px; }
-    .form-group input, .form-group select { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 11px; padding: 10px 12px; font-size: 13px; color: #0f172a; outline: none; }
-    
-    .vehicle-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .veh-btn { border: 2px solid #e2e8f0; background: #f8fafc; border-radius: 11px; padding: 9px; font-size: 12px; font-weight: 800; color: #334155; cursor: pointer; text-align: center; }
-    .veh-btn.active { border-color: #0f172a; background: #fef3c7; color: #0f172a; }
+    #app-shell {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      margin: 0 auto;
+      background-color: var(--bg-primary);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.45);
+    }
 
-    .cop-box { background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 12px; padding: 10px; margin-bottom: 10px; }
-    .doc-upload-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; padding: 7px 9px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .doc-info { font-size: 11px; font-weight: 700; color: #1e293b; }
-    .doc-status { font-size: 9px; color: #64748b; }
-    .doc-status.ok { color: #10b981; }
-    .file-label-btn { background: var(--bg-dark); color: #fff; font-size: 10px; font-weight: 800; padding: 6px 9px; border-radius: 7px; cursor: pointer; }
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      background-color: var(--bg-primary);
+      z-index: 10;
+      overflow: hidden;
+    }
 
-    .primary-btn { width: 100%; border: none; background: var(--bg-dark); color: #fff; font-size: 14px; font-weight: 800; padding: 13px; border-radius: 13px; cursor: pointer; margin-top: 4px; }
-    .primary-btn.red { background: var(--red); }
+    .screen.active {
+      display: flex;
+    }
 
-    /* PANTALLA APP Y MAPA LIBRE / GIRABLE */
-    .app-screen { display: none; width: 100%; height: 100vh; overflow: hidden; }
-    #map { position: fixed; inset: 0; z-index: 1; background: #e2e8f0; }
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar {
+      display: none;
+    }
 
-    .top-bar-app { position: fixed; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
-    .top-icon-btn { pointer-events: auto; width: 42px; height: 42px; background: #fff; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 15px rgba(15,23,42,0.15); cursor: pointer; }
-    .support-pill { pointer-events: auto; background: #fff; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #0f172a; box-shadow: 0 4px 15px rgba(15,23,42,0.15); border: none; cursor: pointer; }
+    #passenger-map, #driver-map {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
 
-    /* Bottom Sheet Pasajero */
-    .bottom-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 600; background: #fff; border-top-left-radius: 22px; border-top-right-radius: 22px; padding: 10px 16px 16px; box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12); max-height: 75vh; overflow-y: auto; }
-    .sheet-handle { width: 38px; height: 4px; background: #cbd5e1; border-radius: 999px; margin: 0 auto 8px; }
-    
-    .service-pills-row { display: flex; gap: 6px; margin-bottom: 10px; }
-    .service-pill { flex: 1; border: 1px solid var(--border); background: #f8fafc; padding: 8px; border-radius: 12px; font-size: 11px; font-weight: 800; color: #334155; cursor: pointer; text-align: center; }
-    .service-pill.active { background: var(--bg-dark); color: #fff; border-color: var(--bg-dark); }
+    .leaflet-control-attribution,
+    .leaflet-control-zoom {
+      display: none !important;
+    }
 
-    .input-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
-    .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    .dot.green { background: #10b981; }
-    .dot.orange { background: #f59e0b; }
-    .input-box input { border: none; background: transparent; width: 100%; font-size: 13px; font-weight: 600; color: #0f172a; outline: none; }
+    .bottom-sheet {
+      background-color: var(--bg-card);
+      border-top-left-radius: 26px;
+      border-top-right-radius: 26px;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.14);
+      z-index: 25;
+      transition: all 0.25s ease;
+    }
 
-    /* Alerta Emergente Conductor (Con Cuenta Regresiva Circular) */
-    .incoming-modal { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(15,23,42,0.75); align-items: center; justify-content: center; padding: 16px; }
-    .incoming-card { background: #fff; width: 100%; max-width: 360px; border-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .sheet-handle {
+      width: 38px;
+      height: 4px;
+      border-radius: 99px;
+      background-color: #d1d5db;
+      margin: 10px auto 6px;
+    }
 
-    /* Pantalla Buscando Conductor */
-    .searching-screen { display: none; position: fixed; inset: 0; z-index: 2000; background: #fff; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+    body.dark-mode .sheet-handle {
+      background-color: #374151;
+    }
 
-    /* VISTA CONDUCTOR */
-    .driver-view { display: none; position: fixed; inset: 0; z-index: 700; background: transparent; pointer-events: none; padding: 16px; }
-    .driver-status-card { pointer-events: auto; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 -6px 25px rgba(0,0,0,0.12); }
-    .connect-big-btn { width: 100%; background: var(--bg-dark); color: #fff; font-size: 16px; font-weight: 900; padding: 16px; border-radius: 999px; border: none; cursor: pointer; margin: 10px 0; }
-    .connect-big-btn.offline { background: var(--red); }
-    .driver-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 10px; }
+    .card-surface {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+    }
 
-    /* CUENTA / AJUSTES */
-    .account-screen { display: none; position: fixed; inset: 0; z-index: 2500; background: #f8fafc; overflow-y: auto; padding: 20px 16px; }
-    .account-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-    .avatar-circle { width: 70px; height: 70px; background: #06b6d4; border-radius: 50%; color: #fff; font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; cursor: pointer; }
-    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-    .menu-card-group { background: #fff; border-radius: 18px; border: 1px solid #e2e8f0; margin-bottom: 14px; overflow: hidden; }
-    .menu-item-row { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 800; color: #0f172a; cursor: pointer; }
+    .input-surface {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+    }
 
-    /* PANEL DUEÑO */
-    .owner-screen { display: none; position: fixed; inset: 0; z-index: 4000; background: #f1f5f9; flex-direction: column; overflow: hidden; }
-    .owner-header { background: var(--bg-dark); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .owner-nav { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border-bottom: 1px solid #e2e8f0; padding: 6px; gap: 4px; }
-    .owner-tab-btn { border: none; background: transparent; padding: 8px 2px; border-radius: 10px; font-size: 10px; font-weight: 800; color: #64748b; cursor: pointer; text-align: center; }
-    .owner-tab-btn.active { background: var(--bg-dark); color: #facc15; }
-    .owner-body { flex: 1; overflow-y: auto; padding: 14px; }
-    .entity-item { background: #fff; border-radius: 14px; padding: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+    .taxigo-logo-trigger {
+      user-select: none;
+      cursor: pointer;
+    }
+    .taxigo-logo-trigger:active {
+      transform: scale(0.97);
+    }
 
-    .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6000; background: #0f172a; color: #facc15; padding: 10px 16px; border-radius: 999px; font-size: 12px; font-weight: 700; display: none; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(0.8); opacity: 0.4; }
+      50% { transform: scale(1.25); opacity: 1; }
+    }
+    .dot-1 { animation: pulseDot 1.2s infinite ease-in-out 0s; }
+    .dot-2 { animation: pulseDot 1.2s infinite ease-in-out 0.2s; }
+    .dot-3 { animation: pulseDot 1.2s infinite ease-in-out 0.4s; }
+
+    @keyframes radarRing {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      100% { transform: scale(1.9); opacity: 0; }
+    }
+    .radar-pulse {
+      animation: radarRing 1.8s infinite ease-out;
+    }
+
+    .countdown-svg circle {
+      transition: stroke-dashoffset 0.2s linear;
+    }
+
+    #drawer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.52);
+      z-index: 80;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    #drawer-backdrop.open {
+      display: block;
+      opacity: 1;
+    }
+    #side-drawer {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 82%;
+      max-width: 320px;
+      background-color: var(--bg-card);
+      z-index: 90;
+      transform: translateX(-105%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 10px 0 35px rgba(0, 0, 0, 0.25);
+    }
+    #side-drawer.open {
+      transform: translateX(0);
+    }
+
+    .upload-box {
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 16px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: var(--bg-secondary);
+    }
+    .upload-box.has-file {
+      border-color: #00b14f;
+      background-color: rgba(0, 177, 79, 0.06);
+    }
   </style>
 </head>
 <body>
+  <div id="app-shell">
 
-  <div id="toast" class="toast"></div>
+    <!-- ========================================================= -->
+    <!-- PANTALLA 1: INICIO / PASAJERO                             -->
+    <!-- ========================================================= -->
+    <section id="screen-passenger" class="screen active">
+      <div id="passenger-map"></div>
 
-  <!-- PORTADA Y REGISTROS CON VALIDACIÓN OTP VÍA WHATSAPP/SMS -->
-  <main class="splash-screen" id="splashScreen">
-    <div class="hero-card" id="logoTrigger">
-      <div class="hero-icon">❖</div>
-      <div>
-        <div class="hero-title">Taxi<span>Go</span></div>
-        <div class="hero-sub">MOVILIDAD Y ENVÍOS</div>
-      </div>
-    </div>
+      <!-- Barra superior flotante -->
+      <div class="absolute top-0 left-0 right-0 z-20 pt-3 px-3.5 flex items-center justify-between gap-2 pointer-events-none">
+        <div class="flex items-center gap-2 pointer-events-auto">
+          <button onclick="openDrawer()" aria-label="Menú" class="w-11 h-11 rounded-full bg-white dark:bg-[#1e2233] shadow-md flex items-center justify-center text-gray-800 dark:text-white active:scale-95 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
 
-    <div class="card-panel">
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">Iniciar Sesión</button>
-        <button class="auth-tab" id="tabRegPass" onclick="setAuthMode('regPass')">Reg. Pasajero</button>
-        <button class="auth-tab" id="tabRegDrv" onclick="setAuthMode('regDrv')">Reg. Conductor</button>
-      </div>
-
-      <!-- LOGIN -->
-      <div id="loginForm">
-        <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="loginPhone" placeholder="Ej: 04141234567" /></div>
-        <div class="form-group"><label>PIN de Acceso</label><input type="password" id="loginPin" placeholder="••••" /></div>
-        <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
-      </div>
-
-      <!-- REGISTRO PASAJERO (WHATSAPP/SMS OTP + FORMULARIO LIMPIO) -->
-      <div id="regPassForm" style="display:none;">
-        <div id="otpPassStep1">
-          <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="regPasPhone" placeholder="04121234567" /></div>
-          <button class="primary-btn" onclick="sendWhatsAppOtp('passenger')">Enviar código vía WhatsApp / SMS</button>
-        </div>
-        <div id="otpPassStep2" style="display:none;">
-          <div class="form-group"><label>Código de confirmación recibido</label><input type="text" id="otpPasCode" placeholder="Ingresa el código (Usa 1234)" /></div>
-          <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="pasName" placeholder="Tu nombre completo" /></div>
-          <div class="form-group"><label>Número de Cédula</label><input type="text" id="pasCedula" placeholder="Ej: V-30000000" /></div>
-          <div class="cop-box">
-            <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">Verificación C.O.P. (Pasajero)</label>
-            <div class="doc-upload-item"><div class="doc-info">Foto de Cédula <span class="doc-status" id="stPasId">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasId', 'stPasId')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">Foto Selfie <span class="doc-status" id="stPasSelfie">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasSelfie', 'stPasSelfie')" /></label></div>
+          <!-- Logotipo con acceso oculto (5 toques) -->
+          <div onclick="handleLogoTap()" class="taxigo-logo-trigger bg-white/95 dark:bg-[#1e2233]/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md flex items-center gap-1 select-none">
+            <span class="font-extrabold text-[17px] tracking-tight text-[#11131a] dark:text-white">Taxi<span class="text-[#e51d2e]">Go</span></span>
           </div>
-          <div class="form-group"><label>Crea tu PIN</label><input type="password" id="pasPin" placeholder="1234" /></div>
-          <button class="primary-btn" onclick="registerPassenger()">Verificar y Registrar</button>
         </div>
+
+        <!-- Selector Viaje / Envío -->
+        <div class="pointer-events-auto bg-white/95 dark:bg-[#1e2233]/95 backdrop-blur-md p-1 rounded-full shadow-md flex items-center gap-1">
+          <button id="tab-viaje" onclick="setServiceMode('viaje')" class="px-4 py-1.5 rounded-full text-xs font-bold bg-[#11131a] text-white transition">Viaje</button>
+          <button id="tab-envio" onclick="setServiceMode('envio')" class="px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 dark:text-gray-200 transition">Envío</button>
+        </div>
+
+        <button onclick="openSupportModal()" aria-label="Soporte" class="pointer-events-auto w-11 h-11 rounded-full bg-white dark:bg-[#1e2233] shadow-md flex items-center justify-center text-gray-800 dark:text-white active:scale-95 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
       </div>
 
-      <!-- REGISTRO CONDUCTOR (WHATSAPP/SMS OTP + C.O.P. COMPLETO) -->
-      <div id="regDrvForm" style="display:none;">
-        <div id="otpDrvStep1">
-          <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="regDrvPhone" placeholder="04141234567" /></div>
-          <button class="primary-btn" onclick="sendWhatsAppOtp('driver')">Enviar código vía WhatsApp / SMS</button>
+      <!-- Aviso de estado de verificación -->
+      <div id="passenger-status-banner" class="hidden absolute top-16 left-3.5 right-3.5 z-20 rounded-2xl p-3 shadow-lg text-xs font-semibold flex items-center justify-between gap-2"></div>
+
+      <!-- Botón centrar GPS -->
+      <button onclick="recenterPassengerMap()" aria-label="Mi ubicación" class="absolute right-3.5 bottom-[310px] z-20 w-11 h-11 rounded-full bg-white dark:bg-[#1e2233] shadow-md flex items-center justify-center text-gray-800 dark:text-white active:scale-95 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.1" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3" />
+          <path stroke-linecap="round" d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+        </svg>
+      </button>
+
+      <!-- Pin selector en mapa -->
+      <div id="map-picker-banner" class="hidden absolute top-20 left-4 right-4 z-20 bg-[#11131a] text-white rounded-2xl p-3.5 shadow-xl flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Selecciona destino en el mapa</p>
+          <p id="map-picker-coords" class="text-sm font-bold truncate max-w-[210px]">Av. Intercomunal, Ciudad Ojeda</p>
         </div>
-        <div id="otpDrvStep2" style="display:none;">
-          <div class="form-group"><label>Código de confirmación recibido</label><input type="text" id="otpDrvCode" placeholder="Ingresa el código (Usa 1234)" /></div>
-          <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="drvName" placeholder="Tu nombre" /></div>
-          <div class="form-group"><label>Cédula de Identidad</label><input type="text" id="drvCedula" placeholder="Ej: V-24000000" /></div>
-          <div class="form-group"><label>Tipo de Vehículo</label>
-            <div class="vehicle-selector">
-              <button type="button" class="veh-btn active" id="vMoto" onclick="setVeh('Moto')">🏍️ Moto</button>
-              <button type="button" class="veh-btn" id="vCarro" onclick="setVeh('Carro')">🚗 Carro</button>
+        <button onclick="confirmMapPicker()" class="bg-[#00b14f] text-white text-xs font-bold px-4 py-2 rounded-xl active:scale-95">Confirmar</button>
+      </div>
+
+      <!-- ===================================== -->
+      <!-- PANEL INFERIOR DINÁMICO DEL PASAJERO  -->
+      <!-- ===================================== -->
+      <div id="passenger-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 px-4 pb-5 pt-1">
+        <div class="sheet-handle"></div>
+
+        <!-- PASO A: Selección de origen y destino -->
+        <div id="step-destination">
+          <div class="flex items-center justify-between mb-3 mt-1">
+            <h1 id="sheet-main-title" class="text-[20px] font-extrabold tracking-tight">¿A dónde iremos hoy?</h1>
+            <span id="service-badge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Ciudad Ojeda</span>
+          </div>
+
+          <div class="space-y-2.5">
+            <!-- Origen -->
+            <div class="input-surface rounded-2xl px-3.5 py-3 flex items-center gap-3">
+              <span class="w-5 h-5 rounded-full bg-[#00b14f]/15 text-[#00b14f] flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+              <input id="input-origin" type="text" value="Tu ubicación actual (Ciudad Ojeda)" class="bg-transparent text-xs font-semibold w-full focus:outline-none truncate" />
+            </div>
+
+            <!-- Parada opcional -->
+            <div id="extra-stop-container" class="hidden input-surface rounded-2xl px-3.5 py-2.5 flex items-center gap-3">
+              <span class="w-3.5 h-3.5 rounded-full bg-amber-500 shrink-0 ml-0.5"></span>
+              <input id="input-stop" type="text" placeholder="Parada intermedia (ej. Casco Central)" class="bg-transparent text-xs font-medium w-full focus:outline-none" />
+              <button onclick="removeExtraStop()" class="text-xs text-red-500 font-bold">✕</button>
+            </div>
+
+            <!-- Destino -->
+            <div class="input-surface rounded-2xl px-3.5 py-3 flex items-center gap-3 border border-transparent focus-within:border-gray-400">
+              <span class="w-4 h-4 rounded-full border-2 border-gray-400 shrink-0 ml-0.5"></span>
+              <input id="input-destination" type="text" placeholder="Escribir aquí tu destino" oninput="handleDestinationTyping(this.value)" onfocus="showDestinationSuggestions()" class="bg-transparent text-sm font-medium w-full focus:outline-none" />
+              <button onclick="clearDestination()" id="btn-clear-dest" class="hidden text-gray-400 text-xs font-bold">✕</button>
             </div>
           </div>
-          <div class="form-group"><label>Modelo, Color y Placa</label><input type="text" id="drvVehDet" placeholder="Ej: Bera • Placa ABC1" /></div>
-          <div class="form-group"><label>Tu Pago Móvil (Para recibir pagos)</label><input type="text" id="drvPM" placeholder="Banco • Cédula • Teléfono" /></div>
-          <div class="cop-box">
-            <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">C.O.P. — Documentos del Conductor</label>
-            <div class="doc-upload-item"><div class="doc-info">1. Selfie <span class="doc-status" id="d1">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dSelfie', 'd1')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">2. Cédula <span class="doc-status" id="d2">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCed', 'd2')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">3. Vehículo y Placa <span class="doc-status" id="d3">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVeh', 'd3')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">4. Certificado Médico <span class="doc-status" id="d4">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dMed', 'd4')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">5. Certificado Vial <span class="doc-status" id="d5">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVial', 'd5')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">6. Póliza RCV <span class="doc-status" id="d6">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dRCV', 'd6')" /></label></div>
-            <div class="doc-upload-item"><div class="doc-info">7. Circulación <span class="doc-status" id="d7">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCirc', 'd7')" /></label></div>
+
+          <!-- Sugerencias rápidas -->
+          <div id="destination-suggestions" class="mt-2.5 space-y-1.5 max-h-36 overflow-y-auto"></div>
+
+          <!-- Resumen de ruta -->
+          <div id="route-summary-bar" class="hidden mt-3">
+            <button id="btn-add-stop" onclick="addExtraStop()" class="w-full py-2.5 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600 text-xs font-bold flex items-center justify-center gap-1.5 mb-2.5 hover:bg-gray-50 dark:hover:bg-gray-800/40">
+              <span>+</span> Agregar parada
+            </button>
+            <div class="flex items-center justify-around py-2 border-y border-gray-100 dark:border-gray-800 mb-3">
+              <div class="flex items-center gap-2 text-xs font-extrabold">
+                <span>🚘</span>
+                <span id="route-distance-text">2.4 Km</span>
+              </div>
+              <div class="h-4 w-[1px] bg-gray-200 dark:bg-gray-700"></div>
+              <div class="flex items-center gap-2 text-xs font-extrabold">
+                <span>🕒</span>
+                <span id="route-duration-text">6 Min</span>
+              </div>
+            </div>
+            <button onclick="goToVehicleSelection()" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.99] transition">
+              <span>Seleccionar vehículo</span>
+            </button>
           </div>
-          <div class="form-group"><label>PIN de Acceso</label><input type="password" id="drvPin" placeholder="1234" /></div>
-          <button class="primary-btn" onclick="registerDriver()">Verificar y Enviar C.O.P.</button>
+
+          <!-- Botón Buscar en el mapa -->
+          <div id="btn-map-search-wrap" class="mt-3">
+            <button onclick="activateMapPicker()" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-[0.99] transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              <span>Buscar en el mapa</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO B: Selección de vehículo -->
+        <div id="step-vehicles" class="hidden">
+          <div class="flex items-center gap-3 mb-3">
+            <button onclick="backToDestination()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+            <h2 class="text-lg font-extrabold">Elige tu vehículo</h2>
+          </div>
+
+          <div id="vehicles-list" class="space-y-2.5 max-h-[240px] overflow-y-auto pr-0.5"></div>
+
+          <button onclick="goToPaymentSelection()" class="mt-3 w-full py-3.5 rounded-2xl bg-[#11131a] text-white font-bold text-sm shadow-lg active:scale-[0.99] transition">
+            Continuar al pago
+          </button>
+        </div>
+
+        <!-- PASO C: Métodos de pago -->
+        <div id="step-payment" class="hidden">
+          <div class="flex items-center gap-3 mb-2">
+            <button onclick="backToVehicles()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+            <h2 class="text-lg font-extrabold">Métodos de pago</h2>
+          </div>
+
+          <div class="py-2 border-b border-dashed border-gray-200 dark:border-gray-700 mb-3 flex items-baseline justify-between">
+            <div>
+              <p class="text-xs font-bold text-gray-500">Monto a pagar:</p>
+              <p id="payment-amount-bs" class="text-2xl font-extrabold tracking-tight">Bs. 1.307,05</p>
+            </div>
+            <span id="payment-amount-usd" class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600">$1.45 USD</span>
+          </div>
+
+          <p class="text-xs font-bold text-gray-500 mb-2">Pagar a través de:</p>
+
+          <div class="space-y-2.5">
+            <label onclick="selectPaymentMethod('Pago Móvil')" class="card-surface rounded-2xl p-3 flex items-center justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-lg">📱</div>
+                <div>
+                  <p class="text-sm font-extrabold">Pago Móvil</p>
+                  <p class="text-[11px] text-gray-500">Transferencia bancaria inmediata</p>
+                </div>
+              </div>
+              <input type="radio" name="paymethod" id="radio-pagomovil" checked class="w-4 h-4 accent-[#11131a]" />
+            </label>
+
+            <label onclick="selectPaymentMethod('Efectivo')" class="card-surface rounded-2xl p-3 flex items-center justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-lg">💵</div>
+                <div>
+                  <p class="text-sm font-extrabold">Efectivo</p>
+                  <p class="text-[11px] text-gray-500">Dólares o Bolívares al llegar</p>
+                </div>
+              </div>
+              <input type="radio" name="paymethod" id="radio-efectivo" class="w-4 h-4 accent-[#11131a]" />
+            </label>
+          </div>
+
+          <button onclick="startSearchingDriver()" class="mt-4 w-full py-3.5 rounded-2xl bg-[#11131a] text-white font-bold text-sm shadow-lg active:scale-[0.99] transition">
+            Solicitar viaje →
+          </button>
+        </div>
+
+        <!-- PASO D: Buscando conductores -->
+        <div id="step-searching" class="hidden text-center py-4">
+          <h2 class="text-lg font-extrabold mb-3">Buscando conductores</h2>
+          <div class="relative w-28 h-28 mx-auto flex items-center justify-center my-2">
+            <div class="radar-pulse absolute inset-0 rounded-full bg-emerald-500/15"></div>
+            <div id="searching-vehicle-icon" class="relative z-10 w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-4xl shadow-inner">🏍️</div>
+          </div>
+          <div class="flex items-center justify-center gap-1.5 my-3">
+            <span class="w-2 h-2 rounded-full bg-gray-400 dot-1"></span>
+            <span class="w-2 h-2 rounded-full bg-gray-600 dot-2"></span>
+            <span class="w-2 h-2 rounded-full bg-gray-400 dot-3"></span>
+          </div>
+          <p class="text-xs text-gray-500 mb-4">Conectando con conductores verificados en Ciudad Ojeda...</p>
+          <button onclick="cancelSearchingDriver()" class="w-full py-3.5 rounded-2xl bg-gray-500/80 text-white font-bold text-sm active:scale-95 transition">
+            Cancelar solicitud
+          </button>
+        </div>
+
+        <!-- PASO E: Conductor asignado -->
+        <div id="step-active-passenger" class="hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600">Conductor en camino · 3 min</span>
+            <span id="active-ride-fare" class="text-sm font-extrabold">$1.45</span>
+          </div>
+
+          <div class="card-surface rounded-2xl p-3 flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-full bg-[#11131a] text-white font-extrabold flex items-center justify-center text-sm">WV</div>
+              <div>
+                <p id="assigned-driver-name" class="text-sm font-extrabold">Willy Villalonga</p>
+                <p id="assigned-driver-vehicle" class="text-xs text-gray-500">Moto Go · Placa AA8G42D · ★ 5.0</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openRideChat('passenger')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-base">💬</button>
+              <button onclick="showToast('Llamando al conductor...')" class="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center text-base">📞</button>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="completePassengerRide()" class="flex-1 py-3 rounded-2xl bg-[#00b14f] text-white font-bold text-xs shadow">Finalizar y calificar</button>
+            <button onclick="cancelSearchingDriver()" class="px-4 py-3 rounded-2xl bg-red-500/10 text-red-600 font-bold text-xs">Cancelar</button>
+          </div>
         </div>
       </div>
-    </div>
-  </main>
+    </section>
 
-  <!-- PANTALLA PRINCIPAL APP -->
-  <section class="app-screen" id="appScreen">
-    <div id="map"></div>
-
-    <div class="top-bar-app" id="passengerTopBar">
-      <button class="top-icon-btn" onclick="openAccountScreen()">☰</button>
-      <button class="support-pill" onclick="showToast('Soporte TaxiGo 24/7')">🎧 Soporte</button>
-      <button class="top-icon-btn" onclick="locateUser()">⌖</button>
-    </div>
-
-    <!-- Bottom Sheet Pasajero -->
-    <section class="bottom-sheet" id="passengerSheet">
-      <div class="sheet-handle"></div>
-      <div class="service-pills-row">
-        <button class="service-pill active" onclick="setService(this, 'Mototaxi')">🏍️ Mototaxi</button>
-        <button class="service-pill" onclick="setService(this, 'Taxi')">🚗 Taxi</button>
-        <button class="service-pill" onclick="setService(this, 'Envío')">📦 Envío</button>
-      </div>
-
-      <div class="input-box">
-        <span class="dot green"></span>
-        <input type="text" id="originInput" placeholder="Ubicación GPS actual" />
-        <span style="font-size:10px;font-weight:800;color:#d97706;">ORIGEN</span>
-      </div>
-
-      <div class="input-box">
-        <span class="dot orange"></span>
-        <input type="text" id="destInput" placeholder="Escribir destino o tocar el mapa..." />
-        <span>📍</span>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;background:#f1f5f9;border-radius:11px;padding:8px 12px;margin-bottom:8px;font-size:12px;font-weight:800;">
-        <span>📏 Distancia: <b id="kmDisplay">1.5</b> km</span>
-        <div style="display:flex;gap:6px;">
-          <button class="step-btn" onclick="adjKm(-0.5)" style="width:24px;height:24px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;font-weight:900;">−</button>
-          <button class="step-btn" onclick="adjKm(0.5)" style="width:24px;height:24px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;font-weight:900;">+</button>
+    <!-- ========================================================= -->
+    <!-- PANTALLA 2: REGISTRO Y VERIFICACIÓN KYC                   -->
+    <!-- ========================================================= -->
+    <section id="screen-register" class="screen">
+      <div class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-3">
+          <button onclick="switchScreen('screen-passenger')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+          <div>
+            <h1 class="text-base font-extrabold">Registro TaxiGo</h1>
+            <p class="text-[11px] text-gray-500">Verificación de identidad y documentos</p>
+          </div>
         </div>
+        <span class="font-extrabold text-sm">Taxi<span class="text-[#e51d2e]">Go</span></span>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:10px;">
+      <div class="scroll-area px-4 py-4 space-y-4">
+        <!-- Selector de Rol -->
         <div>
-          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Tarifa (Mín. $<span id="minFareLbl">1.10</span>)</div>
-          <div style="font-size:18px;font-weight:900;color:#0f172a;">$<span id="fareDisplay">1.13</span></div>
-          <div style="font-size:10px;color:#64748b;">Ref: Bs. <span id="bsDisplay">1032,84</span></div>
-        </div>
-        <select class="pay-select" id="payMethod" style="width:130px;padding:8px;border-radius:8px;border:1px solid #cbd5e1;font-weight:700;">
-          <option value="Pago móvil">📲 Pago móvil</option>
-          <option value="Efectivo">💵 Efectivo</option>
-        </select>
-      </div>
-
-      <button class="primary-btn" onclick="requestRide()">Buscar en el mapa / Solicitar</button>
-    </section>
-
-    <!-- PANTALLA BUSCANDO CONDUCTOR -->
-    <section class="searching-screen" id="searchingScreen">
-      <div style="font-size:42px;margin-bottom:16px;">🏍️</div>
-      <h2 style="font-size:20px;font-weight:900;margin-bottom:6px;">Buscando conductores...</h2>
-      <p style="font-size:12px;color:#64748b;margin-bottom:24px;">Notificando a los motorizados cercanos</p>
-      <button class="primary-btn red" style="max-width:280px;" onclick="cancelRideSearch()">Cancelar solicitud</button>
-    </section>
-
-    <!-- VISTA CONDUCTOR (ESTILO REFERENCIA) -->
-    <section class="driver-view" id="driverView">
-      <div style="position:fixed;top:12px;left:12px;right:12px;z-index:500;display:flex;align-items:center;justify-content:space-between;pointer-events:none;">
-        <button class="top-icon-btn" onclick="goHome('login')" style="pointer-events:auto;">☰</button>
-        <button class="support-pill" onclick="showToast('Soporte Conductor')" style="pointer-events:auto;">🎧 Soporte</button>
-        <button class="top-icon-btn" onclick="locateUser()" style="pointer-events:auto;">⌖</button>
-      </div>
-
-      <div class="driver-status-card">
-        <h3 id="driverWelcomeName" style="font-size:16px;font-weight:900;">Conductor</h3>
-        <p style="font-size:11px;color:#64748b;" id="driverVehInfo">Moto • Bera</p>
-        
-        <button class="connect-big-btn" id="connectBtn" onclick="toggleOnline()">Conectarme</button>
-        
-        <div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;padding:10px 14px;border-radius:12px;margin-top:6px;">
-          <span style="font-size:12px;font-weight:800;">Aceptar solicitudes TaxiGo</span>
-          <input type="checkbox" id="acceptToggle" checked style="width:20px;height:20px;accent-color:#10b981;" />
+          <label class="text-xs font-extrabold text-gray-500 uppercase tracking-wider block mb-2">1. Selecciona tu perfil</label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button" id="reg-role-passenger" onclick="setRegRole('passenger')" class="py-3 px-3 rounded-2xl border-2 border-[#11131a] bg-[#11131a] text-white font-bold text-xs flex items-center justify-center gap-2">
+              <span>🧍</span> Soy Pasajero
+            </button>
+            <button type="button" id="reg-role-driver" onclick="setRegRole('driver')" class="py-3 px-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 font-bold text-xs flex items-center justify-center gap-2">
+              <span>🏍️</span> Soy Conductor
+            </button>
+          </div>
         </div>
 
-        <div class="driver-stats-row">
-          <div><div style="font-size:15px;font-weight:900;color:#0f172a;">0.00 $</div><div style="font-size:10px;font-weight:700;color:#64748b;">Tips</div></div>
-          <div><div style="font-size:15px;font-weight:900;color:#0f172a;" id="drvRidesCount">2</div><div style="font-size:10px;font-weight:700;color:#64748b;">Carreras</div></div>
-          <div><div style="font-size:15px;font-weight:900;color:#0f172a;">★ 5.0</div><div style="font-size:10px;font-weight:700;color:#64748b;">Calificación</div></div>
+        <!-- Datos Personales -->
+        <div class="card-surface rounded-2xl p-4 space-y-3">
+          <p class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">2. Datos Personales</p>
+          <div>
+            <label class="text-[11px] font-bold text-gray-500">Nombre y Apellido completo *</label>
+            <input id="reg-name" type="text" placeholder="Ej. Carlos Mendoza" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] font-bold text-gray-500">Cédula de Identidad *</label>
+              <input id="reg-cedula" type="text" placeholder="V-25123456" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none" />
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-gray-500">Teléfono WhatsApp *</label>
+              <input id="reg-phone" type="tel" placeholder="04121234567" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-gray-500">Dirección de residencia *</label>
+            <input id="reg-address" type="text" placeholder="Sector, Calle, Ciudad Ojeda, Zulia" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none" />
+          </div>
+        </div>
+
+        <!-- Datos del Vehículo (solo Conductor) -->
+        <div id="reg-driver-vehicle-box" class="hidden card-surface rounded-2xl p-4 space-y-3">
+          <p class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">3. Datos del Vehículo</p>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] font-bold text-gray-500">Modalidad *</label>
+              <select id="reg-vehicle-type" class="mt-1 w-full input-surface rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none">
+                <option value="Moto Go">Moto Go</option>
+                <option value="Automóvil">Automóvil</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-gray-500">Placa *</label>
+              <input id="reg-plate" type="text" placeholder="AB123CD" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold uppercase focus:outline-none" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] font-bold text-gray-500">Marca y Modelo *</label>
+              <input id="reg-model" type="text" placeholder="Ej. Bera SBR / Aveo" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none" />
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-gray-500">Color *</label>
+              <input id="reg-color" type="text" placeholder="Ej. Naranja / Blanco" class="mt-1 w-full input-surface rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Carga de Fotos y Documentos -->
+        <div class="card-surface rounded-2xl p-4 space-y-3">
+          <p class="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Fotos y Documentos Obligatorios</p>
+
+          <!-- Foto del rostro -->
+          <div>
+            <label class="text-[11px] font-bold text-gray-600 dark:text-gray-300 block mb-1">Foto clara de tu rostro (Selfie) *</label>
+            <div id="box-photo-face" onclick="document.getElementById('file-photo-face').click()" class="upload-box">
+              <input id="file-photo-face" type="file" accept="image/*" class="hidden" onchange="handleDocUpload(this, 'face')" />
+              <div id="preview-photo-face" class="text-xs font-bold text-gray-500">🤳 Toca para subir o tomar foto de tu cara</div>
+            </div>
+          </div>
+
+          <!-- Foto de Cédula -->
+          <div>
+            <label class="text-[11px] font-bold text-gray-600 dark:text-gray-300 block mb-1">Foto de Cédula de Identidad *</label>
+            <div id="box-photo-cedula" onclick="document.getElementById('file-photo-cedula').click()" class="upload-box">
+              <input id="file-photo-cedula" type="file" accept="image/*" class="hidden" onchange="handleDocUpload(this, 'cedula')" />
+              <div id="preview-photo-cedula" class="text-xs font-bold text-gray-500">🪪 Toca para subir foto de la cédula</div>
+            </div>
+          </div>
+
+          <!-- Documentos extra para Conductor -->
+          <div id="reg-driver-docs-box" class="hidden space-y-3 pt-1">
+            <div>
+              <label class="text-[11px] font-bold text-gray-600 dark:text-gray-300 block mb-1">Foto del Vehículo (donde se vea la placa) *</label>
+              <div id="box-photo-vehicle" onclick="document.getElementById('file-photo-vehicle').click()" class="upload-box">
+                <input id="file-photo-vehicle" type="file" accept="image/*" class="hidden" onchange="handleDocUpload(this, 'vehicle')" />
+                <div id="preview-photo-vehicle" class="text-xs font-bold text-gray-500">🏍️ Toca para subir foto del vehículo</div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[11px] font-bold text-gray-600 dark:text-gray-300 block mb-1">Licencia de Conducir y Carnet de Circulación *</label>
+              <div id="box-photo-license" onclick="document.getElementById('file-photo-license').click()" class="upload-box">
+                <input id="file-photo-license" type="file" accept="image/*" class="hidden" onchange="handleDocUpload(this, 'license')" />
+                <div id="preview-photo-license" class="text-xs font-bold text-gray-500">📄 Toca para subir documentos del vehículo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" onclick="submitRegistration()" class="w-full py-4 rounded-2xl bg-[#00b14f] text-white font-extrabold text-sm shadow-lg active:scale-[0.99] transition">
+          Enviar registro para aprobación
+        </button>
+        <div class="h-6"></div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA 3: PERFIL Y CUENTA DEL USUARIO                   -->
+    <!-- ========================================================= -->
+    <section id="screen-account" class="screen">
+      <div class="px-4 pt-4 pb-2 flex items-center gap-3">
+        <button onclick="switchScreen('screen-passenger')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+        <div>
+          <h1 class="text-lg font-extrabold leading-tight">Tu cuenta</h1>
+          <p class="text-xs text-gray-500">Tu perfil y actividad en TaxiGo</p>
+        </div>
+      </div>
+
+      <div class="scroll-area px-4 pb-8">
+        <div class="flex flex-col items-center text-center my-4">
+          <div class="relative">
+            <div id="profile-avatar" class="w-20 h-20 rounded-full bg-gradient-to-tr from-[#11131a] to-[#374151] text-white text-2xl font-extrabold flex items-center justify-center shadow-md overflow-hidden">WV</div>
+            <span class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#11131a] text-white text-xs flex items-center justify-center border-2 border-white">📷</span>
+          </div>
+          <div class="flex items-center gap-2 mt-3">
+            <h2 id="profile-name" class="text-xl font-extrabold">Willy Villalonga</h2>
+            <span id="profile-role-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">Pasajero</span>
+          </div>
+          <p id="profile-phone" class="text-xs text-gray-500 font-medium mt-0.5">04121114357</p>
+          <span id="profile-approval-pill" class="mt-2 text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600">✓ Cuenta Aprobada</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="card-surface rounded-2xl p-3.5 text-center">
+            <p class="text-xl font-extrabold">5.0 ⭐</p>
+            <p class="text-[11px] text-gray-500 font-medium mt-0.5">Calificación</p>
+          </div>
+          <div class="card-surface rounded-2xl p-3.5 text-center">
+            <p id="profile-trips-count" class="text-xl font-extrabold">25</p>
+            <p class="text-[11px] text-gray-500 font-medium mt-0.5">Viajes completados</p>
+          </div>
+        </div>
+
+        <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-2">Tu actividad</p>
+        <div class="card-surface rounded-2xl divide-y divide-gray-100 dark:divide-gray-800 mb-4">
+          <button onclick="switchScreen('screen-passenger-history')" class="w-full p-3.5 flex items-center justify-between text-left">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">🕒</span>
+              <div>
+                <p class="text-sm font-bold">Historial de viajes</p>
+                <p id="history-count-sub" class="text-xs text-gray-500">25 viajes realizados</p>
+              </div>
+            </div>
+            <span class="text-gray-400">›</span>
+          </button>
+
+          <button onclick="switchScreen('screen-register')" class="w-full p-3.5 flex items-center justify-between text-left">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">🪪</span>
+              <div>
+                <p class="text-sm font-bold">Nuevo registro / Documentos</p>
+                <p class="text-xs text-gray-500">Registrar pasajero o conductor con fotos</p>
+              </div>
+            </div>
+            <span class="text-gray-400">›</span>
+          </button>
+        </div>
+
+        <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-2">Tu cuenta</p>
+        <div class="card-surface rounded-2xl divide-y divide-gray-100 dark:divide-gray-800 mb-4">
+          <button onclick="switchScreen('screen-settings')" class="w-full p-3.5 flex items-center justify-between text-left">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">⚙️</span>
+              <div>
+                <p class="text-sm font-bold">Ajustes</p>
+                <p class="text-xs text-gray-500">Perfil, dirección y tema</p>
+              </div>
+            </div>
+            <span class="text-gray-400">›</span>
+          </button>
+
+          <button onclick="openSupportModal()" class="w-full p-3.5 flex items-center justify-between text-left">
+            <div class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">🎧</span>
+              <div>
+                <p class="text-sm font-bold">Soporte técnico</p>
+                <p class="text-xs text-gray-500">Resuelve un problema</p>
+              </div>
+            </div>
+            <span class="text-gray-400">›</span>
+          </button>
+        </div>
+
+        <div onclick="switchToDriverMode()" class="cursor-pointer rounded-2xl p-4 bg-gradient-to-r from-[#11131a] to-[#3a1219] text-white flex items-center justify-between shadow-lg mb-4 active:scale-[0.99] transition">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center text-lg">🏍️</span>
+            <div>
+              <p class="text-sm font-extrabold">Panel de Conductor</p>
+              <p class="text-xs text-gray-300">Conéctate y recibe solicitudes en TaxiGo</p>
+            </div>
+          </div>
+          <span class="text-lg">›</span>
+        </div>
+
+        <p class="text-center text-[11px] text-gray-400">© 2026 TaxiGo · Todos los derechos reservados<br/>Versión 3.1.0</p>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA 4: AJUSTES                                       -->
+    <!-- ========================================================= -->
+    <section id="screen-settings" class="screen">
+      <div class="px-4 pt-4 pb-2 flex items-center gap-3">
+        <button onclick="switchScreen('screen-account')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+        <div>
+          <h1 class="text-lg font-extrabold leading-tight">Ajustes</h1>
+          <p class="text-xs text-gray-500">Tu cuenta y preferencias</p>
+        </div>
+      </div>
+
+      <div class="scroll-area px-4 pb-8">
+        <div class="flex flex-col items-center text-center my-3">
+          <div id="settings-avatar" class="w-18 h-18 w-[72px] h-[72px] rounded-full bg-[#11131a] text-white text-xl font-extrabold flex items-center justify-center overflow-hidden">WV</div>
+          <h2 id="settings-name" class="text-lg font-extrabold mt-2">Willy Villalonga</h2>
+          <span class="mt-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500">Miembro TaxiGo 2026</span>
+        </div>
+
+        <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-2">Información personal</p>
+        <div class="card-surface rounded-2xl divide-y divide-gray-100 dark:divide-gray-800 mb-4">
+          <div class="p-3.5 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold">Cédula de identidad <span class="ml-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600">✓ VERIFICADO</span></p>
+              <p id="settings-cedula" class="text-sm font-semibold text-gray-500 mt-0.5">V-27456890</p>
+            </div>
+          </div>
+          <div onclick="editPhoneNumber()" class="p-3.5 flex items-center justify-between cursor-pointer">
+            <div>
+              <p class="text-xs font-bold">Número de teléfono <span class="ml-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600">✓ VERIFICADO</span></p>
+              <p id="settings-phone" class="text-sm font-semibold text-gray-500 mt-0.5">04121114357</p>
+            </div>
+            <span class="text-gray-400">›</span>
+          </div>
+          <div class="p-3.5">
+            <p class="text-xs font-bold">Estado de residencia</p>
+            <p class="text-sm font-semibold text-gray-500 mt-0.5">Zulia · Ciudad Ojeda</p>
+          </div>
+        </div>
+
+        <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-2">Direcciones guardadas</p>
+        <div class="card-surface rounded-2xl divide-y divide-gray-100 dark:divide-gray-800 mb-4">
+          <div class="p-3.5 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold">Mi casa</p>
+              <p id="settings-home-address" class="text-xs text-gray-500 mt-0.5">Ciudad Ojeda 4019, Zulia, Venezuela</p>
+            </div>
+          </div>
+          <button onclick="addSavedAddress()" class="w-full p-3.5 text-left text-xs font-bold flex items-center gap-2">
+            <span>+</span> Agregar nueva dirección
+          </button>
+        </div>
+
+        <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider mb-2">Apariencia</p>
+        <div class="input-surface p-1 rounded-2xl grid grid-cols-3 gap-1 mb-5">
+          <button id="theme-light" onclick="setTheme('light')" class="py-2 rounded-xl text-xs font-bold transition">Claro</button>
+          <button id="theme-dark" onclick="setTheme('dark')" class="py-2 rounded-xl text-xs font-bold transition">Nocturno</button>
+          <button id="theme-system" onclick="setTheme('system')" class="py-2 rounded-xl text-xs font-bold bg-white text-gray-900 shadow-sm transition">Sistema</button>
+        </div>
+
+        <button onclick="clearAppCache()" class="text-xs font-bold text-red-500 flex items-center gap-2 py-2">
+          <span>◇</span> Restablecer datos de demostración
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA 5: MODO CONDUCTOR                                -->
+    <!-- ========================================================= -->
+    <section id="screen-driver" class="screen">
+      <div id="driver-map"></div>
+
+      <!-- Barra superior Conductor -->
+      <div class="absolute top-0 left-0 right-0 z-20 pt-3 px-3.5 flex items-center justify-between">
+        <button onclick="openDrawer()" class="w-11 h-11 rounded-full bg-white dark:bg-[#1e2233] shadow-md flex items-center justify-center text-gray-800 dark:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <button onclick="openSupportModal()" class="px-4 py-2 rounded-full bg-white dark:bg-[#1e2233] shadow-md text-xs font-bold flex items-center gap-1.5">
+          <span>🎧</span> Soporte
+        </button>
+
+        <button onclick="switchScreen('screen-driver-history')" class="w-11 h-11 rounded-full bg-white dark:bg-[#1e2233] shadow-md flex items-center justify-center text-gray-800 dark:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Banner si el conductor está pendiente o bloqueado -->
+      <div id="driver-lock-banner" class="hidden absolute top-16 left-3.5 right-3.5 z-30 rounded-2xl p-4 bg-[#11131a] text-white shadow-2xl border border-red-500/40"></div>
+
+      <!-- Panel inferior Conductor -->
+      <div class="bottom-sheet absolute bottom-0 left-0 right-0 px-4 pb-5 pt-1">
+        <div class="sheet-handle"></div>
+
+        <!-- Tarjeta de Comisión Semanal (Corte Lunes) -->
+        <div class="mb-3 rounded-2xl p-3 bg-amber-500/10 border border-amber-500/25 flex items-center justify-between">
+          <div>
+            <p class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400">Comisión plataforma (10%) · Corte Lunes</p>
+            <p class="text-xs text-gray-600 dark:text-gray-300 mt-0.5">Acumulado pendiente: <strong id="driver-debt-display" class="text-sm font-extrabold text-gray-900 dark:text-white">$0.00</strong></p>
+          </div>
+          <button onclick="openDriverReportPaymentModal()" class="px-3 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-bold active:scale-95">
+            Reportar pago
+          </button>
+        </div>
+
+        <button id="btn-driver-toggle" onclick="toggleDriverOnline()" class="w-full py-4 rounded-2xl bg-[#11131a] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-[0.99]">
+          <span id="driver-toggle-icon">🏍️</span>
+          <span id="driver-toggle-text">Conectarme</span>
+        </button>
+
+        <div id="driver-waiting-indicator" class="hidden text-center my-2.5">
+          <div class="flex items-center justify-center gap-1.5 mb-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 dot-1"></span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500 dot-2"></span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500 dot-3"></span>
+          </div>
+          <p class="text-xs font-bold text-gray-500">Esperando solicitudes cercanas...</p>
+        </div>
+
+        <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-700 text-center pt-3 mt-3 border-t border-gray-100 dark:border-gray-800">
+          <div>
+            <p class="text-[11px] text-gray-500 font-semibold">Ganado hoy</p>
+            <p id="driver-stat-earned" class="text-sm font-extrabold mt-0.5">$6.06</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-gray-500 font-semibold">Carreras</p>
+            <p id="driver-stat-trips" class="text-sm font-extrabold mt-0.5">2</p>
+          </div>
+          <div>
+            <p class="text-[11px] text-gray-500 font-semibold">Calificación</p>
+            <p class="text-sm font-extrabold mt-0.5">★ 5.0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL DE SOLICITUD ENTRANTE -->
+      <div id="incoming-request-modal" class="hidden absolute inset-0 z-40 bg-black/50 backdrop-blur-[2px] flex items-end">
+        <div class="w-full bg-white dark:bg-[#1e2233] rounded-t-3xl p-5 shadow-2xl">
+          <div class="flex flex-col items-center text-center">
+            <div id="req-initials" class="w-16 h-16 rounded-full bg-[#00b14f] text-white text-xl font-extrabold flex items-center justify-center shadow">EM</div>
+            <p id="req-rating" class="text-xs font-bold text-amber-500 mt-1.5">★ 4.9</p>
+            <h3 id="req-passenger-name" class="text-base font-extrabold mt-0.5">Elizabeth Manzanilla</h3>
+          </div>
+
+          <div class="card-surface rounded-2xl p-4 my-3.5 text-center">
+            <p id="req-pay-method" class="text-base font-extrabold">Pago móvil</p>
+            <p id="req-fare" class="text-2xl font-extrabold text-[#00b14f] my-0.5">$2,10</p>
+            <p class="text-[11px] text-gray-500 mb-2">Recibes 100% directo · Comisión 10% se anota al corte</p>
+
+            <div class="relative w-14 h-14 mx-auto flex items-center justify-center">
+              <svg class="countdown-svg w-14 h-14 -rotate-90" viewBox="0 0 60 60">
+                <circle cx="30" cy="30" r="25" fill="none" stroke="#e5e7eb" stroke-width="4" />
+                <circle id="countdown-circle" cx="30" cy="30" r="25" fill="none" stroke="#11131a" stroke-width="4" stroke-dasharray="157" stroke-dashoffset="0" stroke-linecap="round" />
+              </svg>
+              <div class="absolute text-center leading-none">
+                <span id="countdown-seconds" class="text-sm font-extrabold block">15</span>
+                <span class="text-[9px] text-gray-500">seg</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-100 dark:bg-gray-800/80 rounded-2xl p-3 text-center text-xs font-bold space-y-1 mb-3">
+            <p id="req-pickup-dist">Buscar a 1,8 km (4 min)</p>
+            <p id="req-trip-dist" class="text-gray-500">Luego llevar a 2,4 km (6 min)</p>
+          </div>
+
+          <div class="space-y-2 text-xs mb-4 px-1">
+            <div class="flex items-start gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#00b14f] mt-1 shrink-0"></span>
+              <div>
+                <p class="text-[10px] text-gray-400 font-bold">Desde</p>
+                <p id="req-origin" class="font-bold">Av. Intercomunal, Ciudad Ojeda</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600 mt-1 shrink-0"></span>
+              <div>
+                <p class="text-[10px] text-gray-400 font-bold">Hasta</p>
+                <p id="req-destination" class="font-bold">Casco Central, Ciudad Ojeda</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="declineIncomingRequest()" class="py-3.5 rounded-2xl bg-gray-100 dark:bg-gray-800 font-extrabold text-sm active:scale-95 transition">Declinar</button>
+            <button onclick="acceptIncomingRequest()" class="py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold text-sm shadow-lg active:scale-95 transition">Aceptar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANTALLA OSCURA DE VIAJE ACTIVO DEL CONDUCTOR -->
+      <div id="driver-active-trip-sheet" class="hidden absolute bottom-0 left-0 right-0 z-30 bg-[#141834] text-white rounded-t-3xl p-5 shadow-2xl">
+        <div class="sheet-handle !bg-white/20"></div>
+        <p id="active-trip-stage-label" class="text-xs text-indigo-300 font-semibold mt-1">Recoge al pasajero</p>
+        <h3 id="active-trip-passenger" class="text-xl font-extrabold">Alejandro Velásquez</h3>
+
+        <div class="flex items-center gap-2.5 my-3 text-xs text-indigo-100">
+          <span>📍</span>
+          <div>
+            <p class="text-[10px] text-indigo-300">Punto de recogida</p>
+            <p id="active-trip-address" class="font-bold">Av. Alonso de Ojeda, Ciudad Ojeda</p>
+          </div>
+        </div>
+
+        <div class="bg-[#0d1025] rounded-2xl p-4 mb-4">
+          <p class="text-[11px] text-indigo-300 font-semibold">Tarifa total a cobrar (100% para ti)</p>
+          <p id="active-trip-fare" class="text-xl font-extrabold my-1">$3,50 / Bs. 3.150,00</p>
+          <div class="flex items-center gap-2 mt-1.5">
+            <span id="active-trip-method-badge" class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-[#1d2247]">Pago Móvil</span>
+            <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300">Cobro directo al pasajero</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <button onclick="showToast('Llamando al pasajero...')" class="py-3 rounded-2xl border border-indigo-400/30 text-xs font-bold flex items-center justify-center gap-2">📞 Llamar</button>
+          <button onclick="openRideChat('driver')" class="py-3 rounded-2xl border border-indigo-400/30 text-xs font-bold flex items-center justify-center gap-2">💬 Mensaje</button>
+        </div>
+
+        <button id="btn-driver-trip-progress" onclick="advanceDriverTripStage()" class="w-full py-3.5 rounded-2xl bg-[#e4e6f1] text-[#141834] font-extrabold text-sm shadow-lg active:scale-[0.99] transition">
+          He llegado
+        </button>
+
+        <button onclick="cancelDriverActiveTrip()" class="w-full text-center text-xs font-bold text-red-400 mt-3 py-1">
+          Quiero cancelar el viaje
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA 6: HISTORIAL DEL CONDUCTOR                       -->
+    <!-- ========================================================= -->
+    <section id="screen-driver-history" class="screen">
+      <div class="px-4 pt-4 pb-2 flex items-center gap-3">
+        <button onclick="switchScreen('screen-driver')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+        <div>
+          <h1 class="text-lg font-extrabold leading-tight">Historial de viajes</h1>
+          <p class="text-xs text-gray-500">Viajes realizados y comisiones</p>
+        </div>
+      </div>
+
+      <div class="scroll-area px-4 pb-8">
+        <div class="card-surface rounded-2xl p-4 grid grid-cols-2 gap-4 my-2">
+          <div>
+            <p class="text-[10px] font-extrabold text-gray-400 uppercase">Ganado en viajes</p>
+            <p id="hist-earned-total" class="text-2xl font-extrabold mt-0.5">$6.06</p>
+            <p id="hist-completed-sub" class="text-[11px] text-gray-500 mt-0.5">2 completados · 0 cancelados</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-extrabold text-gray-400 uppercase">Viajes totales</p>
+            <p id="hist-alltime-count" class="text-2xl font-extrabold mt-0.5">1429</p>
+            <p class="text-[11px] text-gray-500 mt-0.5">histórico</p>
+          </div>
+        </div>
+
+        <div id="driver-history-list" class="space-y-2.5 mt-3"></div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA 7: HISTORIAL DEL PASAJERO                        -->
+    <!-- ========================================================= -->
+    <section id="screen-passenger-history" class="screen">
+      <div class="px-4 pt-4 pb-2 flex items-center gap-3">
+        <button onclick="switchScreen('screen-account')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold">←</button>
+        <div>
+          <h1 class="text-lg font-extrabold leading-tight">Tus viajes</h1>
+          <p class="text-xs text-gray-500">Historial reciente como pasajero</p>
+        </div>
+      </div>
+      <div id="passenger-history-list" class="scroll-area px-4 py-3 space-y-2.5"></div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANTALLA 8: PANEL EXCLUSIVO DEL DUEÑO (OCULTO EN EL LOGO) -->
+    <!-- ========================================================= -->
+    <section id="screen-owner" class="screen">
+      <div class="px-4 pt-4 pb-3 bg-[#11131a] text-white flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-widest text-amber-400">Acceso Privado · Administración</span>
+          <h1 class="text-lg font-extrabold">Panel de Dueño · TaxiGo</h1>
+        </div>
+        <button onclick="switchScreen('screen-passenger')" class="px-3.5 py-2 rounded-xl bg-white/10 text-xs font-bold">Salir</button>
+      </div>
+
+      <!-- KPIs Exclusivos del Dueño -->
+      <div class="px-4 pt-3 pb-2 bg-[#11131a] text-white">
+        <div class="rounded-2xl p-4 bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-lg mb-3">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-100">Ganancia Neta del Dueño (10%)</p>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/25">Solo visible para ti</span>
+          </div>
+          <p id="owner-net-profit" class="text-3xl font-extrabold mt-1">$0.00</p>
+          <div class="flex items-center justify-between text-xs text-emerald-100 mt-2 pt-2 border-t border-white/15">
+            <span>Por cobrar (semana): <strong id="owner-pending-collect">$0.00</strong></span>
+            <span>Ya cobrado: <strong id="owner-collected-total">$0.00</strong></span>
+          </div>
+        </div>
+
+        <!-- Tabs del Dueño -->
+        <div class="grid grid-cols-3 gap-1.5 bg-white/10 p-1 rounded-2xl text-xs font-bold">
+          <button id="owner-tab-users" onclick="setOwnerTab('users')" class="py-2 rounded-xl bg-white text-[#11131a]">Usuarios</button>
+          <button id="owner-tab-settlements" onclick="setOwnerTab('settlements')" class="py-2 rounded-xl text-gray-300">Corte Lunes</button>
+          <button id="owner-tab-ledger" onclick="setOwnerTab('ledger')" class="py-2 rounded-xl text-gray-300">Movimientos</button>
+        </div>
+      </div>
+
+      <div class="scroll-area px-4 py-3">
+        <!-- TAB 1: Aprobación y gestión de usuarios -->
+        <div id="owner-view-users" class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-extrabold uppercase text-gray-500">Nuevos y Antiguos Usuarios</h2>
+            <span id="owner-pending-badge" class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600">0 pendientes</span>
+          </div>
+          <div id="owner-users-list" class="space-y-3"></div>
+        </div>
+
+        <!-- TAB 2: Corte Semanal de los Lunes -->
+        <div id="owner-view-settlements" class="hidden space-y-3">
+          <div class="card-surface rounded-2xl p-3.5 bg-amber-500/5 border-amber-500/30">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-xs font-extrabold">Regla de Liquidación Semanal (Lunes)</p>
+                <p class="text-[11px] text-gray-500 mt-0.5">Bloquea automáticamente a los conductores con saldo pendiente del 10%.</p>
+              </div>
+              <button onclick="runMondayCutoff()" class="shrink-0 px-3 py-2.5 rounded-xl bg-red-600 text-white text-[11px] font-extrabold shadow active:scale-95">
+                Ejecutar Corte Lunes
+              </button>
+            </div>
+          </div>
+          <div id="owner-drivers-debt-list" class="space-y-2.5"></div>
+        </div>
+
+        <!-- TAB 3: Movimientos financieros y carreras -->
+        <div id="owner-view-ledger" class="hidden space-y-2.5">
+          <h2 class="text-xs font-extrabold uppercase text-gray-500">Auditoría de Carreras y Comisiones (10%)</h2>
+          <div id="owner-ledger-list" class="space-y-2"></div>
         </div>
       </div>
     </section>
-  </section>
 
-  <!-- ALERTA EMERGENTE DE CARRERA PARA EL CONDUCTOR -->
-  <div class="incoming-modal" id="incomingModal">
-    <div class="incoming-card">
-      <div style="width:50px;height:50px;background:#10b981;color:#fff;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;" id="incomingInitials">EM</div>
-      <h3 style="font-size:15px;font-weight:900;color:#0f172a;" id="incomingName">Elizabeth manzanilla</h3>
-      <p style="font-size:11px;color:#f59e0b;font-weight:800;margin-bottom:8px;">★ 0.0 • Pago móvil</p>
-      <div style="font-size:22px;font-weight:900;color:#0f172a;margin-bottom:10px;" id="incomingFare">$2.09</div>
-      <p style="font-size:11px;color:#64748b;margin-bottom:14px;" id="incomingRoute">Destino: Ciudad Ojeda</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button class="primary-btn red" style="margin:0;padding:10px;" onclick="declineRideModal()">Declinar</button>
-        <button class="primary-btn" style="margin:0;padding:10px;background:#10b981;" onclick="acceptRideModal()">Aceptar</button>
+    <!-- ========================================================= -->
+    <!-- MENÚ LATERAL (SIN BOTÓN VISIBLE DE DUEÑO)                 -->
+    <!-- ========================================================= -->
+    <div id="drawer-backdrop" onclick="closeDrawer()"></div>
+    <aside id="side-drawer">
+      <div class="p-5 bg-[#11131a] text-white">
+        <div class="flex items-center justify-between mb-4">
+          <span onclick="handleLogoTap()" class="taxigo-logo-trigger text-xl font-extrabold tracking-tight">Taxi<span class="text-[#e51d2e]">Go</span></span>
+          <button onclick="closeDrawer()" class="text-gray-400 text-lg">✕</button>
+        </div>
+        <div class="flex items-center gap-3">
+          <div id="drawer-avatar" class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center font-extrabold text-base overflow-hidden">WV</div>
+          <div>
+            <p id="drawer-name" class="font-extrabold text-sm">Willy Villalonga</p>
+            <p id="drawer-phone" class="text-xs text-gray-300">04121114357</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 flex-1 space-y-1">
+        <button onclick="closeDrawer(); switchScreen('screen-passenger')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span>🗺️</span> Pedir un viaje o envío
+        </button>
+        <button onclick="closeDrawer(); switchScreen('screen-register')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span>🪪</span> Registrar nueva cuenta (KYC)
+        </button>
+        <button onclick="closeDrawer(); switchScreen('screen-account')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span>👤</span> Tu cuenta y perfil
+        </button>
+        <button onclick="closeDrawer(); switchScreen('screen-passenger-history')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span>🕒</span> Historial de viajes
+        </button>
+        <button onclick="closeDrawer(); switchScreen('screen-settings')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span>⚙️</span> Ajustes
+        </button>
+        <button onclick="closeDrawer(); openSupportModal()" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
+          <span>🎧</span> Soporte técnico
+        </button>
+      </div>
+
+      <div class="p-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+        <button id="drawer-mode-switch-btn" onclick="closeDrawer(); toggleRoleMode()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold text-xs shadow">
+          Cambiar a Modo Conductor
+        </button>
+      </div>
+    </aside>
+
+    <!-- ========================================================= -->
+    <!-- MODAL ACCESO OCULTO DE DUEÑO (PIN)                        -->
+    <!-- ========================================================= -->
+    <div id="owner-pin-modal" class="hidden absolute inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5">
+      <div class="w-full max-w-xs bg-white dark:bg-[#1e2233] rounded-3xl p-5 shadow-2xl text-center">
+        <div class="w-12 h-12 rounded-2xl bg-[#11131a] text-white flex items-center justify-center text-xl mx-auto mb-3">🔐</div>
+        <h3 class="text-base font-extrabold">Acceso Restringido</h3>
+        <p class="text-xs text-gray-500 mt-1 mb-4">Ingresa la clave de propietario para continuar</p>
+        <input id="owner-pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••" class="w-full text-center tracking-[0.5em] text-xl font-extrabold input-surface rounded-2xl py-3 mb-3 focus:outline-none" />
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="closeOwnerPinModal()" class="py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-bold">Cancelar</button>
+          <button onclick="verifyOwnerPin()" class="py-3 rounded-xl bg-[#11131a] text-white text-xs font-extrabold">Entrar</button>
+        </div>
       </div>
     </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL VISOR DE DOCUMENTOS / FOTOS                         -->
+    <!-- ========================================================= -->
+    <div id="doc-viewer-modal" class="hidden absolute inset-0 z-[115] bg-black/80 flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white dark:bg-[#1e2233] rounded-3xl p-4 shadow-2xl">
+        <div class="flex items-center justify-between mb-3">
+          <h3 id="doc-viewer-title" class="text-sm font-extrabold">Documentos del usuario</h3>
+          <button onclick="document.getElementById('doc-viewer-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 font-bold text-xs">✕</button>
+        </div>
+        <div id="doc-viewer-body" class="space-y-3 max-h-[65dvh] overflow-y-auto"></div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL CHAT EN VIVO                                        -->
+    <!-- ========================================================= -->
+    <div id="chat-modal" class="hidden absolute inset-0 z-[100] bg-black/55 flex items-end">
+      <div class="w-full h-[72%] bg-white dark:bg-[#1e2233] rounded-t-3xl flex flex-col p-4">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+          <div>
+            <p id="chat-peer-name" class="text-sm font-extrabold">Chat del viaje</p>
+            <p class="text-[11px] text-emerald-500 font-semibold">● En línea</p>
+          </div>
+          <button onclick="closeRideChat()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 font-bold text-xs">✕</button>
+        </div>
+        <div id="chat-messages" class="flex-1 overflow-y-auto py-3 space-y-2 text-xs"></div>
+        <div class="flex gap-1.5 overflow-x-auto pb-2">
+          <button onclick="sendQuickChat('Voy en camino')" class="shrink-0 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">Voy en camino</button>
+          <button onclick="sendQuickChat('Estoy afuera')" class="shrink-0 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">Estoy afuera</button>
+          <button onclick="sendQuickChat('Ya salgo en 1 min')" class="shrink-0 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">Ya salgo en 1 min</button>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <input id="chat-input" type="text" placeholder="Escribe un mensaje..." class="flex-1 input-surface rounded-xl px-3.5 py-2.5 text-xs focus:outline-none" />
+          <button onclick="sendChatInput()" class="px-4 py-2.5 rounded-xl bg-[#11131a] text-white text-xs font-bold">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL SOPORTE                                             -->
+    <!-- ========================================================= -->
+    <div id="support-modal" class="hidden absolute inset-0 z-[100] bg-black/55 flex items-center justify-center p-5">
+      <div class="w-full max-w-sm bg-white dark:bg-[#1e2233] rounded-3xl p-5 shadow-2xl">
+        <h3 class="text-base font-extrabold mb-1">Soporte Técnico TaxiGo</h3>
+        <p class="text-xs text-gray-500 mb-4">Atención directa 24/7 en Ciudad Ojeda y Costa Oriental del Lago.</p>
+        <div class="space-y-2 text-xs mb-4">
+          <div class="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold">📲 WhatsApp: +58 412-1114357</div>
+          <div class="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 font-semibold">🕒 Respuesta promedio: menos de 3 min</div>
+        </div>
+        <button onclick="closeSupportModal()" class="w-full py-3 rounded-2xl bg-[#11131a] text-white font-bold text-xs">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[130] bg-[#11131a] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl whitespace-nowrap"></div>
   </div>
 
-  <!-- PANTALLA DE CUENTA / AJUSTES DEL PASAJERO -->
-  <section class="account-screen" id="accountScreen">
-    <div class="account-header">
-      <button class="top-icon-btn" onclick="closeAccountScreen()">‹</button>
-      <div><h2 style="font-size:16px;font-weight:900;">Tu cuenta</h2><p style="font-size:11px;color:#64748b;">Perfil y preferencias</p></div>
-    </div>
-
-    <div style="background:#fff;border-radius:20px;padding:16px;border:1px solid #e2e8f0;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
-      <div class="avatar-circle" id="accAvatarBox" onclick="document.getElementById('profilePicInput').click()" title="Cambiar foto">
-        <span id="accAvatarInitials">SO</span>
-        <input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="updateProfilePic(this)" />
-      </div>
-      <div>
-        <h3 style="font-size:16px;font-weight:900;" id="accName">Usuario</h3>
-        <span style="background:#dcfce7;color:#15803d;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;">Pasajero</span>
-        <p style="font-size:12px;color:#64748b;margin-top:4px;" id="accPhone">04120000000</p>
-        <p style="font-size:11px;color:#047857;margin-top:2px;">Cédula: <b id="accCedula">V-00000000</b> (✓ VERIFICADO)</p>
-      </div>
-    </div>
-
-    <div class="menu-card-group">
-      <div class="menu-item-row" onclick="showToast('Direcciones guardadas')">📍 Mis direcciones guardadas <span>›</span></div>
-      <div class="menu-item-row" onclick="showToast('Historial limpio • Sin viajes')">📜 Historial de viajes <span>›</span></div>
-      <div class="menu-item-row" onclick="showToast('Soporte activo 24/7')">🎧 Soporte técnico <span>›</span></div>
-      <div class="menu-item-row" onclick="showToast('Términos y privacidad')">📄 Términos y privacidad <span>›</span></div>
-    </div>
-
-    <button class="primary-btn red" onclick="goHome('login')">Cerrar sesión</button>
-  </section>
-
-  <!-- PANEL DUEÑO -->
-  <section class="owner-screen" id="ownerScreen">
-    <div class="owner-header">
-      <h2>👑 Panel Dueño TaxiGo</h2>
-      <button onclick="closeOwner()" style="background:#1e293b;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;">✕</button>
-    </div>
-    <nav class="owner-nav">
-      <button class="owner-tab-btn active" onclick="switchOwnerTab('sum')">📊 Tarifas</button>
-      <button class="owner-tab-btn" onclick="switchOwnerTab('drv')">🏍️ Conductores</button>
-      <button class="owner-tab-btn" onclick="switchOwnerTab('usr')">🙋‍♀️ Pasajeros</button>
-    </nav>
-    <div class="owner-body">
-      <div id="osec-sum">
-        <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #e2e8f0;">
-          <h3 style="font-size:14px;font-weight:900;margin-bottom:12px;">Configuración</h3>
-          <div class="form-group"><label>Tasa BCV ($1)</label><input type="number" id="admRate" step="0.01" /></div>
-          <div class="form-group"><label>Precio por Km ($)</label><input type="number" id="admKm" step="0.05" /></div>
-          <div class="form-group"><label>Tarifa Mínima ($)</label><input type="number" id="admMin" step="0.10" /></div>
-          <button class="primary-btn" onclick="saveAdmin()">Guardar</button>
-        </div>
-      </div>
-      <div id="osec-drv" style="display:none;"><div id="adminDrvList"></div></div>
-      <div id="osec-usr" style="display:none;"><div id="adminUsrList"></div></div>
-    </div>
-  </section>
-
   <script>
-    const STORAGE_KEY = 'taxigo_db_v9';
-    const defaultDB = {
-      settings: { rate: 914.02, pricePerKm: 0.75, minFare: 1.10 },
-      drivers: [],
-      users: [],
-      rides: []
+    // =========================================================
+    // CONFIGURACIÓN Y ESTADO DEFENSIVO (NO SE BLOQUEA)
+    // =========================================================
+    const OWNER_PIN = '2026';
+    const STORAGE_KEY = 'taxigo_v6_clean_state';
+    const EXCHANGE_RATE = 900.0;
+    const CENTER_COORDS = [10.2015, -71.3095]; // Ciudad Ojeda
+
+    let logoTapCount = 0;
+    let logoTapTimer = null;
+    let currentOwnerTab = 'users';
+
+    const DEFAULT_STATE = {
+      activeUserId: 'usr-driver-1',
+      mode: 'passenger',
+      serviceMode: 'viaje',
+      theme: 'system',
+      selectedVehicle: 'Moto Go',
+      paymentMethod: 'Pago Móvil',
+      distanceKm: 2.4,
+      durationMin: 6,
+      destinationText: '',
+      ownerCollectedTotal: 4.50,
+      users: [
+        {
+          id: 'usr-driver-1',
+          role: 'driver',
+          name: 'Willy Villalonga',
+          cedula: 'V-27456890',
+          phone: '04121114357',
+          address: 'Los Samanes, Ciudad Ojeda, Zulia',
+          vehicleType: 'Moto Go',
+          model: 'Bera SBR 150',
+          plate: 'AA8G42D',
+          color: 'Naranja',
+          status: 'approved', // pending | approved | blocked
+          debtUsd: 1.85,
+          mondayBlocked: false,
+          earnedToday: 6.06,
+          tripsToday: 2,
+          tripsTotal: 1429,
+          joined: 'Nov 2026',
+          docs: { face: '', cedula: '', vehicle: '', license: '' }
+        },
+        {
+          id: 'usr-pass-1',
+          role: 'passenger',
+          name: 'Siolibeth Oranyelis',
+          cedula: 'V-30816190',
+          phone: '04121114357',
+          address: 'Ciudad Ojeda 4019, Zulia',
+          status: 'approved',
+          tripsTotal: 25,
+          joined: 'Feb 2026',
+          docs: { face: '', cedula: '' }
+        },
+        {
+          id: 'usr-pending-1',
+          role: 'driver',
+          name: 'José Gregorio Pérez',
+          cedula: 'V-24890123',
+          phone: '04146543210',
+          address: 'Las Morochas, Ciudad Ojeda',
+          vehicleType: 'Automóvil',
+          model: 'Chevrolet Aveo',
+          plate: 'AC451KM',
+          color: 'Plata',
+          status: 'pending',
+          debtUsd: 0.00,
+          mondayBlocked: false,
+          earnedToday: 0,
+          tripsToday: 0,
+          tripsTotal: 0,
+          joined: 'Hoy',
+          docs: { face: '', cedula: '', vehicle: '', license: '' }
+        }
+      ],
+      driverHistory: [
+        { id: '#Y80ZFQ', route: 'Av. Intercomunal → Casco Central', passenger: 'Liz Estrada', time: 'Hoy · 01:01 PM', fare: 1.82, ownerFee: 0.18, method: 'Pago Móvil' },
+        { id: '#Y6TL1I', route: 'Los Samanes → Terminal de Pasajeros', passenger: 'Michelle Marcano', time: 'Hoy · 12:48 PM', fare: 4.24, ownerFee: 0.42, method: 'Efectivo' }
+      ],
+      passengerHistory: [
+        { route: 'Los Samanes → Casco Central, Ciudad Ojeda', date: '16 Nov 2026 · 07:38 PM', fare: '$1.45', vehicle: 'Moto Go', method: 'Pago Móvil' },
+        { route: 'Av. Alonso de Ojeda → Terminal de Pasajeros', date: '14 Nov 2026 · 02:15 PM', fare: '$3.20', vehicle: 'Automóvil', method: 'Efectivo' }
+      ],
+      ledger: [
+        { id: 'MOV-102', desc: 'Viaje #Y80ZFQ · Willy Villalonga', totalFare: 1.82, ownerCut: 0.18, date: 'Hoy 01:01 PM', type: 'commission' },
+        { id: 'MOV-101', desc: 'Viaje #Y6TL1I · Willy Villalonga', totalFare: 4.24, ownerCut: 0.42, date: 'Hoy 12:48 PM', type: 'commission' },
+        { id: 'MOV-100', desc: 'Liquidación Lunes · Willy Villalonga', totalFare: 45.00, ownerCut: 4.50, date: 'Lunes pasado', type: 'settlement' }
+      ]
     };
 
-    function loadDB() {
+    let state = loadStateSafe();
+
+    function loadStateSafe() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return JSON.parse(JSON.stringify(defaultDB));
-        return JSON.parse(raw);
-      } catch(e) { return JSON.parse(JSON.stringify(defaultDB)); }
-    }
-
-    let db = loadDB();
-    function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
-
-    let currentUser = null;
-    let currentDriver = null;
-    let selectedVeh = 'Moto';
-    let currentService = 'Mototaxi';
-    let distanceKm = 1.5;
-    let currentFare = 1.13;
-    let map = null, userMarker = null, destMarker = null, mapInitialized = false;
-    let originCoords = [10.2016, -71.3125];
-    let tempDocs = {};
-    let logoClicks = 0, clickTimer = null;
-    let pendingPhone = '';
-
-    function calcFare(km) {
-      const perKm = Number(db.settings.pricePerKm) || 0.75;
-      const base = Number(db.settings.minFare) || 1.10;
-      return Math.max(base, Math.round(km * perKm * 100) / 100);
-    }
-
-    function initMap() {
-      if (mapInitialized) { setTimeout(()=>map.invalidateSize(), 150); return; }
-      map = L.map('map', { zoomControl: false, dragging: true, touchZoom: true, scrollWheelZoom: true, doubleClickZoom: true }).setView(originCoords, 15);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
-
-      const uIcon = L.divIcon({ className: 'pin', html: '<div style="width:16px;height:16px;background:#10b981;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(16,185,129,0.8);"></div>', iconSize:[16,16], iconAnchor:[8,8] });
-      userMarker = L.marker(originCoords, { icon: uIcon }).addTo(map);
-
-      map.on('click', (e) => {
-        const latlng = [e.latlng.lat, e.latlng.lng];
-        if (destMarker) destMarker.setLatLng(latlng);
-        else {
-          const dIcon = L.divIcon({ className: 'pin', html: '<div style="width:18px;height:18px;background:#f59e0b;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(245,158,11,0.9);"></div>', iconSize:[18,18], iconAnchor:[9,9] });
-          destMarker = L.marker(latlng, { icon: dIcon }).addTo(map);
+        if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.users) || parsed.users.length === 0) {
+          return JSON.parse(JSON.stringify(DEFAULT_STATE));
         }
-        document.getElementById('destInput').value = `Destino (${latlng[0].toFixed(4)}, ${latlng[1].toFixed(4)})`;
-        const meters = map.distance(originCoords, latlng);
-        distanceKm = Math.max(1.0, Math.round((meters / 1000) * 10) / 10);
-        updateFare();
-        showToast(`Destino fijado • ${distanceKm.toFixed(1)} km`);
-      });
-      mapInitialized = true;
-      setTimeout(()=>map.invalidateSize(), 200);
+        return Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+      } catch (e) {
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
     }
 
-    function setAuthMode(mode) {
-      document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
-      document.getElementById('tabRegPass').classList.toggle('active', mode === 'regPass');
-      document.getElementById('tabRegDrv').classList.toggle('active', mode === 'regDrv');
-      document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
-      document.getElementById('regPassForm').style.display = mode === 'regPass' ? 'block' : 'none';
-      document.getElementById('regDrvForm').style.display = mode === 'regDrv' ? 'block' : 'none';
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        // Si el almacenamiento se llena por imágenes grandes, guardamos sin base64 pesados
+        try {
+          const slim = JSON.parse(JSON.stringify(state));
+          slim.users.forEach(u => { if (u.docs) u.docs = { face: '', cedula: '', vehicle: '', license: '' }; });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+        } catch (err) {}
+      }
     }
 
-    function setVeh(v) {
-      selectedVeh = v;
-      document.getElementById('vMoto').classList.toggle('active', v === 'Moto');
-      document.getElementById('vCarro').classList.toggle('active', v === 'Carro');
+    function getActiveUser() {
+      return state.users.find(u => u.id === state.activeUserId) || state.users[0];
     }
 
-    function handleDoc(input, key, stId) {
-      const f = input.files && input.files[0];
-      if (!f) return;
-      const r = new FileReader();
-      r.onload = e => {
-        tempDocs[key] = e.target.result;
-        const el = document.getElementById(stId);
-        el.textContent = '✓ OK';
-        el.classList.add('ok');
-      };
-      r.readAsDataURL(f);
+    // =========================================================
+    // ACCESO OCULTO DE DUEÑO (5 TOQUES EN LOGOTIPO TAXIGO)
+    // =========================================================
+    function handleLogoTap() {
+      logoTapCount++;
+      clearTimeout(logoTapTimer);
+      logoTapTimer = setTimeout(() => { logoTapCount = 0; }, 1600);
+
+      if (logoTapCount >= 5) {
+        logoTapCount = 0;
+        const input = document.getElementById('owner-pin-input');
+        if (input) input.value = '';
+        document.getElementById('owner-pin-modal').classList.remove('hidden');
+        setTimeout(() => { if (input) input.focus(); }, 100);
+      }
     }
 
-    /* FLUJO OTP VÍA WHATSAPP / SMS */
-    function sendWhatsAppOtp(type) {
-      const phoneInput = type === 'passenger' ? document.getElementById('regPasPhone') : document.getElementById('regDrvPhone');
-      const phone = phoneInput.value.trim();
-      if (!phone) { showToast('Ingresa tu número de teléfono'); return; }
-      pendingPhone = phone;
-      showToast('📲 Código enviado por WhatsApp/SMS (Usa 1234)');
-      if (type === 'passenger') {
-        document.getElementById('otpPassStep1').style.display = 'none';
-        document.getElementById('otpPassStep2').style.display = 'block';
+    function closeOwnerPinModal() {
+      document.getElementById('owner-pin-modal').classList.add('hidden');
+    }
+
+    function verifyOwnerPin() {
+      const val = (document.getElementById('owner-pin-input').value || '').trim();
+      if (val === OWNER_PIN) {
+        closeOwnerPinModal();
+        closeDrawer();
+        renderOwnerDashboard();
+        switchScreen('screen-owner');
+        showToast('Bienvenido al Panel de Dueño');
       } else {
-        document.getElementById('otpDrvStep1').style.display = 'none';
-        document.getElementById('otpDrvStep2').style.display = 'block';
+        showToast('Clave incorrecta');
       }
     }
 
-    function registerPassenger() {
-      const code = document.getElementById('otpPasCode').value.trim();
-      if (code !== '1234') { showToast('Código de confirmación incorrecto (Usa 1234)'); return; }
-      const name = document.getElementById('pasName').value.trim();
-      const cedula = document.getElementById('pasCedula').value.trim();
-      const pin = document.getElementById('pasPin').value.trim() || '1234';
-      if (!name || !cedula) { showToast('Completa todos los campos'); return; }
-      
-      const newU = { id: 'u'+Date.now(), phone: pendingPhone, name, cedula, pin, status: 'approved', avatar: '' };
-      db.users.unshift(newU);
-      saveDB();
-      enterApp('passenger', newU);
-    }
+    // =========================================================
+    // NAVEGACIÓN ENTRE PANTALLAS (GARANTIZADA SIN BLOQUEOS)
+    // =========================================================
+    function switchScreen(screenId) {
+      try {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(screenId);
+        if (target) target.classList.add('active');
 
-    function registerDriver() {
-      const code = document.getElementById('otpDrvCode').value.trim();
-      if (code !== '1234') { showToast('Código de confirmación incorrecto (Usa 1234)'); return; }
-      const name = document.getElementById('drvName').value.trim();
-      const cedula = document.getElementById('drvCedula').value.trim();
-      const vehicleDetail = document.getElementById('drvVehDet').value.trim();
-      const pagoMovil = document.getElementById('drvPM').value.trim();
-      const pin = document.getElementById('drvPin').value.trim() || '1234';
-      if (!name || !cedula || !vehicleDetail || !pagoMovil) { showToast('Completa todos los campos'); return; }
-
-      const newD = { id: 'd'+Date.now(), phone: pendingPhone, name, cedula, vehicleType: selectedVeh, vehicleDetail, pagoMovil, pin, status: 'approved', docs: { ...tempDocs }, avatar: '' };
-      db.drivers.unshift(newD);
-      saveDB();
-      showToast('¡Registro exitoso! Ya puedes iniciar sesión');
-      setAuthMode('login');
-    }
-
-    function handleLogin() {
-      const phone = document.getElementById('loginPhone').value.trim();
-      const pin = document.getElementById('loginPin').value.trim();
-      if (!phone) { showToast('Ingresa tu número de teléfono'); return; }
-      
-      const drv = db.drivers.find(d => d.phone === phone);
-      if (drv) { enterApp('driver', drv); return; }
-      const usr = db.users.find(u => u.phone === phone);
-      if (usr) { enterApp('passenger', usr); return; }
-      showToast('Usuario (teléfono) no registrado');
-    }
-
-    function enterApp(role, profile) {
-      document.getElementById('splashScreen').style.display = 'none';
-      document.getElementById('appScreen').style.display = 'block';
-      const isPass = role === 'passenger';
-      document.getElementById('passengerTopBar').style.display = isPass ? 'flex' : 'none';
-      document.getElementById('passengerSheet').style.display = isPass ? 'block' : 'none';
-      document.getElementById('driverView').style.display = isPass ? 'none' : 'block';
-
-      if (isPass) { currentUser = profile; }
-      else {
-        currentDriver = profile;
-        document.getElementById('driverWelcomeName').textContent = profile.name;
-        document.getElementById('driverVehInfo').textContent = `${profile.vehicleType} • ${profile.vehicleDetail}`;
+        if (screenId === 'screen-passenger' && passengerMap) {
+          setTimeout(() => passengerMap.invalidateSize(), 120);
+        }
+        if (screenId === 'screen-driver' && driverMap) {
+          setTimeout(() => driverMap.invalidateSize(), 120);
+        }
+        if (screenId === 'screen-driver-history') renderDriverHistory();
+        if (screenId === 'screen-passenger-history') renderPassengerHistory();
+        if (screenId === 'screen-owner') renderOwnerDashboard();
+        updateAllUI();
+      } catch (err) {
+        console.error('Error cambiando pantalla:', err);
       }
-      initMap();
-      showToast(`Bienvenido, ${profile.name}`);
     }
 
-    function goHome(m) {
-      document.getElementById('splashScreen').style.display = 'flex';
-      document.getElementById('appScreen').style.display = 'none';
-      document.getElementById('accountScreen').style.display = 'none';
-      document.getElementById('incomingModal').style.display = 'none';
-      setAuthMode(m || 'login');
+    function openDrawer() {
+      document.getElementById('drawer-backdrop').classList.add('open');
+      document.getElementById('side-drawer').classList.add('open');
     }
 
-    function locateUser() {
-      if (!navigator.geolocation) return;
-      navigator.geolocation.getCurrentPosition(p => {
-        originCoords = [p.coords.latitude, p.coords.longitude];
-        map.setView(originCoords, 16);
-        userMarker.setLatLng(originCoords);
-        document.getElementById('originInput').value = `Ubicación GPS actual`;
-        showToast('GPS actualizado');
-      }, () => showToast('Activa el GPS'));
+    function closeDrawer() {
+      document.getElementById('drawer-backdrop').classList.remove('open');
+      document.getElementById('side-drawer').classList.remove('open');
     }
 
-    function setService(el, s) {
-      document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
-      el.classList.add('active');
-      currentService = s;
+    function toggleRoleMode() {
+      if (state.mode === 'passenger') {
+        switchToDriverMode();
+      } else {
+        state.mode = 'passenger';
+        saveState();
+        switchScreen('screen-passenger');
+        showToast('Modo Pasajero activo');
+      }
     }
 
-    function adjKm(d) {
-      distanceKm = Math.max(0.5, Math.round((distanceKm + d)*10)/10);
-      updateFare();
+    function switchToDriverMode() {
+      state.mode = 'driver';
+      saveState();
+      switchScreen('screen-driver');
+      showToast('Modo Conductor activo');
     }
 
-    function updateFare() {
-      currentFare = calcFare(distanceKm);
-      const rate = Number(db.settings.rate) || 914.02;
-      document.getElementById('kmDisplay').textContent = distanceKm.toFixed(1);
-      document.getElementById('minFareLbl').textContent = (db.settings.minFare).toFixed(2);
-      document.getElementById('fareDisplay').textContent = currentFare.toFixed(2);
-      document.getElementById('bsDisplay').textContent = (currentFare * rate).toFixed(2).replace('.', ',');
+    // =========================================================
+    // REGISTRO Y VERIFICACIÓN KYC CON COMPRESIÓN DE FOTOS
+    // =========================================================
+    let regRole = 'passenger';
+    let uploadedDocs = { face: '', cedula: '', vehicle: '', license: '' };
+
+    function setRegRole(role) {
+      regRole = role;
+      const btnP = document.getElementById('reg-role-passenger');
+      const btnD = document.getElementById('reg-role-driver');
+      const vBox = document.getElementById('reg-driver-vehicle-box');
+      const dBox = document.getElementById('reg-driver-docs-box');
+
+      if (role === 'passenger') {
+        btnP.className = 'py-3 px-3 rounded-2xl border-2 border-[#11131a] bg-[#11131a] text-white font-bold text-xs flex items-center justify-center gap-2';
+        btnD.className = 'py-3 px-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 font-bold text-xs flex items-center justify-center gap-2';
+        vBox.classList.add('hidden');
+        dBox.classList.add('hidden');
+      } else {
+        btnD.className = 'py-3 px-3 rounded-2xl border-2 border-[#11131a] bg-[#11131a] text-white font-bold text-xs flex items-center justify-center gap-2';
+        btnP.className = 'py-3 px-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 font-bold text-xs flex items-center justify-center gap-2';
+        vBox.classList.remove('hidden');
+        dBox.classList.remove('hidden');
+      }
     }
 
-    function requestRide() {
-      const dest = document.getElementById('destInput').value.trim();
-      if (!dest || dest.includes('Toca el mapa')) { showToast('Fija tu destino en el mapa'); return; }
+    function handleDocUpload(input, docKey) {
+      const file = input.files && input.files[0];
+      if (!file) return;
 
-      document.getElementById('passengerSheet').style.display = 'none';
-      document.getElementById('searchingScreen').style.display = 'flex';
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () {
+          // Redimensionar imagen para que nunca sature localStorage
+          const canvas = document.createElement('canvas');
+          const maxW = 420;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          uploadedDocs[docKey] = canvas.toDataURL('image/jpeg', 0.65);
 
-      setTimeout(() => {
-        const modal = document.getElementById('incomingModal');
-        document.getElementById('incomingFare').textContent = `$${currentFare.toFixed(2)}`;
-        document.getElementById('incomingRoute').textContent = `Destino: ${dest} (${distanceKm} km)`;
-        modal.style.display = 'flex';
-      }, 1500);
+          const box = document.getElementById('box-photo-' + docKey);
+          const prev = document.getElementById('preview-photo-' + docKey);
+          if (box) box.classList.add('has-file');
+          if (prev) {
+            prev.innerHTML = `<div class="flex items-center justify-center gap-2 text-emerald-600"><img src="${uploadedDocs[docKey]}" class="w-10 h-10 rounded-lg object-cover border" /><span>✓ Foto cargada (${file.name.slice(0, 14)})</span></div>`;
+          }
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
-    function cancelRideSearch() {
-      document.getElementById('searchingScreen').style.display = 'none';
-      document.getElementById('passengerSheet').style.display = 'block';
-      document.getElementById('incomingModal').style.display = 'none';
+    function submitRegistration() {
+      const name = document.getElementById('reg-name').value.trim();
+      const cedula = document.getElementById('reg-cedula').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const address = document.getElementById('reg-address').value.trim();
+
+      if (!name || !cedula || !phone || !address) {
+        showToast('Completa todos los datos personales');
+        return;
+      }
+
+      const newUser = {
+        id: 'usr-' + Date.now(),
+        role: regRole,
+        name,
+        cedula,
+        phone,
+        address,
+        status: 'pending',
+        debtUsd: 0,
+        mondayBlocked: false,
+        earnedToday: 0,
+        tripsToday: 0,
+        tripsTotal: 0,
+        joined: 'Hoy',
+        docs: { ...uploadedDocs }
+      };
+
+      if (regRole === 'driver') {
+        const plate = document.getElementById('reg-plate').value.trim().toUpperCase();
+        const model = document.getElementById('reg-model').value.trim();
+        const color = document.getElementById('reg-color').value.trim();
+        if (!plate || !model) {
+          showToast('Completa placa y modelo del vehículo');
+          return;
+        }
+        newUser.vehicleType = document.getElementById('reg-vehicle-type').value;
+        newUser.plate = plate;
+        newUser.model = model;
+        newUser.color = color || 'Estándar';
+      }
+
+      state.users.unshift(newUser);
+      state.activeUserId = newUser.id;
+      saveState();
+
+      // Limpiar formulario
+      uploadedDocs = { face: '', cedula: '', vehicle: '', license: '' };
+      showToast('Registro enviado. Pendiente de aprobación');
+      switchScreen('screen-account');
+    }
+
+    // =========================================================
+    // PANEL DE DUEÑO: APROBACIONES, GANANCIA 10% Y CORTE LUNES
+    // =========================================================
+    function setOwnerTab(tab) {
+      currentOwnerTab = tab;
+      ['users', 'settlements', 'ledger'].forEach(t => {
+        const view = document.getElementById('owner-view-' + t);
+        const btn = document.getElementById('owner-tab-' + t);
+        if (view) view.classList.toggle('hidden', t !== tab);
+        if (btn) {
+          btn.className = t === tab
+            ? 'py-2 rounded-xl bg-white text-[#11131a]'
+            : 'py-2 rounded-xl text-gray-300';
+        }
+      });
+    }
+
+    function renderOwnerDashboard() {
+      const drivers = state.users.filter(u => u.role === 'driver');
+      const pendingCollect = drivers.reduce((acc, d) => acc + (d.debtUsd || 0), 0);
+      const netProfit = (state.ownerCollectedTotal || 0) + pendingCollect;
+
+      document.getElementById('owner-net-profit').textContent = '$' + netProfit.toFixed(2);
+      document.getElementById('owner-pending-collect').textContent = '$' + pendingCollect.toFixed(2);
+      document.getElementById('owner-collected-total').textContent = '$' + (state.ownerCollectedTotal || 0).toFixed(2);
+
+      const pendingCount = state.users.filter(u => u.status === 'pending').length;
+      document.getElementById('owner-pending-badge').textContent = pendingCount + ' pendientes';
+
+      // Lista de Usuarios
+      const usersList = document.getElementById('owner-users-list');
+      usersList.innerHTML = state.users.map(u => {
+        const statusColors = {
+          pending: 'bg-amber-500/15 text-amber-600',
+          approved: 'bg-emerald-500/15 text-emerald-600',
+          blocked: 'bg-red-500/15 text-red-600'
+        };
+        const statusLabels = {
+          pending: '⏳ Pendiente',
+          approved: '✓ Autorizado',
+          blocked: '⛔ Bloqueado'
+        };
+        const roleLabel = u.role === 'driver' ? `🏍️ Conductor · ${u.vehicleType || 'Moto Go'} (${u.plate || 'S/P'})` : '🧍 Pasajero';
+
+        return `
+          <div class="card-surface rounded-2xl p-3.5 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="text-sm font-extrabold">${u.name}</p>
+                <p class="text-[11px] font-bold text-gray-500">${roleLabel}</p>
+                <p class="text-[11px] text-gray-400">CI: ${u.cedula} · Tel: ${u.phone}</p>
+                <p class="text-[11px] text-gray-400">Dir: ${u.address}</p>
+              </div>
+              <span class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full ${statusColors[u.status] || statusColors.pending}">
+                ${statusLabels[u.status] || 'Pendiente'}
+              </span>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              <button onclick="viewUserDocs('${u.id}')" class="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">
+                👁️ Ver fotos/docs
+              </button>
+              ${u.status !== 'approved' ? `<button onclick="setUserStatus('${u.id}', 'approved')" class="px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold">✓ Aprobar</button>` : ''}
+              ${u.status !== 'blocked' ? `<button onclick="setUserStatus('${u.id}', 'blocked')" class="px-3 py-1.5 rounded-xl bg-red-500/15 text-red-600 text-[11px] font-bold">Bloquear</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Lista de Deudas Semanales (Corte Lunes)
+      const debtList = document.getElementById('owner-drivers-debt-list');
+      debtList.innerHTML = drivers.map(d => `
+        <div class="card-surface rounded-2xl p-3.5 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-sm font-extrabold">${d.name} ${d.mondayBlocked ? '<span class="text-[10px] text-red-500">(BLOQUEADO POR CORTE)</span>' : ''}</p>
+            <p class="text-xs text-gray-500">Deuda 10% acumulada: <strong class="text-gray-900 dark:text-white">$${(d.debtUsd || 0).toFixed(2)}</strong></p>
+          </div>
+          ${(d.debtUsd > 0 || d.mondayBlocked) ? `
+            <button onclick="settleDriverDebt('${d.id}')" class="px-3 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold shrink-0">
+              Confirmar pago
+            </button>
+          ` : `<span class="text-[11px] font-bold text-emerald-600">✓ Solvente</span>`}
+        </div>
+      `).join('');
+
+      // Bitácora de Movimientos
+      const ledgerList = document.getElementById('owner-ledger-list');
+      ledgerList.innerHTML = state.ledger.map(m => `
+        <div class="card-surface rounded-2xl p-3 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-extrabold">${m.desc}</p>
+            <p class="text-[10px] text-gray-400">${m.date} · Carrera total: $${m.totalFare.toFixed(2)}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-extrabold text-emerald-600">+$${m.ownerCut.toFixed(2)}</p>
+            <p class="text-[9px] text-gray-400">10% Dueño</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setUserStatus(userId, newStatus) {
+      const u = state.users.find(x => x.id === userId);
+      if (!u) return;
+      u.status = newStatus;
+      if (newStatus === 'approved') u.mondayBlocked = false;
+      saveState();
+      renderOwnerDashboard();
+      updateAllUI();
+      showToast(`Usuario ${newStatus === 'approved' ? 'aprobado' : 'bloqueado'}`);
+    }
+
+    function runMondayCutoff() {
+      let blockedCount = 0;
+      state.users.forEach(u => {
+        if (u.role === 'driver' && (u.debtUsd || 0) > 0) {
+          u.status = 'blocked';
+          u.mondayBlocked = true;
+          blockedCount++;
+        }
+      });
+      saveState();
+      renderOwnerDashboard();
+      updateAllUI();
+      showToast(`Corte Lunes ejecutado: ${blockedCount} conductor(es) bloqueado(s)`);
+    }
+
+    function settleDriverDebt(driverId) {
+      const d = state.users.find(u => u.id === driverId);
+      if (!d) return;
+      const paid = d.debtUsd || 0;
+      state.ownerCollectedTotal = (state.ownerCollectedTotal || 0) + paid;
+      d.debtUsd = 0;
+      d.mondayBlocked = false;
+      d.status = 'approved';
+
+      state.ledger.unshift({
+        id: 'MOV-' + Math.floor(100 + Math.random() * 900),
+        desc: `Pago semanal Lunes · ${d.name}`,
+        totalFare: paid * 10,
+        ownerCut: paid,
+        date: 'Ahora mismo',
+        type: 'settlement'
+      });
+
+      saveState();
+      renderOwnerDashboard();
+      updateAllUI();
+      showToast(`Pago de $${paid.toFixed(2)} confirmado · Conductor desbloqueado`);
+    }
+
+    function viewUserDocs(userId) {
+      const u = state.users.find(x => x.id === userId);
+      if (!u) return;
+      document.getElementById('doc-viewer-title').textContent = `Expediente · ${u.name}`;
+      const docs = u.docs || {};
+      const entries = [
+        { label: 'Foto del rostro', src: docs.face },
+        { label: 'Cédula de identidad', src: docs.cedula },
+        { label: 'Foto del vehículo', src: docs.vehicle },
+        { label: 'Licencia / Documentos', src: docs.license }
+      ].filter(e => e.label && (u.role === 'driver' || e.label === 'Foto del rostro' || e.label === 'Cédula de identidad'));
+
+      document.getElementById('doc-viewer-body').innerHTML = entries.map(item => `
+        <div class="card-surface rounded-2xl p-3">
+          <p class="text-xs font-extrabold mb-1.5">${item.label}</p>
+          ${item.src
+            ? `<img src="${item.src}" class="w-full h-40 object-cover rounded-xl border" />`
+            : `<div class="h-24 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs text-gray-400 font-semibold">Documento verificado en registro inicial</div>`}
+        </div>
+      `).join('');
+
+      document.getElementById('doc-viewer-modal').classList.remove('hidden');
+    }
+
+    // =========================================================
+    // FLUJO DE PASAJERO Y MAPA LEAFLET
+    // =========================================================
+    const LOCAL_PLACES = [
+      { name: 'Av. Intercomunal, Sector Las Morochas', dist: 2.1, min: 5, coords: [10.1945, -71.3182] },
+      { name: 'Casco Central, Av. Bolívar, Ciudad Ojeda', dist: 2.8, min: 7, coords: [10.2068, -71.3041] },
+      { name: 'Terminal de Pasajeros de Ciudad Ojeda', dist: 3.4, min: 8, coords: [10.2122, -71.2985] },
+      { name: 'Urb. Eleazar López Contreras, Ciudad Ojeda', dist: 1.9, min: 5, coords: [10.1982, -71.2960] },
+      { name: 'Av. Alonso de Ojeda, Zona Comercial', dist: 2.5, min: 6, coords: [10.2035, -71.3125] },
+      { name: 'Sector Tamare, Carretera N', dist: 5.6, min: 12, coords: [10.2380, -71.3250] }
+    ];
+
+    let passengerMap = null;
+    let driverMap = null;
+    let originMarker = null;
+    let destMarker = null;
+    let routeLine = null;
+    let mapPickerActive = false;
+
+    function initMaps() {
+      try {
+        if (typeof L === 'undefined') return;
+        passengerMap = L.map('passenger-map', { zoomControl: false }).setView(CENTER_COORDS, 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(passengerMap);
+
+        const pinIcon = L.divIcon({
+          className: '',
+          html: `<div style="width:22px;height:22px;background:#e51d2e;border:3px solid #fff;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,0.35);"></div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        });
+        originMarker = L.marker(CENTER_COORDS, { icon: pinIcon }).addTo(passengerMap);
+
+        passengerMap.on('move', () => {
+          if (!mapPickerActive) return;
+          const c = passengerMap.getCenter();
+          document.getElementById('map-picker-coords').textContent = `Punto en mapa (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`;
+        });
+
+        driverMap = L.map('driver-map', { zoomControl: false }).setView(CENTER_COORDS, 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(driverMap);
+        L.marker(CENTER_COORDS, { icon: pinIcon }).addTo(driverMap);
+      } catch (e) {
+        console.warn('Mapa inicializado en modo ligero');
+      }
+    }
+
+    function setServiceMode(mode) {
+      state.serviceMode = mode;
+      const tabV = document.getElementById('tab-viaje');
+      const tabE = document.getElementById('tab-envio');
+      if (mode === 'viaje') {
+        tabV.className = 'px-4 py-1.5 rounded-full text-xs font-bold bg-[#11131a] text-white transition';
+        tabE.className = 'px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 dark:text-gray-200 transition';
+        document.getElementById('sheet-main-title').textContent = '¿A dónde iremos hoy?';
+      } else {
+        tabE.className = 'px-4 py-1.5 rounded-full text-xs font-bold bg-[#11131a] text-white transition';
+        tabV.className = 'px-4 py-1.5 rounded-full text-xs font-bold text-gray-700 dark:text-gray-200 transition';
+        document.getElementById('sheet-main-title').textContent = '¿Qué deseas enviar hoy?';
+      }
+      saveState();
+    }
+
+    function showDestinationSuggestions() {
+      renderSuggestions(LOCAL_PLACES);
+    }
+
+    function handleDestinationTyping(val) {
+      document.getElementById('btn-clear-dest').classList.toggle('hidden', !val);
+      const filtered = LOCAL_PLACES.filter(p => p.name.toLowerCase().includes(val.toLowerCase()));
+      renderSuggestions(filtered.length ? filtered : LOCAL_PLACES);
+    }
+
+    function renderSuggestions(list) {
+      const container = document.getElementById('destination-suggestions');
+      container.innerHTML = list.slice(0, 4).map(p => `
+        <button onclick="selectDestinationPlace('${p.name}', ${p.dist}, ${p.min}, ${p.coords[0]}, ${p.coords[1]})" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-between text-xs">
+          <span class="font-bold truncate pr-2">📍 ${p.name}</span>
+          <span class="text-[11px] text-gray-400 shrink-0">${p.dist} km</span>
+        </button>
+      `).join('');
+    }
+
+    function selectDestinationPlace(name, dist, min, lat, lng) {
+      state.destinationText = name;
+      state.distanceKm = dist;
+      state.durationMin = min;
+
+      document.getElementById('input-destination').value = name;
+      document.getElementById('btn-clear-dest').classList.remove('hidden');
+      document.getElementById('destination-suggestions').innerHTML = '';
+      document.getElementById('route-distance-text').textContent = dist.toFixed(1) + ' Km';
+      document.getElementById('route-duration-text').textContent = min + ' Min';
+      document.getElementById('route-summary-bar').classList.remove('hidden');
+      document.getElementById('btn-map-search-wrap').classList.add('hidden');
+
+      drawRouteOnPassengerMap([lat, lng]);
+    }
+
+    function clearDestination() {
+      state.destinationText = '';
+      document.getElementById('input-destination').value = '';
+      document.getElementById('btn-clear-dest').classList.add('hidden');
+      document.getElementById('route-summary-bar').classList.add('hidden');
+      document.getElementById('btn-map-search-wrap').classList.remove('hidden');
+      if (destMarker && passengerMap) passengerMap.removeLayer(destMarker);
+      if (routeLine && passengerMap) passengerMap.removeLayer(routeLine);
+    }
+
+    function drawRouteOnPassengerMap(destCoords) {
+      if (!passengerMap || typeof L === 'undefined') return;
+      if (destMarker) passengerMap.removeLayer(destMarker);
+      if (routeLine) passengerMap.removeLayer(routeLine);
+
+      const destIcon = L.divIcon({
+        className: '',
+        html: `<div style="width:18px;height:18px;background:#00b14f;border:3px solid #fff;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,0.35);"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      destMarker = L.marker(destCoords, { icon: destIcon }).addTo(passengerMap);
+      routeLine = L.polyline([CENTER_COORDS, destCoords], { color: '#11131a', weight: 4 }).addTo(passengerMap);
+      passengerMap.fitBounds(routeLine.getBounds(), { padding: [70, 140] });
+    }
+
+    function activateMapPicker() {
+      mapPickerActive = true;
+      document.getElementById('map-picker-banner').classList.remove('hidden');
+      showToast('Mueve el mapa y pulsa Confirmar');
+    }
+
+    function confirmMapPicker() {
+      mapPickerActive = false;
+      document.getElementById('map-picker-banner').classList.add('hidden');
+      const c = passengerMap ? passengerMap.getCenter() : { lat: 10.205, lng: -71.305 };
+      selectDestinationPlace('Destino seleccionado en Ciudad Ojeda', 2.6, 6, c.lat, c.lng);
+    }
+
+    function recenterPassengerMap() {
+      if (passengerMap) passengerMap.setView(CENTER_COORDS, 15);
+    }
+
+    function addExtraStop() {
+      document.getElementById('extra-stop-container').classList.remove('hidden');
+      document.getElementById('btn-add-stop').classList.add('hidden');
+    }
+
+    function removeExtraStop() {
+      document.getElementById('extra-stop-container').classList.add('hidden');
+      document.getElementById('btn-add-stop').classList.remove('hidden');
+    }
+
+    function calculateFares() {
+      const km = state.distanceKm || 2.4;
+      const motoUsd = Math.max(1.10, +(0.85 + km * 0.25).toFixed(2));
+      const carUsd = Math.max(2.50, +(1.80 + km * 0.55).toFixed(2));
+      return [
+        { name: 'Moto Go', icon: '🏍️', desc: 'Rápido y económico · 1 pasajero', usd: motoUsd, bs: motoUsd * EXCHANGE_RATE },
+        { name: 'Automóvil', icon: '🚗', desc: 'Confort con aire acondicionado · 4 puestos', usd: carUsd, bs: carUsd * EXCHANGE_RATE }
+      ];
+    }
+
+    function goToVehicleSelection() {
+      const user = getActiveUser();
+      if (user.status !== 'approved') {
+        showToast('Tu cuenta debe ser aprobada por el administrador primero');
+        return;
+      }
+      document.getElementById('step-destination').classList.add('hidden');
+      document.getElementById('step-vehicles').classList.remove('hidden');
+      renderVehiclesList();
+    }
+
+    function renderVehiclesList() {
+      const options = calculateFares();
+      const container = document.getElementById('vehicles-list');
+      container.innerHTML = options.map(v => {
+        const selected = state.selectedVehicle === v.name;
+        return `
+          <div onclick="selectVehicle('${v.name}')" class="cursor-pointer rounded-2xl p-3.5 flex items-center justify-between border-2 transition ${selected ? 'border-blue-600 bg-blue-500/5' : 'border-gray-100 dark:border-gray-800'}">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">${v.icon}</span>
+              <div>
+                <p class="text-sm font-extrabold">${v.name}</p>
+                <p class="text-[11px] text-gray-500">${v.desc}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-extrabold">${v.bs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs.</p>
+              <p class="text-[11px] font-bold text-gray-400">$${v.usd.toFixed(2)}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectVehicle(name) {
+      state.selectedVehicle = name;
+      renderVehiclesList();
+    }
+
+    function backToDestination() {
+      document.getElementById('step-vehicles').classList.add('hidden');
+      document.getElementById('step-destination').classList.remove('hidden');
+    }
+
+    function goToPaymentSelection() {
+      const chosen = calculateFares().find(v => v.name === state.selectedVehicle) || calculateFares()[0];
+      document.getElementById('payment-amount-bs').textContent = 'Bs. ' + chosen.bs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('payment-amount-usd').textContent = '$' + chosen.usd.toFixed(2) + ' USD';
+      document.getElementById('step-vehicles').classList.add('hidden');
+      document.getElementById('step-payment').classList.remove('hidden');
+    }
+
+    function backToVehicles() {
+      document.getElementById('step-payment').classList.add('hidden');
+      document.getElementById('step-vehicles').classList.remove('hidden');
+    }
+
+    function selectPaymentMethod(method) {
+      state.paymentMethod = method;
+    }
+
+    let searchTimeout = null;
+    function startSearchingDriver() {
+      document.getElementById('step-payment').classList.add('hidden');
+      document.getElementById('step-searching').classList.remove('hidden');
+      document.getElementById('searching-vehicle-icon').textContent = state.selectedVehicle === 'Moto Go' ? '🏍️' : '🚗';
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const chosen = calculateFares().find(v => v.name === state.selectedVehicle) || calculateFares()[0];
+        document.getElementById('step-searching').classList.add('hidden');
+        document.getElementById('step-active-passenger').classList.remove('hidden');
+        document.getElementById('active-ride-fare').textContent = '$' + chosen.usd.toFixed(2);
+        document.getElementById('assigned-driver-vehicle').textContent = `${state.selectedVehicle} · Placa AA8G42D · ★ 5.0`;
+      }, 2400);
+    }
+
+    function cancelSearchingDriver() {
+      clearTimeout(searchTimeout);
+      document.getElementById('step-searching').classList.add('hidden');
+      document.getElementById('step-active-passenger').classList.add('hidden');
+      document.getElementById('step-destination').classList.remove('hidden');
       showToast('Solicitud cancelada');
     }
 
-    function acceptRideModal() {
-      document.getElementById('incomingModal').style.display = 'none';
-      showToast('¡Carrera aceptada con éxito!');
-    }
+    function completePassengerRide() {
+      const chosen = calculateFares().find(v => v.name === state.selectedVehicle) || calculateFares()[0];
+      const ownerCut = +(chosen.usd * 0.10).toFixed(2);
 
-    function declineRideModal() {
-      document.getElementById('incomingModal').style.display = 'none';
-      showToast('Carrera declinada');
-    }
+      // Registrar en historial pasajero
+      state.passengerHistory.unshift({
+        route: `Ciudad Ojeda → ${state.destinationText || 'Casco Central'}`,
+        date: 'Hoy · Ahora',
+        fare: '$' + chosen.usd.toFixed(2),
+        vehicle: state.selectedVehicle,
+        method: state.paymentMethod
+      });
 
-    function toggleOnline() {
-      const btn = document.getElementById('connectBtn');
-      const isOnline = btn.textContent.includes('Conectarme');
-      btn.textContent = isOnline ? 'Desconectarme' : 'Conectarme';
-      btn.classList.toggle('offline', isOnline);
-      showToast(isOnline ? 'Estás en línea (Esperando solicitudes)' : 'Desconectado');
-    }
-
-    function openAccountScreen() {
-      if (!currentUser) return;
-      document.getElementById('accName').textContent = currentUser.name;
-      document.getElementById('accPhone').textContent = currentUser.phone;
-      document.getElementById('accCedula').textContent = currentUser.cedula;
-      if (currentUser.avatar) {
-        document.getElementById('accAvatarBox').innerHTML = `<img src="${currentUser.avatar}" /><input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="updateProfilePic(this)" />`;
+      // Sumar comisión del 10% al conductor activo y al panel del dueño
+      const driver = state.users.find(u => u.role === 'driver' && u.status === 'approved');
+      if (driver) {
+        driver.debtUsd = +((driver.debtUsd || 0) + ownerCut).toFixed(2);
+        driver.earnedToday = +((driver.earnedToday || 0) + chosen.usd).toFixed(2);
+        driver.tripsToday = (driver.tripsToday || 0) + 1;
+        driver.tripsTotal = (driver.tripsTotal || 0) + 1;
       }
-      document.getElementById('accountScreen').style.display = 'block';
+
+      state.ledger.unshift({
+        id: 'MOV-' + Math.floor(100 + Math.random() * 900),
+        desc: `Carrera ${state.selectedVehicle} · ${driver ? driver.name : 'Conductor'}`,
+        totalFare: chosen.usd,
+        ownerCut: ownerCut,
+        date: 'Ahora',
+        type: 'commission'
+      });
+
+      saveState();
+      document.getElementById('step-active-passenger').classList.add('hidden');
+      document.getElementById('step-destination').classList.remove('hidden');
+      clearDestination();
+      updateAllUI();
+      showToast('¡Viaje finalizado! Gracias por usar TaxiGo');
     }
 
-    function closeAccountScreen() { document.getElementById('accountScreen').style.display = 'none'; }
+    // =========================================================
+    // FLUJO DE CONDUCTOR + COMISIÓN 10% + BLOQUEO LUNES
+    // =========================================================
+    let driverOnline = false;
+    let countdownTimer = null;
+    let requestTimeout = null;
+    let driverTripStage = 0;
 
-    function updateProfilePic(input) {
-      const f = input.files && input.files[0];
-      if (!f) return;
-      const r = new FileReader();
-      r.onload = e => {
-        currentUser.avatar = e.target.result;
-        saveDB();
-        document.getElementById('accAvatarBox').innerHTML = `<img src="${currentUser.avatar}" /><input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="updateProfilePic(this)" />`;
-        showToast('Foto de perfil actualizada');
-      };
-      r.readAsDataURL(f);
-    }
-
-    /* PANEL DUEÑO */
-    document.getElementById('logoTrigger').addEventListener('click', () => {
-      logoClicks++;
-      clearTimeout(clickTimer);
-      clickTimer = setTimeout(()=>logoClicks=0, 1500);
-      if (logoClicks >= 5) {
-        logoClicks = 0;
-        const pin = prompt('PIN Dueño:');
-        if (pin === '1234') openOwner(); else showToast('PIN incorrecto');
+    function toggleDriverOnline() {
+      const user = getActiveUser();
+      if (user.status === 'pending') {
+        showToast('Tu cuenta de conductor aún está pendiente de aprobación');
+        return;
       }
-    });
+      if (user.status === 'blocked' || user.mondayBlocked) {
+        showToast('Cuenta bloqueada: liquida tu comisión del lunes para conectarte');
+        return;
+      }
 
-    function openOwner() {
-      document.getElementById('admRate').value = db.settings.rate;
-      document.getElementById('admKm').value = db.settings.pricePerKm;
-      document.getElementById('admMin').value = db.settings.minFare;
-      renderAdmin();
-      document.getElementById('ownerScreen').style.display = 'flex';
+      driverOnline = !driverOnline;
+      const btn = document.getElementById('btn-driver-toggle');
+      const txt = document.getElementById('driver-toggle-text');
+      const wait = document.getElementById('driver-waiting-indicator');
+
+      if (driverOnline) {
+        btn.className = 'w-full py-4 rounded-2xl bg-[#e51d2e] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition';
+        txt.textContent = 'Desconectarme';
+        wait.classList.remove('hidden');
+        requestTimeout = setTimeout(showIncomingRequest, 2500);
+      } else {
+        btn.className = 'w-full py-4 rounded-2xl bg-[#11131a] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition';
+        txt.textContent = 'Conectarme';
+        wait.classList.add('hidden');
+        clearTimeout(requestTimeout);
+      }
     }
 
-    function closeOwner() { document.getElementById('ownerScreen').style.display = 'none'; }
+    function showIncomingRequest() {
+      if (!driverOnline) return;
+      const modal = document.getElementById('incoming-request-modal');
+      modal.classList.remove('hidden');
 
-    function switchOwnerTab(t) {
-      ['sum','drv','usr'].forEach(x => { document.getElementById('osec-'+x).style.display = (x===t)?'block':'none'; });
-      renderAdmin();
+      let sec = 15;
+      const secEl = document.getElementById('countdown-seconds');
+      const circle = document.getElementById('countdown-circle');
+      secEl.textContent = sec;
+      circle.style.strokeDashoffset = 0;
+
+      clearInterval(countdownTimer);
+      countdownTimer = setInterval(() => {
+        sec--;
+        secEl.textContent = sec;
+        circle.style.strokeDashoffset = 157 * (1 - sec / 15);
+        if (sec <= 0) {
+          clearInterval(countdownTimer);
+          declineIncomingRequest();
+        }
+      }, 1000);
     }
 
-    function renderAdmin() {
-      document.getElementById('adminDrvList').innerHTML = db.drivers.map(d=>`<div class="entity-item"><strong>🏍️ ${d.name}</strong> (${d.phone})<br/><span style="font-size:11px;color:#64748b;">${d.vehicleDetail}</span></div>`).join('') || 'No hay conductores';
-      document.getElementById('adminUsrList').innerHTML = db.users.map(u=>`<div class="entity-item"><strong>🙋‍♀️ ${u.name}</strong> (${u.phone})<br/><span style="font-size:11px;color:#64748b;">Cédula: ${u.cedula}</span></div>`).join('') || 'No hay pasajeros';
+    function declineIncomingRequest() {
+      clearInterval(countdownTimer);
+      document.getElementById('incoming-request-modal').classList.add('hidden');
+      if (driverOnline) {
+        requestTimeout = setTimeout(showIncomingRequest, 4500);
+      }
     }
 
-    function saveAdmin() {
-      db.settings.rate = parseFloat(document.getElementById('admRate').value) || db.settings.rate;
-      db.settings.pricePerKm = parseFloat(document.getElementById('admKm').value) || db.settings.pricePerKm;
-      db.settings.minFare = parseFloat(document.getElementById('admMin').value) || db.settings.minFare;
-      saveDB();
-      updateFare();
-      showToast('Guardado');
+    function acceptIncomingRequest() {
+      clearInterval(countdownTimer);
+      document.getElementById('incoming-request-modal').classList.add('hidden');
+      driverTripStage = 0;
+      document.getElementById('active-trip-stage-label').textContent = 'Recoge al pasajero';
+      document.getElementById('btn-driver-trip-progress').textContent = 'He llegado';
+      document.getElementById('driver-active-trip-sheet').classList.remove('hidden');
     }
 
+    function advanceDriverTripStage() {
+      const btn = document.getElementById('btn-driver-trip-progress');
+      const label = document.getElementById('active-trip-stage-label');
+      driverTripStage++;
+
+      if (driverTripStage === 1) {
+        label.textContent = 'Pasajero a bordo · En ruta';
+        btn.textContent = 'Iniciar viaje';
+      } else if (driverTripStage === 2) {
+        label.textContent = 'Llegando al destino';
+        btn.textContent = 'Finalizar carrera ($3.50)';
+      } else {
+        // Completar carrera y acumular 10% al dueño
+        const fare = 3.50;
+        const ownerFee = +(fare * 0.10).toFixed(2);
+        const driver = getActiveUser();
+        driver.debtUsd = +((driver.debtUsd || 0) + ownerFee).toFixed(2);
+        driver.earnedToday = +((driver.earnedToday || 0) + fare).toFixed(2);
+        driver.tripsToday = (driver.tripsToday || 0) + 1;
+        driver.tripsTotal = (driver.tripsTotal || 0) + 1;
+
+        state.driverHistory.unshift({
+          id: '#TX' + Math.floor(100 + Math.random() * 899),
+          route: 'Av. Intercomunal → Casco Central',
+          passenger: 'Elizabeth Manzanilla',
+          time: 'Hoy · Ahora',
+          fare: fare,
+          ownerFee: ownerFee,
+          method: 'Pago Móvil'
+        });
+
+        state.ledger.unshift({
+          id: 'MOV-' + Math.floor(100 + Math.random() * 900),
+          desc: `Carrera completada · ${driver.name}`,
+          totalFare: fare,
+          ownerCut: ownerFee,
+          date: 'Ahora mismo',
+          type: 'commission'
+        });
+
+        saveState();
+        updateAllUI();
+        document.getElementById('driver-active-trip-sheet').classList.add('hidden');
+        showToast(`Carrera cobrada ($${fare.toFixed(2)}). Comisión 10% ($${ownerFee.toFixed(2)}) anotada.`);
+      }
+    }
+
+    function cancelDriverActiveTrip() {
+      document.getElementById('driver-active-trip-sheet').classList.add('hidden');
+      showToast('Viaje cancelado');
+    }
+
+    function openDriverReportPaymentModal() {
+      showToast('Envía tu comprobante de Pago Móvil al administrador para desbloqueo');
+    }
+
+    // =========================================================
+    // HISTORIALES, CHAT, AJUSTES Y SINCRONIZACIÓN DE UI
+    // =========================================================
+    function renderDriverHistory() {
+      const user = getActiveUser();
+      document.getElementById('hist-earned-total').textContent = '$' + (user.earnedToday || 6.06).toFixed(2);
+      document.getElementById('hist-alltime-count').textContent = user.tripsTotal || 1429;
+      document.getElementById('driver-history-list').innerHTML = state.driverHistory.map(h => `
+        <div class="card-surface rounded-2xl p-3.5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-extrabold">${h.route}</p>
+            <p class="text-[11px] text-gray-500 mt-0.5">${h.time} · ${h.passenger} · ${h.method}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-extrabold">$${h.fare.toFixed(2)}</p>
+            <p class="text-[10px] text-amber-600 font-bold">10% corte: $${h.ownerFee.toFixed(2)}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPassengerHistory() {
+      document.getElementById('passenger-history-list').innerHTML = state.passengerHistory.map(h => `
+        <div class="card-surface rounded-2xl p-3.5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-extrabold">${h.route}</p>
+            <p class="text-[11px] text-gray-500 mt-0.5">${h.date} · ${h.vehicle} · ${h.method}</p>
+          </div>
+          <p class="text-sm font-extrabold">${h.fare}</p>
+        </div>
+      `).join('');
+    }
+
+    function updateAllUI() {
+      const user = getActiveUser();
+      const initials = (user.name || 'TG').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+      ['profile-name', 'settings-name', 'drawer-name'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = user.name;
+      });
+      ['profile-phone', 'settings-phone', 'drawer-phone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = user.phone;
+      });
+      ['profile-avatar', 'settings-avatar', 'drawer-avatar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (user.docs && user.docs.face) {
+          el.innerHTML = `<img src="${user.docs.face}" class="w-full h-full object-cover" />`;
+        } else {
+          el.textContent = initials;
+        }
+      });
+
+      const cedEl = document.getElementById('settings-cedula');
+      if (cedEl) cedEl.textContent = user.cedula || 'V-27456890';
+      const addrEl = document.getElementById('settings-home-address');
+      if (addrEl) addrEl.textContent = user.address || 'Ciudad Ojeda 4019, Zulia';
+
+      const roleBadge = document.getElementById('profile-role-badge');
+      if (roleBadge) roleBadge.textContent = user.role === 'driver' ? 'Conductor' : 'Pasajero';
+
+      const pill = document.getElementById('profile-approval-pill');
+      if (pill) {
+        if (user.status === 'approved') {
+          pill.className = 'mt-2 text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600';
+          pill.textContent = '✓ Cuenta Aprobada';
+        } else if (user.status === 'blocked') {
+          pill.className = 'mt-2 text-[11px] font-extrabold px-3 py-1 rounded-full bg-red-500/15 text-red-600';
+          pill.textContent = '⛔ Cuenta Bloqueada';
+        } else {
+          pill.className = 'mt-2 text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-500/15 text-amber-600';
+          pill.textContent = '⏳ Pendiente de Aprobación';
+        }
+      }
+
+      // Banner estado en inicio pasajero
+      const passBanner = document.getElementById('passenger-status-banner');
+      if (passBanner) {
+        if (user.status === 'pending') {
+          passBanner.classList.remove('hidden');
+          passBanner.className = 'absolute top-16 left-3.5 right-3.5 z-20 rounded-2xl p-3 shadow-lg text-xs font-semibold flex items-center justify-between gap-2 bg-amber-500 text-white';
+          passBanner.innerHTML = `<span>⏳ Tu cuenta está en revisión por el dueño</span><button onclick="switchScreen('screen-register')" class="underline font-extrabold">Ver</button>`;
+        } else if (user.status === 'blocked') {
+          passBanner.classList.remove('hidden');
+          passBanner.className = 'absolute top-16 left-3.5 right-3.5 z-20 rounded-2xl p-3 shadow-lg text-xs font-semibold flex items-center justify-between gap-2 bg-red-600 text-white';
+          passBanner.innerHTML = `<span>⛔ Cuenta suspendida · Contacta soporte</span>`;
+        } else {
+          passBanner.classList.add('hidden');
+        }
+      }
+
+      // Datos panel conductor
+      const debtEl = document.getElementById('driver-debt-display');
+      if (debtEl) debtEl.textContent = '$' + (user.debtUsd || 0).toFixed(2);
+      const earnedEl = document.getElementById('driver-stat-earned');
+      if (earnedEl) earnedEl.textContent = '$' + (user.earnedToday || 0).toFixed(2);
+      const tripsEl = document.getElementById('driver-stat-trips');
+      if (tripsEl) tripsEl.textContent = user.tripsToday || 0;
+
+      const driverLock = document.getElementById('driver-lock-banner');
+      if (driverLock) {
+        if (user.status === 'blocked' || user.mondayBlocked) {
+          driverLock.classList.remove('hidden');
+          driverLock.innerHTML = `<p class="text-xs font-extrabold text-red-400">⛔ USUARIO BLOQUEADO (CORTE SEMANAL LUNES)</p><p class="text-[11px] text-gray-300 mt-1">Debes liquidar $${(user.debtUsd || 0).toFixed(2)} correspondientes al 10% de comisión semanal para volver a recibir carreras.</p>`;
+        } else if (user.status === 'pending') {
+          driverLock.classList.remove('hidden');
+          driverLock.innerHTML = `<p class="text-xs font-extrabold text-amber-400">⏳ DOCUMENTOS EN REVISIÓN</p><p class="text-[11px] text-gray-300 mt-1">El administrador está verificando tu vehículo y documentos.</p>`;
+        } else {
+          driverLock.classList.add('hidden');
+        }
+      }
+
+      const drawerSwitch = document.getElementById('drawer-mode-switch-btn');
+      if (drawerSwitch) {
+        drawerSwitch.textContent = state.mode === 'passenger' ? 'Cambiar a Modo Conductor' : 'Cambiar a Modo Pasajero';
+      }
+    }
+
+    // Chat en vivo
+    function openRideChat(role) {
+      document.getElementById('chat-peer-name').textContent = role === 'driver' ? 'Pasajero · Alejandro' : 'Conductor · Willy';
+      document.getElementById('chat-messages').innerHTML = `<div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-3 max-w-[80%]">¡Hola! Ya voy en camino al punto de encuentro.</div>`;
+      document.getElementById('chat-modal').classList.remove('hidden');
+    }
+    function closeRideChat() { document.getElementById('chat-modal').classList.add('hidden'); }
+    function sendQuickChat(text) {
+      const box = document.getElementById('chat-messages');
+      box.innerHTML += `<div class="ml-auto bg-[#11131a] text-white rounded-2xl p-3 max-w-[80%]">${text}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+    function sendChatInput() {
+      const inp = document.getElementById('chat-input');
+      if (!inp.value.trim()) return;
+      sendQuickChat(inp.value.trim());
+      inp.value = '';
+    }
+
+    function openSupportModal() { document.getElementById('support-modal').classList.remove('hidden'); }
+    function closeSupportModal() { document.getElementById('support-modal').classList.add('hidden'); }
+
+    function setTheme(theme) {
+      state.theme = theme;
+      document.body.classList.toggle('dark-mode', theme === 'dark');
+      ['light', 'dark', 'system'].forEach(t => {
+        const b = document.getElementById('theme-' + t);
+        if (b) b.className = t === theme ? 'py-2 rounded-xl text-xs font-bold bg-white text-gray-900 shadow-sm transition' : 'py-2 rounded-xl text-xs font-bold transition';
+      });
+      saveState();
+    }
+
+    function editPhoneNumber() {
+      const nuevo = prompt('Ingresa tu nuevo número de teléfono:', getActiveUser().phone);
+      if (nuevo && nuevo.trim()) {
+        getActiveUser().phone = nuevo.trim();
+        saveState();
+        updateAllUI();
+        showToast('Teléfono actualizado');
+      }
+    }
+
+    function addSavedAddress() {
+      const addr = prompt('Nueva dirección en Ciudad Ojeda:');
+      if (addr && addr.trim()) {
+        getActiveUser().address = addr.trim();
+        saveState();
+        updateAllUI();
+        showToast('Dirección guardada');
+      }
+    }
+
+    function clearAppCache() {
+      localStorage.removeItem(STORAGE_KEY);
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      updateAllUI();
+      showToast('Datos restablecidos');
+    }
+
+    let toastTimer = null;
     function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      clearTimeout(t._timer);
-      t._timer = setTimeout(()=>t.style.display='none', 3000);
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('hidden'), 2800);
     }
 
-    updateFare();
+    // =========================================================
+    // INICIALIZACIÓN SEGURA AL CARGAR LA MINI APP
+    // =========================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (window.Telegram && window.Telegram.WebApp) {
+          const tg = window.Telegram.WebApp;
+          tg.ready();
+          tg.expand();
+          if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) {
+            const u = getActiveUser();
+            const fullName = [tg.initDataUnsafe.user.first_name, tg.initDataUnsafe.user.last_name].filter(Boolean).join(' ');
+            if (fullName && u.id === 'usr-driver-1') u.name = fullName;
+          }
+        }
+      } catch (e) {}
+
+      initMaps();
+      setTheme(state.theme || 'system');
+      updateAllUI();
+    });
   </script>
 </body>
 </html>
