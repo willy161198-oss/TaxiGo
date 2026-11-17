@@ -1,12 +1,15 @@
 // =========================================================
-// TAXIGO · EXTRAS-MAPA.JS v6.0 (GPS EXACTO + PIN CENTRAL + ROTACIÓN + TARIFA OCULTA $1.10 / $0.75)
+// TAXIGO · EXTRAS-MAPA.JS v6.1 (DEFINITIVO - GPS, PIN CENTRAL Y TARIFA OCULTA)
 // =========================================================
 (function () {
-  // 1. Forzar teselas OpenStreetMap gratuitas en todo Leaflet
-  function forceOpenStreetMapCore() {
-    if (typeof L === 'undefined' || !L.TileLayer) return false;
+  function initTaxiGoMapSystem() {
+    if (typeof L === 'undefined' || !document.getElementById('map-passenger')) {
+      setTimeout(initTaxiGoMapSystem, 150);
+      return;
+    }
 
-    if (!L.TileLayer.prototype._taxiGoOsmForced) {
+    // 1. Forzar teselas OpenStreetMap gratuitas en Leaflet
+    if (L.TileLayer && !L.TileLayer.prototype._taxiGoOsmForced) {
       const origGetTileUrl = L.TileLayer.prototype.getTileUrl;
       L.TileLayer.prototype.getTileUrl = function (coords) {
         let url = origGetTileUrl.call(this, coords);
@@ -18,180 +21,75 @@
       L.TileLayer.prototype._taxiGoOsmForced = true;
     }
 
-    document.querySelectorAll('img.leaflet-tile').forEach(img => {
-      if (img.src && (img.src.includes('cartocdn') || img.src.includes('basemaps'))) {
-        const match = img.src.match(/\/(\d+)\/(\d+)\/(\d+)(?:@2x)?\.png/);
-        if (match) {
-          img.src = `https://tile.openstreetmap.org/${match[1]}/${match[2]}/${match[3]}.png`;
-        }
-      }
-    });
-
-    return true;
-  }
-
-  // 2. Interceptar líneas rectas de 2 puntos y doblarlas por calles reales (OSRM)
-  function snapStraightLinesToRoads() {
-    if (typeof L === 'undefined' || !L.Polyline || L.Polyline.prototype._taxiGoRoadSnapped) return;
-
-    const origSetLatLngs = L.Polyline.prototype.setLatLngs;
-
-    async function routeOverRoads(polylineInstance, pts) {
-      if (!Array.isArray(pts) || pts.length !== 2) return;
-      const p1 = L.latLng(pts[0]);
-      const p2 = L.latLng(pts[1]);
-      if (!p1 || !p2 || (p1.lat === p2.lat && p1.lng === p2.lng)) return;
-
-      const routeKey = `${p1.lat.toFixed(5)},${p1.lng.toFixed(5)}->${p2.lat.toFixed(5)},${p2.lng.toFixed(5)}`;
-      if (polylineInstance._lastRoutedKey === routeKey) return;
-      polylineInstance._lastRoutedKey = routeKey;
-
-      try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${p1.lng},${p1.lat};${p2.lng},${p2.lat}?overview=full&geometries=geojson`;
-        const res = await fetch(osrmUrl);
-        const data = await res.json();
-
-        if (data && data.routes && data.routes[0]) {
-          const r = data.routes[0];
-          const roadCoords = r.geometry.coordinates.map(c => [c[1], c[0]]);
-          polylineInstance._skipRoadSnap = true;
-          origSetLatLngs.call(polylineInstance, roadCoords);
-          polylineInstance._skipRoadSnap = false;
-
-          const distKm = Math.max(0.3, Number((r.distance / 1000).toFixed(1)));
-          const durMin = Math.max(2, Math.round(r.duration / 60));
-
-          if (typeof state !== 'undefined') {
-            state.distanceKm = distKm;
-            state.durationMin = durMin;
-          }
-
-          document.querySelectorAll('#step-destination p, #step-destination span').forEach(el => {
-            if (el.children.length === 0) {
-              if (/^\d+(\.\d+)?\s*km$/i.test(el.textContent.trim())) {
-                el.textContent = `${distKm} Km`;
-              } else if (/^\d+\s*min$/i.test(el.textContent.trim())) {
-                el.textContent = `${durMin} Min`;
-              }
-            }
-          });
-
-          if (typeof renderVehicleOptions === 'function') {
-            renderVehicleOptions();
-          }
-        }
-      } catch (e) {}
-    }
-
-    L.Polyline.prototype.setLatLngs = function (latlngs) {
-      const res = origSetLatLngs.call(this, latlngs);
-      if (!this._skipRoadSnap && Array.isArray(latlngs) && latlngs.length === 2) {
-        routeOverRoads(this, latlngs);
-      }
-      return res;
-    };
-
-    const origPolylineFactory = L.polyline;
-    L.polyline = function (latlngs, options) {
-      const poly = origPolylineFactory.call(this, latlngs, options);
-      if (Array.isArray(latlngs) && latlngs.length === 2) {
-        routeOverRoads(poly, latlngs);
-      }
-      return poly;
-    };
-
-    L.Polyline.prototype._taxiGoRoadSnapped = true;
-  }
-
-  // Capturar la instancia real del mapa de Leaflet apenas se inicialice
-  let capturedPassMap = null;
-  if (typeof L !== 'undefined' && L.Map && !L.Map.prototype._taxiGoCaptured) {
-    const origInit = L.Map.prototype.initialize;
-    L.Map.prototype.initialize = function (id, options) {
-      const res = origInit.call(this, id, options);
-      if (id === 'map-passenger' || (id && id.id === 'map-passenger')) {
-        capturedPassMap = this;
-      }
-      return res;
-    };
-    L.Map.prototype._taxiGoCaptured = true;
-  }
-
-  forceOpenStreetMapCore();
-  snapStraightLinesToRoads();
-
-  const bootWatcher = setInterval(() => {
-    forceOpenStreetMapCore();
-    snapStraightLinesToRoads();
-  }, 250);
-  setTimeout(() => clearInterval(bootWatcher), 10000);
-
-  function initGlobalMapFeatures() {
-    forceOpenStreetMapCore();
-    snapStraightLinesToRoads();
-
-    // 3. TARIFA OCULTA EN EL SISTEMA: Mínima $1.10 | Kilómetro $0.75 (sin mostrar fórmulas al público)
+    // 2. Tarifa oculta en el sistema ($1.10 mínima | $0.75 por km)
     window.calculateFares = function () {
       const km = Math.max(0.3, Number((typeof state !== 'undefined' && state.distanceKm) ? state.distanceKm : 1.0));
       const rate = (typeof state !== 'undefined' && state.bcvRate) ? Number(state.bcvRate) : 45.0;
 
-      // Fórmula oculta: carrera mínima $1.10, costo por km $0.75
       const motoUsd = Math.max(1.10, Number((km * 0.75).toFixed(2)));
       const carroUsd = Math.max(1.80, Number((km * 1.15).toFixed(2)));
       const envioUsd = Math.max(1.10, Number((km * 0.75).toFixed(2)));
 
       return [
-        {
-          name: 'Moto Go',
-          desc: 'Rápido · 1 pasajero',
-          icon: '🏍️',
-          eta: `${Math.max(2, Math.round(km * 1.4))} min`,
-          usd: motoUsd,
-          bs: (motoUsd * rate).toFixed(2)
-        },
-        {
-          name: 'Carro Go',
-          desc: 'Confort · A/A · 4 puestos',
-          icon: '🚗',
-          eta: `${Math.max(3, Math.round(km * 1.8))} min`,
-          usd: carroUsd,
-          bs: (carroUsd * rate).toFixed(2)
-        },
-        {
-          name: 'Envío Express',
-          desc: 'Paquetes y encomiendas',
-          icon: '📦',
-          eta: `${Math.max(2, Math.round(km * 1.4))} min`,
-          usd: envioUsd,
-          bs: (envioUsd * rate).toFixed(2)
-        }
+        { name: 'Moto Go', desc: 'Rápido · 1 pasajero', icon: '🏍️', eta: `${Math.max(2, Math.round(km * 1.4))} min`, usd: motoUsd, bs: (motoUsd * rate).toFixed(2) },
+        { name: 'Carro Go', desc: 'Confort · A/A · 4 puestos', icon: '🚗', eta: `${Math.max(3, Math.round(km * 1.8))} min`, usd: carroUsd, bs: (carroUsd * rate).toFixed(2) },
+        { name: 'Envío Express', desc: 'Paquetes y encomiendas', icon: '📦', eta: `${Math.max(2, Math.round(km * 1.4))} min`, usd: envioUsd, bs: (envioUsd * rate).toFixed(2) }
       ];
     };
 
-    const destInput = document.getElementById('input-destination');
-    const stepDest = document.getElementById('step-destination');
     const passScreen = document.getElementById('screen-passenger');
-    if (!destInput || !stepDest || !passScreen) {
-      setTimeout(initGlobalMapFeatures, 150);
-      return;
-    }
+    const stepDest = document.getElementById('step-destination');
+    const destInput = document.getElementById('input-destination');
+    if (!passScreen || !stepDest || !destInput) return;
 
     let originCoords = [10.2016, -71.3148];
     let originMarker = null;
     let destMarker = null;
     let activePolyline = null;
     let isPinPickingMode = false;
-    let mapRotationDeg = 0;
     let reverseTimer = null;
     let searchTimer = null;
 
-    function getPassMap() {
-      if (capturedPassMap) return capturedPassMap;
+    // Obtener la instancia global del mapa pasajero
+    function getActivePassMap() {
       if (typeof mapPassenger !== 'undefined' && mapPassenger) return mapPassenger;
       return null;
     }
 
-    // 4. PIN FIJO EN EL CENTRO DEL MAPA AL MOVERLO ("Es aquí")
+    // 3. Interceptar rutas para que doblen por las calles reales (OSRM)
+    if (L.Polyline && !L.Polyline.prototype._taxiGoRoadSnapped) {
+      const origSetLatLngs = L.Polyline.prototype.setLatLngs;
+      L.Polyline.prototype.setLatLngs = function (latlngs) {
+        const res = origSetLatLngs.call(this, latlngs);
+        if (!this._skipRoadSnap && Array.isArray(latlngs) && latlngs.length === 2) {
+          const p1 = L.latLng(latlngs[0]);
+          const p2 = L.latLng(latlngs[1]);
+          const self = this;
+          fetch(`https://router.project-osrm.org/route/v1/driving/${p1.lng},${p1.lat};${p2.lng},${p2.lat}?overview=full&geometries=geojson`)
+            .then(r => r.json())
+            .then(data => {
+              if (data && data.routes && data.routes[0]) {
+                const r = data.routes[0];
+                const roadCoords = r.geometry.coordinates.map(c => [c[1], c[0]]);
+                self._skipRoadSnap = true;
+                origSetLatLngs.call(self, roadCoords);
+                self._skipRoadSnap = false;
+
+                const distKm = Math.max(0.3, Number((r.distance / 1000).toFixed(1)));
+                const durMin = Math.max(2, Math.round(r.duration / 60));
+                if (typeof state !== 'undefined') {
+                  state.distanceKm = distKm;
+                  state.durationMin = durMin;
+                }
+              }
+            }).catch(() => {});
+        }
+        return res;
+      };
+      L.Polyline.prototype._taxiGoRoadSnapped = true;
+    }
+
+    // 4. Interfaz del Pin Central al mover el mapa ("Buscar en el mapa")
     if (!document.getElementById('center-pin-overlay')) {
       passScreen.insertAdjacentHTML('beforeend', `
         <div id="center-pin-overlay" class="hidden pointer-events-none absolute inset-0 z-[35] flex flex-col items-center justify-center pb-28">
@@ -199,9 +97,7 @@
             Mueve el mapa para ubicar el pin
           </div>
           <div class="relative flex flex-col items-center">
-            <div class="w-8 h-8 rounded-full bg-[#e51d2e] border-4 border-white shadow-xl flex items-center justify-center text-white text-xs font-extrabold">
-              📍
-            </div>
+            <div class="w-8 h-8 rounded-full bg-[#e51d2e] border-4 border-white shadow-xl flex items-center justify-center text-white text-xs font-extrabold">📍</div>
             <div class="w-1 h-3 bg-[#11131a] rounded-b-full"></div>
             <div class="w-3 h-1 rounded-full bg-black/35 mt-0.5"></div>
           </div>
@@ -222,14 +118,13 @@
       `);
     }
 
-    // Enlazar botón "Buscar en el mapa" para activar el pin central movible
     const pickOnMapBtn = document.querySelector('#step-destination button[onclick*="enableMapPick"], #step-destination button.bg-\\[\\#11131a\\]');
     if (pickOnMapBtn) {
       pickOnMapBtn.setAttribute('onclick', 'startCenterPinPicker()');
     }
 
     window.startCenterPinPicker = function () {
-      const m = getPassMap();
+      const m = getActivePassMap();
       isPinPickingMode = true;
       stepDest.classList.add('hidden');
       document.getElementById('center-pin-overlay').classList.remove('hidden');
@@ -243,7 +138,7 @@
     };
 
     window.cancelCenterPinPicker = function () {
-      const m = getPassMap();
+      const m = getActivePassMap();
       isPinPickingMode = false;
       if (m) m.off('moveend', onMapMoveForPin);
       document.getElementById('center-pin-overlay').classList.add('hidden');
@@ -252,7 +147,7 @@
     };
 
     function onMapMoveForPin() {
-      const m = getPassMap();
+      const m = getActivePassMap();
       if (!m || !isPinPickingMode) return;
       updateCenterPinAddress(m.getCenter());
     }
@@ -266,128 +161,70 @@
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
           const data = await res.json();
-          const shortAddr = (data && data.display_name)
-            ? data.display_name.split(',').slice(0, 3).join(',')
-            : `Punto seleccionado (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`;
+          const shortAddr = (data && data.display_name) ? data.display_name.split(',').slice(0, 3).join(',') : `Punto (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`;
           if (lbl) lbl.textContent = shortAddr;
           if (addrTxt) addrTxt.textContent = shortAddr;
           window._lastPickedPin = { lat: latlng.lat, lng: latlng.lng, label: shortAddr };
         } catch (e) {
-          const fallback = `Punto (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`;
-          if (lbl) lbl.textContent = fallback;
-          if (addrTxt) addrTxt.textContent = fallback;
-          window._lastPickedPin = { lat: latlng.lat, lng: latlng.lng, label: fallback };
+          window._lastPickedPin = { lat: latlng.lat, lng: latlng.lng, label: 'Destino en mapa' };
         }
       }, 300);
     }
 
     window.confirmCenterPinDestination = async function () {
-      const m = getPassMap();
+      const m = getActivePassMap();
       const picked = window._lastPickedPin || (m ? { lat: m.getCenter().lat, lng: m.getCenter().lng, label: 'Destino marcado en mapa' } : null);
       if (!picked) return;
-
       cancelCenterPinPicker();
-      await applyDestinationAndDrawStreetRoute(picked.lat, picked.lng, picked.label);
+      await applyDestinationRoute(picked.lat, picked.lng, picked.label);
     };
 
-    // 5. GPS REAL DE ALTA PRECISIÓN (Sincroniza tu punto exacto en el mapa)
-    function updateOriginOnMap(lat, lng, updateAddressText) {
+    // 5. GPS de alta precisión
+    function updateOriginGps(lat, lng) {
       originCoords = [lat, lng];
-      const m = getPassMap();
+      const m = getActivePassMap();
       if (m) {
         m.setView(originCoords, 16);
         if (!originMarker) {
-          originMarker = L.circleMarker(originCoords, {
-            radius: 9,
-            fillColor: '#00b14f',
-            color: '#ffffff',
-            weight: 3,
-            fillOpacity: 1
-          }).addTo(m);
+          originMarker = L.circleMarker(originCoords, { radius: 9, fillColor: '#00b14f', color: '#ffffff', weight: 3, fillOpacity: 1 }).addTo(m);
         } else {
           originMarker.setLatLng(originCoords);
         }
       }
-
-      if (updateAddressText) {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-          .then(r => r.json())
-          .then(data => {
-            if (data && data.display_name) {
-              const shortName = data.display_name.split(',').slice(0, 3).join(',');
-              const origInput = document.getElementById('input-origin');
-              if (origInput) origInput.value = shortName;
-            }
-          })
-          .catch(() => {});
-      }
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.display_name) {
+            const origInput = document.getElementById('input-origin');
+            if (origInput) origInput.value = data.display_name.split(',').slice(0, 3).join(',');
+          }
+        }).catch(() => {});
     }
 
     window.locateUserGlobal = function () {
-      if (!navigator.geolocation) {
-        if (typeof showToast === 'function') showToast('Tu dispositivo no soporta GPS');
-        return;
-      }
-      if (typeof showToast === 'function') showToast('Sincronizando tu GPS exacto...');
+      if (!navigator.geolocation) return;
+      if (typeof showToast === 'function') showToast('Sincronizando GPS exacto...');
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          updateOriginOnMap(pos.coords.latitude, pos.coords.longitude, true);
-          if (typeof showToast === 'function') showToast('Ubicación GPS sincronizada');
-        },
-        () => {
-          if (typeof showToast === 'function') showToast('Activa la ubicación (GPS) del teléfono');
-        },
+        (pos) => updateOriginGps(pos.coords.latitude, pos.coords.longitude),
+        () => { if (typeof showToast === 'function') showToast('Activa el GPS del teléfono'); },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     };
 
-    // Sincronizar automáticamente apenas abre el mapa
     setTimeout(() => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => updateOriginOnMap(pos.coords.latitude, pos.coords.longitude, true),
+          (pos) => updateOriginGps(pos.coords.latitude, pos.coords.longitude),
           () => {},
           { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
       }
-    }, 600);
+    }, 500);
 
     const gpsBtn = document.querySelector('#screen-passenger button[onclick*="centerPassengerMap"]');
     if (gpsBtn) gpsBtn.setAttribute('onclick', 'locateUserGlobal()');
 
-    // 6. ROTACIÓN DEL MAPA CON DOS DEDOS
-    const mapContainer = document.getElementById('map-passenger');
-    if (mapContainer && !mapContainer._rotationEnabled) {
-      let startAngle = 0;
-      let baseRotation = 0;
-
-      function getTouchAngle(t1, t2) {
-        return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * (180 / Math.PI);
-      }
-
-      mapContainer.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-          startAngle = getTouchAngle(e.touches[0], e.touches[1]);
-          baseRotation = mapRotationDeg;
-        }
-      }, { passive: true });
-
-      mapContainer.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2) {
-          const currentAngle = getTouchAngle(e.touches[0], e.touches[1]);
-          mapRotationDeg = (baseRotation + (currentAngle - startAngle)) % 360;
-          const pane = mapContainer.querySelector('.leaflet-map-pane');
-          if (pane) {
-            pane.style.transformOrigin = 'center center';
-            pane.style.rotate = `${mapRotationDeg}deg`;
-          }
-        }
-      }, { passive: true });
-
-      mapContainer._rotationEnabled = true;
-    }
-
-    // 7. Buscador mundial de direcciones + trazado por calles
+    // 6. Buscador mundial y aplicación de destino
     if (!document.getElementById('global-places-dropdown')) {
       destInput.insertAdjacentHTML('afterend', `
         <div id="global-places-dropdown" class="hidden mt-1.5 rounded-2xl bg-white dark:bg-[#1e2233] border border-gray-200 dark:border-gray-700 shadow-xl max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800 z-50"></div>
@@ -397,26 +234,18 @@
         const q = destInput.value.trim();
         const drop = document.getElementById('global-places-dropdown');
         clearTimeout(searchTimer);
-
-        if (q.length < 3) {
-          drop.classList.add('hidden');
-          return;
-        }
+        if (q.length < 3) { drop.classList.add('hidden'); return; }
 
         searchTimer = setTimeout(async () => {
           try {
             drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Buscando "${q}"...</p>`;
             drop.classList.remove('hidden');
-
-            const url = `https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encodeURIComponent(q)}`;
-            const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'es' } });
             const results = await res.json();
-
             if (!Array.isArray(results) || results.length === 0) {
-              drop.innerHTML = `<p class="p-3 text-xs text-gray-400">No se encontraron lugares. Usa "Buscar en el mapa" para mover el pin.</p>`;
+              drop.innerHTML = `<p class="p-3 text-xs text-gray-400">No se encontraron lugares.</p>`;
               return;
             }
-
             drop.innerHTML = results.map(item => {
               const title = item.display_name.split(',')[0];
               const sub = item.display_name.split(',').slice(1, 4).join(',');
@@ -428,9 +257,7 @@
                 </button>
               `;
             }).join('');
-          } catch (e) {
-            drop.classList.add('hidden');
-          }
+          } catch (e) { drop.classList.add('hidden'); }
         }, 450);
       });
     }
@@ -438,46 +265,30 @@
     window.selectGlobalDestination = async function (lat, lon, label) {
       const drop = document.getElementById('global-places-dropdown');
       if (drop) drop.classList.add('hidden');
-      await applyDestinationAndDrawStreetRoute(lat, lon, label);
+      await applyDestinationRoute(lat, lon, label);
     };
 
-    async function applyDestinationAndDrawStreetRoute(lat, lon, label) {
+    async function applyDestinationRoute(lat, lon, label) {
       const dLat = parseFloat(lat);
       const dLon = parseFloat(lon);
       if (typeof state !== 'undefined') state.destinationText = label;
       if (destInput) destInput.value = label;
 
-      const m = getPassMap();
-      let distKm = 0;
-      let durMin = 0;
+      const m = getActivePassMap();
+      let distKm = 1.0;
+      let durMin = 3;
       let polyCoords = [originCoords, [dLat, dLon]];
 
       try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${dLon},${dLat}?overview=full&geometries=geojson`;
-        const res = await fetch(osrmUrl);
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${dLon},${dLat}?overview=full&geometries=geojson`);
         const data = await res.json();
-
         if (data && data.routes && data.routes[0]) {
           const r = data.routes[0];
           distKm = Math.max(0.3, Number((r.distance / 1000).toFixed(1)));
           durMin = Math.max(2, Math.round(r.duration / 60));
           polyCoords = r.geometry.coordinates.map(c => [c[1], c[0]]);
-        } else {
-          throw new Error('Fallback');
         }
-      } catch (err) {
-        const R = 6371;
-        const dLatRad = ((dLat - originCoords[0]) * Math.PI) / 180;
-        const dLonRad = ((dLon - originCoords[1]) * Math.PI) / 180;
-        const a =
-          Math.sin(dLatRad / 2) * Math.sin(dLatRad / 2) +
-          Math.cos((originCoords[0] * Math.PI) / 180) *
-            Math.cos((dLat * Math.PI) / 180) *
-            Math.sin(dLonRad / 2) *
-            Math.sin(dLonRad / 2);
-        distKm = Math.max(0.3, Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.25).toFixed(1)));
-        durMin = Math.max(2, Math.round(distKm * 1.5));
-      }
+      } catch (e) {}
 
       if (typeof state !== 'undefined') {
         state.distanceKm = distKm;
@@ -487,35 +298,17 @@
       if (m) {
         if (activePolyline) m.removeLayer(activePolyline);
         if (destMarker) m.removeLayer(destMarker);
-
-        destMarker = L.circleMarker([dLat, dLon], {
-          radius: 9,
-          fillColor: '#e51d2e',
-          color: '#ffffff',
-          weight: 3,
-          fillOpacity: 1
-        }).addTo(m);
-
-        activePolyline = L.polyline(polyCoords, {
-          color: '#11131a',
-          weight: 5,
-          opacity: 0.9
-        }).addTo(m);
-
+        destMarker = L.circleMarker([dLat, dLon], { radius: 9, fillColor: '#e51d2e', color: '#ffffff', weight: 3, fillOpacity: 1 }).addTo(m);
+        activePolyline = L.polyline(polyCoords, { color: '#11131a', weight: 5, opacity: 0.9 }).addTo(m);
         m.fitBounds(activePolyline.getBounds(), { padding: [50, 50] });
       }
 
       stepDest.classList.add('hidden');
       document.getElementById('step-vehicles').classList.remove('hidden');
-      if (typeof renderVehicleOptions === 'function') {
-        renderVehicleOptions();
-      }
-      if (typeof showToast === 'function') {
-        showToast(`Ruta lista: ${distKm} km · ~${durMin} min`);
-      }
+      if (typeof renderVehicleOptions === 'function') renderVehicleOptions();
     }
   }
 
-  window.addEventListener('load', initGlobalMapFeatures);
-  setTimeout(initGlobalMapFeatures, 150);
+  window.addEventListener('load', initTaxiGoMapSystem);
+  setTimeout(initTaxiGoMapSystem, 250);
 })();
