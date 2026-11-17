@@ -76,7 +76,7 @@
     .dot.orange { background: #f59e0b; }
     .input-box input { border: none; background: transparent; width: 100%; font-size: 13px; font-weight: 600; color: #0f172a; outline: none; }
 
-    /* Alerta Emergente Conductor */
+    /* Alerta Emergente Conductor (Con Cuenta Regresiva Circular) */
     .incoming-modal { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(15,23,42,0.75); align-items: center; justify-content: center; padding: 16px; }
     .incoming-card { background: #fff; width: 100%; max-width: 360px; border-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
@@ -114,7 +114,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- PORTADA Y REGISTROS CON VALIDACIÓN OTP POR TELÉFONO -->
+  <!-- PORTADA Y REGISTROS CON VALIDACIÓN OTP VÍA WHATSAPP/SMS -->
   <main class="splash-screen" id="splashScreen">
     <div class="hero-card" id="logoTrigger">
       <div class="hero-icon">❖</div>
@@ -138,14 +138,14 @@
         <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
       </div>
 
-      <!-- REGISTRO PASAJERO (PASO 1: TELÉFONO + OTP / PASO 2: DATOS) -->
+      <!-- REGISTRO PASAJERO (WHATSAPP/SMS OTP + FORMULARIO LIMPIO) -->
       <div id="regPassForm" style="display:none;">
         <div id="otpPassStep1">
           <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="regPasPhone" placeholder="04121234567" /></div>
-          <button class="primary-btn" onclick="sendOtp('passenger')">Enviar código de confirmación (OTP)</button>
+          <button class="primary-btn" onclick="sendWhatsAppOtp('passenger')">Enviar código vía WhatsApp / SMS</button>
         </div>
         <div id="otpPassStep2" style="display:none;">
-          <div class="form-group"><label>Código OTP recibido</label><input type="text" id="otpPasCode" placeholder="Ingresa 1234" /></div>
+          <div class="form-group"><label>Código de confirmación recibido</label><input type="text" id="otpPasCode" placeholder="Ingresa el código (Usa 1234)" /></div>
           <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="pasName" placeholder="Tu nombre completo" /></div>
           <div class="form-group"><label>Número de Cédula</label><input type="text" id="pasCedula" placeholder="Ej: V-30000000" /></div>
           <div class="cop-box">
@@ -158,14 +158,14 @@
         </div>
       </div>
 
-      <!-- REGISTRO CONDUCTOR (PASO 1: TELÉFONO + OTP / PASO 2: DATOS Y C.O.P.) -->
+      <!-- REGISTRO CONDUCTOR (WHATSAPP/SMS OTP + C.O.P. COMPLETO) -->
       <div id="regDrvForm" style="display:none;">
         <div id="otpDrvStep1">
           <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="regDrvPhone" placeholder="04141234567" /></div>
-          <button class="primary-btn" onclick="sendOtp('driver')">Enviar código de confirmación (OTP)</button>
+          <button class="primary-btn" onclick="sendWhatsAppOtp('driver')">Enviar código vía WhatsApp / SMS</button>
         </div>
         <div id="otpDrvStep2" style="display:none;">
-          <div class="form-group"><label>Código OTP recibido</label><input type="text" id="otpDrvCode" placeholder="Ingresa 1234" /></div>
+          <div class="form-group"><label>Código de confirmación recibido</label><input type="text" id="otpDrvCode" placeholder="Ingresa el código (Usa 1234)" /></div>
           <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="drvName" placeholder="Tu nombre" /></div>
           <div class="form-group"><label>Cédula de Identidad</label><input type="text" id="drvCedula" placeholder="Ej: V-24000000" /></div>
           <div class="form-group"><label>Tipo de Vehículo</label>
@@ -255,7 +255,7 @@
       <button class="primary-btn red" style="max-width:280px;" onclick="cancelRideSearch()">Cancelar solicitud</button>
     </section>
 
-    <!-- VISTA CONDUCTOR -->
+    <!-- VISTA CONDUCTOR (ESTILO REFERENCIA) -->
     <section class="driver-view" id="driverView">
       <div style="position:fixed;top:12px;left:12px;right:12px;z-index:500;display:flex;align-items:center;justify-content:space-between;pointer-events:none;">
         <button class="top-icon-btn" onclick="goHome('login')" style="pointer-events:auto;">☰</button>
@@ -355,7 +355,7 @@
   </section>
 
   <script>
-    const STORAGE_KEY = 'taxigo_db_v8';
+    const STORAGE_KEY = 'taxigo_db_v9';
     const defaultDB = {
       settings: { rate: 914.02, pricePerKm: 0.75, minFare: 1.10 },
       drivers: [],
@@ -445,13 +445,13 @@
       r.readAsDataURL(f);
     }
 
-    /* FLUJO OTP DE TELÉFONO */
-    function sendOtp(type) {
+    /* FLUJO OTP VÍA WHATSAPP / SMS */
+    function sendWhatsAppOtp(type) {
       const phoneInput = type === 'passenger' ? document.getElementById('regPasPhone') : document.getElementById('regDrvPhone');
       const phone = phoneInput.value.trim();
       if (!phone) { showToast('Ingresa tu número de teléfono'); return; }
       pendingPhone = phone;
-      showToast('Código OTP enviado (Usa 1234)');
+      showToast('📲 Código enviado por WhatsApp/SMS (Usa 1234)');
       if (type === 'passenger') {
         document.getElementById('otpPassStep1').style.display = 'none';
         document.getElementById('otpPassStep2').style.display = 'block';
@@ -463,7 +463,7 @@
 
     function registerPassenger() {
       const code = document.getElementById('otpPasCode').value.trim();
-      if (code !== '1234') { showToast('Código OTP incorrecto (Usa 1234)'); return; }
+      if (code !== '1234') { showToast('Código de confirmación incorrecto (Usa 1234)'); return; }
       const name = document.getElementById('pasName').value.trim();
       const cedula = document.getElementById('pasCedula').value.trim();
       const pin = document.getElementById('pasPin').value.trim() || '1234';
@@ -477,7 +477,7 @@
 
     function registerDriver() {
       const code = document.getElementById('otpDrvCode').value.trim();
-      if (code !== '1234') { showToast('Código OTP incorrecto (Usa 1234)'); return; }
+      if (code !== '1234') { showToast('Código de confirmación incorrecto (Usa 1234)'); return; }
       const name = document.getElementById('drvName').value.trim();
       const cedula = document.getElementById('drvCedula').value.trim();
       const vehicleDetail = document.getElementById('drvVehDet').value.trim();
@@ -647,7 +647,7 @@
       document.getElementById('ownerScreen').style.display = 'flex';
     }
 
-    function closeOwner() { document.getElementById('ownerScreen'].style.display = 'none'; }
+    function closeOwner() { document.getElementById('ownerScreen').style.display = 'none'; }
 
     function switchOwnerTab(t) {
       ['sum','drv','usr'].forEach(x => { document.getElementById('osec-'+x).style.display = (x===t)?'block':'none'; });
