@@ -16,6 +16,7 @@
       --text-main: #0f172a;
       --text-muted: #64748b;
       --green: #10b981;
+      --red: #ef4444;
       --border: #e2e8f0;
     }
 
@@ -35,17 +36,7 @@
       overflow-x: hidden;
     }
 
-    /* Ocultar widget flotante de Netlify si intenta inyectarse */
-    [data-netlify-deploy-id],
-    iframe[src*="netlify"],
-    div[id*="netlify"] {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-    }
-
-    /* PANTALLA DE PORTADA LIMPIA */
+    /* PORTADA LIMPIA */
     .splash-screen {
       min-height: 100vh;
       padding: 36px 16px 28px;
@@ -138,7 +129,7 @@
     }
 
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .form-group label {
@@ -146,7 +137,7 @@
       font-size: 12px;
       font-weight: 800;
       color: #0f172a;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .form-group input, .form-group select {
@@ -154,7 +145,7 @@
       background: #f1f5f9;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 13px 14px;
+      padding: 12px 14px;
       font-size: 14px;
       color: #0f172a;
       outline: none;
@@ -172,7 +163,7 @@
       color: #ffffff;
       font-size: 15px;
       font-weight: 800;
-      padding: 15px;
+      padding: 14px;
       border-radius: 14px;
       cursor: pointer;
       margin-top: 4px;
@@ -446,41 +437,198 @@
       background: #f8fafc;
     }
 
-    /* Modales */
-    .modal-backdrop {
+    /* PANEL COMPLETO DE DUEÑO */
+    .owner-screen {
       display: none;
       position: fixed;
       inset: 0;
-      z-index: 2000;
-      background: rgba(15, 23, 42, 0.7);
+      z-index: 2500;
+      background: #f1f5f9;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .owner-header {
+      background: var(--bg-dark);
+      color: #ffffff;
+      padding: 14px 16px;
+      display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 16px;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
     }
 
-    .modal-box {
+    .owner-header h2 {
+      font-size: 16px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .owner-close {
+      background: #1e293b;
+      color: #ffffff;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .owner-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       background: #ffffff;
-      width: 100%;
-      max-width: 380px;
-      border-radius: 18px;
-      padding: 18px;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px;
+      gap: 4px;
     }
 
-    .modal-title {
-      font-size: 17px;
+    .owner-tab-btn {
+      border: none;
+      background: transparent;
+      padding: 9px 4px;
+      border-radius: 10px;
+      font-size: 11px;
       font-weight: 800;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .owner-tab-btn.active {
+      background: var(--bg-dark);
+      color: #facc15;
+    }
+
+    .owner-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-box {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stat-num {
+      font-size: 22px;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .admin-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 15px;
+      border: 1px solid #e2e8f0;
       margin-bottom: 12px;
+    }
+
+    .admin-card h3 {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .entity-item {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 13px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 10px;
+    }
+
+    .entity-top {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
     }
+
+    .entity-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .entity-meta {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .badge-approved { background: #dcfce7; color: #15803d; }
+    .badge-pending { background: #fef3c7; color: #b45309; }
+    .badge-blocked { background: #fee2e2; color: #b91c1c; }
+
+    .action-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mini-btn {
+      flex: 1;
+      min-width: 80px;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .btn-approve { background: #10b981; color: #ffffff; }
+    .btn-block { background: #f59e0b; color: #0f172a; }
+    .btn-delete { background: #fee2e2; color: #b91c1c; }
 
     .toast {
       position: fixed;
       top: 18px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 3000;
+      z-index: 4000;
       background: #0f172a;
       color: #facc15;
       padding: 10px 16px;
@@ -489,7 +637,8 @@
       font-weight: 700;
       display: none;
       box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-      white-space: nowrap;
+      max-width: 92%;
+      text-align: center;
     }
   </style>
 </head>
@@ -497,7 +646,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- PORTADA LIMPIA SIN BARRA SUPERIOR NI TEXTO EXTRA -->
+  <!-- PORTADA LIMPIA -->
   <main class="splash-screen" id="splashScreen">
     <div class="hero-card" id="logoTrigger">
       <div class="hero-icon">❖</div>
@@ -513,6 +662,7 @@
         <button class="auth-tab" id="tabRegister" onclick="setAuthMode('register')">Registrarse</button>
       </div>
 
+      <!-- Formulario Login -->
       <div id="loginForm">
         <div class="form-group">
           <label>Usuario o Teléfono</label>
@@ -525,17 +675,26 @@
         <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
       </div>
 
+      <!-- Formulario Registro -->
       <div id="registerForm" style="display:none;">
         <div class="form-group">
           <label>Nombre completo</label>
           <input type="text" id="regName" placeholder="Tu nombre y apellido" />
         </div>
         <div class="form-group">
+          <label>Teléfono / WhatsApp</label>
+          <input type="tel" id="regPhone" placeholder="Ej: 0414-1234567" />
+        </div>
+        <div class="form-group">
           <label>Tipo de cuenta</label>
-          <select id="regRole">
+          <select id="regRole" onchange="toggleDriverExtra()">
             <option value="passenger">Pasajero (Pedir viajes / envíos)</option>
             <option value="driver">Conductor (Moto / Carro)</option>
           </select>
+        </div>
+        <div class="form-group" id="driverVehicleGroup" style="display:none;">
+          <label>Vehículo y Placa (Solo Conductores)</label>
+          <input type="text" id="regVehicle" placeholder="Ej: Moto Bera 150cc • Placa AA1B23" />
         </div>
         <div class="form-group">
           <label>Crea tu PIN de Acceso</label>
@@ -554,15 +713,15 @@
       <button class="circle-btn" onclick="goHome('login')" title="Salir">←</button>
 
       <div class="service-pills">
-        <button class="service-pill active" onclick="selectService(this, 'Mototaxi', 1.10)">🏍️ Mototaxi</button>
-        <button class="service-pill" onclick="selectService(this, 'Taxi', 2.50)">🚗 Taxi</button>
-        <button class="service-pill" onclick="selectService(this, 'Envío', 1.50)">📦 Envío</button>
+        <button class="service-pill active" id="pillMoto" onclick="selectService(this, 'Mototaxi')">🏍️ Mototaxi</button>
+        <button class="service-pill" id="pillTaxi" onclick="selectService(this, 'Taxi')">🚗 Taxi</button>
+        <button class="service-pill" id="pillEnvio" onclick="selectService(this, 'Envío')">📦 Envío</button>
       </div>
 
       <button class="circle-btn" onclick="locateUser()">⌖</button>
     </div>
 
-    <button class="circle-btn support-btn" id="supportBtn" onclick="showToast('Soporte TaxiGo Ciudad Ojeda activo 24/7')">🎧</button>
+    <button class="circle-btn support-btn" id="supportBtn" onclick="openSupport()">🎧</button>
 
     <section class="bottom-sheet" id="passengerSheet">
       <div class="sheet-handle"></div>
@@ -591,7 +750,7 @@
             <span class="fare-amount">$<span id="fareDisplay">1.10</span></span>
             <button class="step-btn" onclick="adjustFare(0.10)">+</button>
           </div>
-          <div class="fare-bs">Ref: Bs. <span id="bsDisplay">99,00</span></div>
+          <div class="fare-bs">Ref: Bs. <span id="bsDisplay">1005,42</span></div>
         </div>
 
         <div>
@@ -606,6 +765,7 @@
       <button class="primary-btn" id="requestBtn" onclick="requestRide()">Solicitar Mototaxi</button>
     </section>
 
+    <!-- Vista Conductor -->
     <section class="driver-view" id="driverView">
       <div class="driver-card">
         <div class="status-row">
@@ -619,40 +779,125 @@
 
       <div class="driver-card">
         <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Solicitudes cercanas (Ciudad Ojeda)</h4>
-        <div id="requestsList">
-          <div class="ride-request-item">
-            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:13px;">
-              <span>🏍️ Mototaxi • Los Samanes → Centro</span>
-              <span style="color:#10b981;">$1.50</span>
-            </div>
-            <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: Pago móvil • Distancia: 2.4 km</p>
-            <button class="primary-btn" style="padding:9px;font-size:12px;background:#10b981;" onclick="acceptRide(this)">Aceptar carrera</button>
-          </div>
-        </div>
+        <div id="requestsList"></div>
       </div>
 
       <button class="primary-btn" style="background:#334155;" onclick="goHome('login')">← Cerrar sesión</button>
     </section>
   </section>
 
-  <!-- Panel Oculto del Dueño (5 toques al logo TaxiGo + PIN 1234) -->
-  <div class="modal-backdrop" id="ownerModal">
-    <div class="modal-box">
-      <div class="modal-title">
-        <span>👑 Panel Administrador TaxiGo</span>
-        <button onclick="closeModal('ownerModal')" style="border:none;background:none;font-size:18px;cursor:pointer;">✕</button>
-      </div>
-      <div class="form-group">
-        <label>Tasa BCV / Referencia (Bs. por $1)</label>
-        <input type="number" id="adminRateInput" value="90" step="0.1" />
-      </div>
-      <div class="form-group">
-        <label>Tarifa Mínima Mototaxi ($)</label>
-        <input type="number" id="adminMinMoto" value="1.10" step="0.10" />
-      </div>
-      <button class="primary-btn" onclick="saveAdminSettings()">Guardar Configuración</button>
+  <!-- PANEL COMPLETO DEL DUEÑO (5 TOQUES AL LOGO + PIN 1234) -->
+  <section class="owner-screen" id="ownerScreen">
+    <div class="owner-header">
+      <h2>👑 Control Total TaxiGo</h2>
+      <button class="owner-close" onclick="closeOwnerPanel()">✕ Cerrar</button>
     </div>
-  </div>
+
+    <nav class="owner-nav">
+      <button class="owner-tab-btn active" id="otab-summary" onclick="switchOwnerTab('summary')">
+        <span>📊</span><span>Tarifas</span>
+      </button>
+      <button class="owner-tab-btn" id="otab-drivers" onclick="switchOwnerTab('drivers')">
+        <span>🏍️</span><span>Conductores</span>
+      </button>
+      <button class="owner-tab-btn" id="otab-users" onclick="switchOwnerTab('users')">
+        <span>🙋‍♀️</span><span>Usuarios</span>
+      </button>
+      <button class="owner-tab-btn" id="otab-rides" onclick="switchOwnerTab('rides')">
+        <span>🚕</span><span>Viajes</span>
+      </button>
+    </nav>
+
+    <div class="owner-body">
+      <!-- TAB 1: RESUMEN, TASA Y TARIFAS -->
+      <div id="osec-summary">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-num" id="statDriversApproved">0</div>
+            <div class="stat-lbl">Conductores aprobados</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" style="color:#d97706;" id="statDriversPending">0</div>
+            <div class="stat-lbl">Pendientes por aprobar</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="statUsersTotal">0</div>
+            <div class="stat-lbl">Usuarios registrados</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" style="color:#10b981;" id="statRidesTotal">0</div>
+            <div class="stat-lbl">Viajes registrados</div>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3>💱 Tasa de Cambio y Tarifas Mínimas</h3>
+          <div class="form-group">
+            <label>Tasa BCV / Referencia (Bs. por $1)</label>
+            <input type="number" id="adminRateInput" step="0.01" />
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Mín. Mototaxi ($)</label>
+              <input type="number" id="adminMinMoto" step="0.10" />
+            </div>
+            <div class="form-group">
+              <label>Mín. Taxi ($)</label>
+              <input type="number" id="adminMinTaxi" step="0.10" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mín. Envío / Delivery ($)</label>
+            <input type="number" id="adminMinEnvio" step="0.10" />
+          </div>
+          <button class="primary-btn" onclick="saveAdminSettings()">💾 Guardar Tasa y Tarifas</button>
+        </div>
+
+        <div class="admin-card">
+          <h3>📲 Datos de Pago Móvil y Soporte</h3>
+          <div class="form-group">
+            <label>Datos Pago Móvil de la Central</label>
+            <input type="text" id="adminPagoMovil" placeholder="Banco • Cédula • Teléfono" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono / WhatsApp Soporte</label>
+            <input type="text" id="adminSupportPhone" placeholder="Ej: 0414-0000000" />
+          </div>
+          <button class="primary-btn" style="background:#1e293b;" onclick="saveAdminSettings()">Guardar Datos de Contacto</button>
+        </div>
+      </div>
+
+      <!-- TAB 2: CONDUCTORES -->
+      <div id="osec-drivers" style="display:none;">
+        <div class="admin-card" style="padding:12px;">
+          <h3 style="margin-bottom:4px;">🏍️ Gestión de Conductores</h3>
+          <p style="font-size:12px;color:#64748b;">Aprueba nuevos ingresos, suspende cuentas o revisa vehículos.</p>
+        </div>
+        <div id="adminDriversList"></div>
+      </div>
+
+      <!-- TAB 3: USUARIOS / PASAJEROS -->
+      <div id="osec-users" style="display:none;">
+        <div class="admin-card" style="padding:12px;">
+          <h3 style="margin-bottom:4px;">🙋‍♀️ Gestión de Usuarios (Pasajeros)</h3>
+          <p style="font-size:12px;color:#64748b;">Activa, bloquea o elimina cuentas de clientes.</p>
+        </div>
+        <div id="adminUsersList"></div>
+      </div>
+
+      <!-- TAB 4: VIAJES -->
+      <div id="osec-rides" style="display:none;">
+        <div class="admin-card" style="padding:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <h3 style="margin-bottom:2px;">🚕 Historial de Solicitudes</h3>
+            <p style="font-size:12px;color:#64748b;">Carreras pedidas en la plataforma.</p>
+          </div>
+          <button class="owner-close" onclick="clearRidesHistory()">Limpiar</button>
+        </div>
+        <div id="adminRidesList"></div>
+      </div>
+    </div>
+  </section>
 
   <script>
     const tg = window.Telegram && window.Telegram.WebApp;
@@ -661,10 +906,56 @@
       tg.expand();
     }
 
+    const STORAGE_KEY = 'taxigo_db_v2';
+
+    const defaultDB = {
+      settings: {
+        rate: 914.02,
+        minMoto: 1.10,
+        minTaxi: 2.50,
+        minEnvio: 1.50,
+        pagoMovil: 'Banesco • V-27.000.000 • 0414-0000000',
+        supportPhone: '0414-0000000'
+      },
+      drivers: [
+        { id: 'd1', name: 'Luis Mendoza', phone: '0414-6521100', vehicle: 'Moto Bera SBR 150cc • Placa AB4K92', pin: '1234', status: 'approved' },
+        { id: 'd2', name: 'Carlos Pérez', phone: '0424-6189932', vehicle: 'Moto Empire Owen • Placa AC9M11', pin: '1234', status: 'pending' },
+        { id: 'd3', name: 'José Gregorio', phone: '0412-7741209', vehicle: 'Chevrolet Aveo Gris • Placa AE204X', pin: '1234', status: 'pending' }
+      ],
+      users: [
+        { id: 'u1', name: 'Siolibeth O.', phone: '0414-6012233', pin: '1234', status: 'approved' },
+        { id: 'u2', name: 'María Fernanda', phone: '0424-6904411', pin: '1234', status: 'approved' }
+      ],
+      rides: [
+        { id: 'r1', service: 'Mototaxi', origin: 'Los Samanes', dest: 'Centro Ciudad Ojeda', fare: 1.50, pay: 'Pago móvil', trip: 'Solo ida', status: 'Pendiente' }
+      ]
+    };
+
+    function loadDB() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return JSON.parse(JSON.stringify(defaultDB));
+        const parsed = JSON.parse(raw);
+        return {
+          settings: Object.assign({}, defaultDB.settings, parsed.settings || {}),
+          drivers: Array.isArray(parsed.drivers) ? parsed.drivers : defaultDB.drivers,
+          users: Array.isArray(parsed.users) ? parsed.users : defaultDB.users,
+          rides: Array.isArray(parsed.rides) ? parsed.rides : defaultDB.rides
+        };
+      } catch (e) {
+        return JSON.parse(JSON.stringify(defaultDB));
+      }
+    }
+
+    let db = loadDB();
+
+    function saveDB() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    }
+
     let currentService = 'Mototaxi';
-    let minFare = 1.10;
-    let currentFare = 1.10;
-    let exchangeRate = 90.00;
+    let minFare = db.settings.minMoto;
+    let currentFare = db.settings.minMoto;
     let roundTrip = false;
     let isOnline = true;
     let mapInitialized = false;
@@ -706,6 +997,11 @@
       document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
     }
 
+    function toggleDriverExtra() {
+      const role = document.getElementById('regRole').value;
+      document.getElementById('driverVehicleGroup').style.display = role === 'driver' ? 'block' : 'none';
+    }
+
     function goHome(mode) {
       document.getElementById('splashScreen').style.display = 'flex';
       document.getElementById('appScreen').style.display = 'none';
@@ -726,32 +1022,90 @@
         document.getElementById('driverGreeting').textContent = `Conductor: ${userName}`;
       }
 
+      renderDriverRequests();
       initMapOnce();
       if (userName) showToast(`Bienvenido, ${userName}`);
     }
 
     function handleLogin() {
-      const u = document.getElementById('loginUser').value.trim();
-      if (!u) {
+      const q = document.getElementById('loginUser').value.trim();
+      const pin = document.getElementById('loginPin').value.trim();
+      if (!q) {
         showToast('Ingresa tu usuario o teléfono');
         return;
       }
-      const lower = u.toLowerCase();
+
+      const lower = q.toLowerCase();
+
+      // Buscar en conductores registrados
+      const foundDriver = db.drivers.find(d => d.name.toLowerCase().includes(lower) || d.phone.includes(q));
+      if (foundDriver) {
+        if (foundDriver.status === 'pending') {
+          showToast('Tu cuenta de conductor está pendiente de aprobación del dueño');
+          return;
+        }
+        if (foundDriver.status === 'blocked') {
+          showToast('Tu cuenta de conductor está suspendida. Contacta soporte');
+          return;
+        }
+        enterApp('driver', foundDriver.name);
+        return;
+      }
+
+      // Buscar en usuarios pasajeros
+      const foundUser = db.users.find(u => u.name.toLowerCase().includes(lower) || u.phone.includes(q));
+      if (foundUser) {
+        if (foundUser.status === 'blocked') {
+          showToast('Tu usuario está bloqueado por administración');
+          return;
+        }
+        enterApp('passenger', foundUser.name);
+        return;
+      }
+
+      // Acceso directo si escribe palabra clave moto/cond o cualquier usuario nuevo rápido
       if (lower.includes('moto') || lower.includes('cond')) {
-        enterApp('driver', u);
+        enterApp('driver', q);
       } else {
-        enterApp('passenger', u);
+        enterApp('passenger', q);
       }
     }
 
     function handleRegister() {
       const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim() || 'Sin teléfono';
       const role = document.getElementById('regRole').value;
+      const vehicle = document.getElementById('regVehicle').value.trim() || 'Vehículo por verificar';
+      const pin = document.getElementById('regPin').value.trim() || '1234';
+
       if (!name) {
         showToast('Escribe tu nombre completo');
         return;
       }
-      enterApp(role, name);
+
+      if (role === 'driver') {
+        db.drivers.unshift({
+          id: 'd' + Date.now(),
+          name,
+          phone,
+          vehicle,
+          pin,
+          status: 'pending'
+        });
+        saveDB();
+        showToast('Registro enviado. El dueño debe aprobar tu cuenta de conductor');
+        setAuthMode('login');
+      } else {
+        db.users.unshift({
+          id: 'u' + Date.now(),
+          name,
+          phone,
+          pin,
+          status: 'approved'
+        });
+        saveDB();
+        enterApp('passenger', name);
+      }
     }
 
     function locateUser() {
@@ -775,12 +1129,18 @@
       );
     }
 
-    function selectService(el, name, baseMin) {
+    function getMinForService(serviceName) {
+      if (serviceName === 'Taxi') return Number(db.settings.minTaxi) || 2.50;
+      if (serviceName === 'Envío') return Number(db.settings.minEnvio) || 1.50;
+      return Number(db.settings.minMoto) || 1.10;
+    }
+
+    function selectService(el, name) {
       document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
       currentService = name;
-      minFare = baseMin;
-      currentFare = baseMin;
+      minFare = getMinForService(name);
+      currentFare = roundTrip ? Math.round(minFare * 1.8 * 100) / 100 : minFare;
       updateFareUI();
       document.getElementById('requestBtn').textContent = `Solicitar ${name}`;
     }
@@ -803,9 +1163,14 @@
     }
 
     function updateFareUI() {
+      const rate = Number(db.settings.rate) || 914.02;
       document.getElementById('minFareLabel').textContent = minFare.toFixed(2);
       document.getElementById('fareDisplay').textContent = currentFare.toFixed(2);
-      document.getElementById('bsDisplay').textContent = (currentFare * exchangeRate).toFixed(2).replace('.', ',');
+      document.getElementById('bsDisplay').textContent = (currentFare * rate).toFixed(2).replace('.', ',');
+    }
+
+    function openSupport() {
+      showToast(`Soporte TaxiGo: ${db.settings.supportPhone}`);
     }
 
     function requestRide() {
@@ -819,19 +1184,50 @@
         return;
       }
 
+      db.rides.unshift({
+        id: 'r' + Date.now(),
+        service: currentService,
+        origin,
+        dest,
+        fare: currentFare,
+        pay,
+        trip: roundTrip ? 'Ida y vuelta' : 'Solo ida',
+        status: 'Buscando conductor'
+      });
+      saveDB();
+      renderDriverRequests();
+
+      if (pay === 'Pago móvil') {
+        showToast(`Buscando ${currentService} ($${currentFare.toFixed(2)}) • Pago Móvil: ${db.settings.pagoMovil}`);
+      } else {
+        showToast(`Buscando ${currentService} por $${currentFare.toFixed(2)} en Efectivo...`);
+      }
+    }
+
+    function renderDriverRequests() {
       const list = document.getElementById('requestsList');
-      const card = document.createElement('div');
-      card.className = 'ride-request-item';
-      card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;font-weight:800;font-size:13px;">
-          <span>${currentService} • ${origin} → ${dest}</span>
-          <span style="color:#10b981;">$${currentFare.toFixed(2)}</span>
+      if (!list) return;
+      list.innerHTML = db.rides.map((r, idx) => `
+        <div class="ride-request-item">
+          <div style="display:flex;justify-content:space-between;font-weight:800;font-size:13px;">
+            <span>${r.service} • ${r.origin} → ${r.dest}</span>
+            <span style="color:#10b981;">$${Number(r.fare).toFixed(2)}</span>
+          </div>
+          <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: ${r.pay} • ${r.trip} • Estado: <b>${r.status}</b></p>
+          <button class="primary-btn" style="padding:9px;font-size:12px;background:${r.status === 'Aceptada' ? '#0f172a' : '#10b981'};" ${r.status === 'Aceptada' ? 'disabled' : ''} onclick="acceptRide(${idx})">
+            ${r.status === 'Aceptada' ? '✓ Carrera aceptada (En camino)' : 'Aceptar carrera'}
+          </button>
         </div>
-        <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: ${pay} • ${roundTrip ? 'Ida y vuelta' : 'Solo ida'}</p>
-        <button class="primary-btn" style="padding:9px;font-size:12px;background:#10b981;" onclick="acceptRide(this)">Aceptar carrera</button>
-      `;
-      list.prepend(card);
-      showToast(`Buscando ${currentService} por $${currentFare.toFixed(2)} (${pay})...`);
+      `).join('');
+    }
+
+    function acceptRide(idx) {
+      if (db.rides[idx]) {
+        db.rides[idx].status = 'Aceptada';
+        saveDB();
+        renderDriverRequests();
+        showToast('¡Carrera asignada!');
+      }
     }
 
     function toggleOnline() {
@@ -842,52 +1238,175 @@
       document.getElementById('driverStatusText').textContent = isOnline ? 'Disponible para recibir carreras' : 'No recibirás solicitudes nuevas';
     }
 
-    function acceptRide(btn) {
-      btn.textContent = '✓ Carrera aceptada (En camino)';
-      btn.style.background = '#0f172a';
-      btn.disabled = true;
-      showToast('¡Carrera asignada!');
-    }
-
+    /* ACTIVACIÓN PANEL DEL DUEÑO (5 TOQUES AL LOGO + PIN 1234) */
     document.getElementById('logoTrigger').addEventListener('click', () => {
       logoClicks++;
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => { logoClicks = 0; }, 1500);
       if (logoClicks >= 5) {
         logoClicks = 0;
-        const pin = prompt('Acceso Dueño - Ingresa el PIN:');
+        const pin = prompt('Acceso Dueño TaxiGo - Ingresa el PIN:');
         if (pin === '1234') {
-          document.getElementById('ownerModal').style.display = 'flex';
+          openOwnerPanel();
         } else if (pin !== null) {
           showToast('PIN incorrecto');
         }
       }
     });
 
+    function openOwnerPanel() {
+      document.getElementById('adminRateInput').value = db.settings.rate;
+      document.getElementById('adminMinMoto').value = db.settings.minMoto;
+      document.getElementById('adminMinTaxi').value = db.settings.minTaxi;
+      document.getElementById('adminMinEnvio').value = db.settings.minEnvio;
+      document.getElementById('adminPagoMovil').value = db.settings.pagoMovil;
+      document.getElementById('adminSupportPhone').value = db.settings.supportPhone;
+
+      renderOwnerDashboard();
+      document.getElementById('ownerScreen').style.display = 'flex';
+    }
+
+    function closeOwnerPanel() {
+      document.getElementById('ownerScreen').style.display = 'none';
+    }
+
+    function switchOwnerTab(tab) {
+      ['summary', 'drivers', 'users', 'rides'].forEach(t => {
+        document.getElementById('osec-' + t).style.display = t === tab ? 'block' : 'none';
+        document.getElementById('otab-' + t).classList.toggle('active', t === tab);
+      });
+      renderOwnerDashboard();
+    }
+
+    function renderOwnerDashboard() {
+      const approvedDrivers = db.drivers.filter(d => d.status === 'approved').length;
+      const pendingDrivers = db.drivers.filter(d => d.status === 'pending').length;
+
+      document.getElementById('statDriversApproved').textContent = approvedDrivers;
+      document.getElementById('statDriversPending').textContent = pendingDrivers;
+      document.getElementById('statUsersTotal').textContent = db.users.length;
+      document.getElementById('statRidesTotal').textContent = db.rides.length;
+
+      // Render Conductores
+      const dList = document.getElementById('adminDriversList');
+      dList.innerHTML = db.drivers.map((d, i) => {
+        const badgeClass = d.status === 'approved' ? 'badge-approved' : (d.status === 'pending' ? 'badge-pending' : 'badge-blocked');
+        const badgeText = d.status === 'approved' ? 'Aprobado' : (d.status === 'pending' ? 'Pendiente' : 'Suspendido');
+        return `
+          <div class="entity-item">
+            <div class="entity-top">
+              <div class="entity-name">🏍️ ${d.name}</div>
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="entity-meta">
+              📞 ${d.phone}<br/>
+              🚘 ${d.vehicle}
+            </div>
+            <div class="action-row">
+              ${d.status !== 'approved' ? `<button class="mini-btn btn-approve" onclick="setDriverStatus(${i}, 'approved')">✅ Aprobar</button>` : ''}
+              ${d.status !== 'blocked' ? `<button class="mini-btn btn-block" onclick="setDriverStatus(${i}, 'blocked')">🚫 Suspender</button>` : ''}
+              <button class="mini-btn btn-delete" onclick="deleteDriver(${i})">🗑️ Eliminar</button>
+            </div>
+          </div>
+        `;
+      }).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay conductores registrados.</p>';
+
+      // Render Usuarios
+      const uList = document.getElementById('adminUsersList');
+      uList.innerHTML = db.users.map((u, i) => {
+        const badgeClass = u.status === 'approved' ? 'badge-approved' : 'badge-blocked';
+        const badgeText = u.status === 'approved' ? 'Activo' : 'Bloqueado';
+        return `
+          <div class="entity-item">
+            <div class="entity-top">
+              <div class="entity-name">🙋‍♀️ ${u.name}</div>
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="entity-meta">📞 ${u.phone}</div>
+            <div class="action-row">
+              ${u.status !== 'approved' ? `<button class="mini-btn btn-approve" onclick="setUserStatus(${i}, 'approved')">✅ Activar</button>` : ''}
+              ${u.status !== 'blocked' ? `<button class="mini-btn btn-block" onclick="setUserStatus(${i}, 'blocked')">🚫 Bloquear</button>` : ''}
+              <button class="mini-btn btn-delete" onclick="deleteUser(${i})">🗑️ Eliminar</button>
+            </div>
+          </div>
+        `;
+      }).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">No hay usuarios registrados.</p>';
+
+      // Render Viajes
+      const rList = document.getElementById('adminRidesList');
+      rList.innerHTML = db.rides.map(r => `
+        <div class="entity-item">
+          <div class="entity-top">
+            <div class="entity-name">${r.service}: ${r.origin} → ${r.dest}</div>
+            <span class="badge badge-approved">$${Number(r.fare).toFixed(2)}</span>
+          </div>
+          <div class="entity-meta">
+            Pago: <b>${r.pay}</b> (${r.trip}) • Estado: <b>${r.status}</b>
+          </div>
+        </div>
+      `).join('') || '<p style="text-align:center;color:#64748b;font-size:13px;">Aún no hay viajes registrados.</p>';
+    }
+
+    function setDriverStatus(idx, status) {
+      db.drivers[idx].status = status;
+      saveDB();
+      renderOwnerDashboard();
+      showToast(status === 'approved' ? 'Conductor aprobado' : 'Conductor suspendido');
+    }
+
+    function deleteDriver(idx) {
+      db.drivers.splice(idx, 1);
+      saveDB();
+      renderOwnerDashboard();
+      showToast('Conductor eliminado');
+    }
+
+    function setUserStatus(idx, status) {
+      db.users[idx].status = status;
+      saveDB();
+      renderOwnerDashboard();
+      showToast(status === 'approved' ? 'Usuario activado' : 'Usuario bloqueado');
+    }
+
+    function deleteUser(idx) {
+      db.users.splice(idx, 1);
+      saveDB();
+      renderOwnerDashboard();
+      showToast('Usuario eliminado');
+    }
+
+    function clearRidesHistory() {
+      db.rides = [];
+      saveDB();
+      renderOwnerDashboard();
+      renderDriverRequests();
+      showToast('Historial de viajes limpiado');
+    }
+
     function saveAdminSettings() {
-      const newRate = parseFloat(document.getElementById('adminRateInput').value);
-      const newMoto = parseFloat(document.getElementById('adminMinMoto').value);
-      if (newRate > 0) exchangeRate = newRate;
-      if (newMoto > 0 && currentService === 'Mototaxi') {
-        minFare = newMoto;
-        currentFare = newMoto;
-      }
+      const rate = parseFloat(document.getElementById('adminRateInput').value);
+      const minMoto = parseFloat(document.getElementById('adminMinMoto').value);
+      const minTaxi = parseFloat(document.getElementById('adminMinTaxi').value);
+      const minEnvio = parseFloat(document.getElementById('adminMinEnvio').value);
+
+      if (rate > 0) db.settings.rate = rate;
+      if (minMoto > 0) db.settings.minMoto = minMoto;
+      if (minTaxi > 0) db.settings.minTaxi = minTaxi;
+      if (minEnvio > 0) db.settings.minEnvio = minEnvio;
+      db.settings.pagoMovil = document.getElementById('adminPagoMovil').value.trim();
+      db.settings.supportPhone = document.getElementById('adminSupportPhone').value.trim();
+
+      saveDB();
+      minFare = getMinForService(currentService);
+      currentFare = minFare;
       updateFareUI();
-      closeModal('ownerModal');
-      showToast('Configuración guardada');
+      showToast('✅ Configuración y tarifas actualizadas');
     }
 
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      clearTimeout(t._timer);
-      t._timer = setTimeout(() => { t.style.display = 'none'; }, 2800);
-    }
-
+    minFare = getMinForService(currentService);
+    currentFare = minFare;
     updateFareUI();
+    renderDriverRequests();
   </script>
 </body>
 </html>
