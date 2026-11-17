@@ -30,12 +30,11 @@
     body, html {
       width: 100%;
       height: 100%;
-      background: #f1f5f9;
+      background: #f8fafc;
       color: var(--text-main);
       overflow-x: hidden;
     }
 
-    /* Barra superior oscura */
     .topbar {
       position: fixed;
       top: 0;
@@ -72,7 +71,6 @@
       padding: 6px 10px;
       border-radius: 999px;
       cursor: pointer;
-      transition: 0.2s;
     }
 
     .top-pill.active {
@@ -81,7 +79,6 @@
       box-shadow: inset 0 0 0 1px #475569;
     }
 
-    /* PANTALLA DE PORTADA / INICIO */
     .splash-screen {
       min-height: 100vh;
       padding: 72px 16px 28px;
@@ -158,7 +155,6 @@
       border: 1px solid #e2e8f0;
     }
 
-    /* Tabs Iniciar Sesión / Registrarse */
     .auth-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -177,7 +173,6 @@
       font-weight: 700;
       color: #64748b;
       cursor: pointer;
-      transition: 0.2s;
     }
 
     .auth-tab.active {
@@ -226,7 +221,6 @@
       margin-top: 4px;
     }
 
-    /* PANTALLA APP PRINCIPAL (MAPA + PASAJERO / CONDUCTOR) */
     .app-screen {
       display: none;
       width: 100%;
@@ -440,3 +434,521 @@
     .pay-select {
       width: 100%;
       padding: 8px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      outline: none;
+    }
+
+    .driver-view {
+      display: none;
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 700;
+      background: #f1f5f9;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .driver-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toggle-online {
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      background: #10b981;
+      color: #fff;
+    }
+
+    .toggle-online.offline {
+      background: #ef4444;
+    }
+
+    .ride-request-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 10px;
+      background: #f8fafc;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(15, 23, 42, 0.7);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      width: 100%;
+      max-width: 380px;
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toast {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      background: #0f172a;
+      color: #facc15;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast" class="toast"></div>
+
+  <header class="topbar">
+    <span class="topbar-label">Vista activa:</span>
+    <div class="top-pills">
+      <button class="top-pill active" id="navPassenger" onclick="enterApp('passenger', '')">🙋‍♀️ Pasajero</button>
+      <button class="top-pill" id="navDriver" onclick="enterApp('driver', '')">🏍️ Conductor</button>
+      <button class="top-pill" id="navRegister" onclick="goHome('register')">Registro</button>
+    </div>
+  </header>
+
+  <main class="splash-screen" id="splashScreen">
+    <div class="hero-card" id="logoTrigger">
+      <div class="hero-icon">❖</div>
+      <div>
+        <div class="hero-title">Taxi<span>Go</span></div>
+        <div class="hero-sub">MOVILIDAD Y ENVÍOS</div>
+      </div>
+    </div>
+
+    <p class="tagline">Mototaxi, Taxi y Delivery seguro a partir de <b>$1.10</b></p>
+
+    <div class="card-panel">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">Iniciar Sesión</button>
+        <button class="auth-tab" id="tabRegister" onclick="setAuthMode('register')">Registrarse</button>
+      </div>
+
+      <div id="loginForm">
+        <div class="form-group">
+          <label>Usuario o Teléfono</label>
+          <input type="text" id="loginUser" placeholder="Ej: @usuario o 0414..." />
+        </div>
+        <div class="form-group">
+          <label>PIN de Acceso</label>
+          <input type="password" id="loginPin" placeholder="••••" />
+        </div>
+        <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
+      </div>
+
+      <div id="registerForm" style="display:none;">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="regName" placeholder="Tu nombre y apellido" />
+        </div>
+        <div class="form-group">
+          <label>Tipo de cuenta</label>
+          <select id="regRole">
+            <option value="passenger">Pasajero (Pedir viajes / envíos)</option>
+            <option value="driver">Conductor (Moto / Carro)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Crea tu PIN de Acceso</label>
+          <input type="password" id="regPin" placeholder="Ej: 1234" />
+        </div>
+        <button class="primary-btn" onclick="handleRegister()">Crear cuenta y entrar</button>
+      </div>
+    </div>
+  </main>
+
+  <section class="app-screen" id="appScreen">
+    <div id="map"></div>
+
+    <div class="map-controls" id="passengerControls">
+      <button class="circle-btn" onclick="goHome('login')" title="Volver al inicio">←</button>
+
+      <div class="service-pills">
+        <button class="service-pill active" onclick="selectService(this, 'Mototaxi', 1.10)">🏍️ Mototaxi</button>
+        <button class="service-pill" onclick="selectService(this, 'Taxi', 2.50)">🚗 Taxi</button>
+        <button class="service-pill" onclick="selectService(this, 'Envío', 1.50)">📦 Envío</button>
+      </div>
+
+      <button class="circle-btn" onclick="locateUser()">⌖</button>
+    </div>
+
+    <button class="circle-btn support-btn" id="supportBtn" onclick="showToast('Soporte TaxiGo Ciudad Ojeda activo 24/7')">🎧</button>
+
+    <section class="bottom-sheet" id="passengerSheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>¿A dónde iremos hoy?</h2>
+        <button class="trip-type-btn" id="tripTypeBtn" onclick="toggleTripType()">⇄ Solo ida</button>
+      </div>
+
+      <div class="input-box">
+        <span class="dot green"></span>
+        <input type="text" id="originInput" value="Los Samanes, Calle Principal" />
+        <span class="gps-tag">GPS</span>
+      </div>
+
+      <div class="input-box">
+        <span class="dot orange"></span>
+        <input type="text" id="destInput" placeholder="Escribir aquí tu destino..." />
+        <span>☆</span>
+      </div>
+
+      <div class="fare-row">
+        <div>
+          <div class="fare-label">Tarifa ofrecida (Mín. $<span id="minFareLabel">1.10</span>)</div>
+          <div class="fare-stepper">
+            <button class="step-btn" onclick="adjustFare(-0.10)">−</button>
+            <span class="fare-amount">$<span id="fareDisplay">1.10</span></span>
+            <button class="step-btn" onclick="adjustFare(0.10)">+</button>
+          </div>
+          <div class="fare-bs">Ref: Bs. <span id="bsDisplay">99,00</span></div>
+        </div>
+
+        <div>
+          <div class="fare-label">Método de pago</div>
+          <select class="pay-select" id="paymentMethod">
+            <option value="Pago móvil">📲 Pago móvil</option>
+            <option value="Efectivo">💵 Efectivo</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="primary-btn" id="requestBtn" onclick="requestRide()">Solicitar Mototaxi</button>
+    </section>
+
+    <section class="driver-view" id="driverView">
+      <div class="driver-card">
+        <div class="status-row">
+          <div>
+            <h3 style="font-size:16px;font-weight:800;" id="driverGreeting">Panel de Conductor</h3>
+            <p style="font-size:12px;color:#64748b;" id="driverStatusText">Disponible para recibir carreras</p>
+          </div>
+          <button class="toggle-online" id="onlineToggle" onclick="toggleOnline()">En línea</button>
+        </div>
+      </div>
+
+      <div class="driver-card">
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:6px;">Solicitudes cercanas (Ciudad Ojeda)</h4>
+        <div id="requestsList">
+          <div class="ride-request-item">
+            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:13px;">
+              <span>🏍️ Mototaxi • Los Samanes → Centro</span>
+              <span style="color:#10b981;">$1.50</span>
+            </div>
+            <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: Pago móvil • Distancia: 2.4 km</p>
+            <button class="primary-btn" style="padding:9px;font-size:12px;background:#10b981;" onclick="acceptRide(this)">Aceptar carrera</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="primary-btn" style="background:#334155;" onclick="goHome('login')">← Volver a la portada</button>
+    </section>
+  </section>
+
+  <div class="modal-backdrop" id="ownerModal">
+    <div class="modal-box">
+      <div class="modal-title">
+        <span>👑 Panel Administrador TaxiGo</span>
+        <button onclick="closeModal('ownerModal')" style="border:none;background:none;font-size:18px;cursor:pointer;">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Tasa BCV / Referencia (Bs. por $1)</label>
+        <input type="number" id="adminRateInput" value="90" step="0.1" />
+      </div>
+      <div class="form-group">
+        <label>Tarifa Mínima Mototaxi ($)</label>
+        <input type="number" id="adminMinMoto" value="1.10" step="0.10" />
+      </div>
+      <button class="primary-btn" onclick="saveAdminSettings()">Guardar Configuración</button>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    let currentService = 'Mototaxi';
+    let minFare = 1.10;
+    let currentFare = 1.10;
+    let exchangeRate = 90.00;
+    let roundTrip = false;
+    let isOnline = true;
+    let mapInitialized = false;
+    let map = null;
+    let userMarker = null;
+    let logoClicks = 0;
+    let clickTimer = null;
+
+    const defaultCoords = [10.2016, -71.3125];
+
+    function initMapOnce() {
+      if (mapInitialized) {
+        setTimeout(() => map.invalidateSize(), 150);
+        return;
+      }
+      map = L.map('map', { zoomControl: false }).setView(defaultCoords, 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      const userIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="width:18px;height:18px;background:#10b981;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(16,185,129,0.8);"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+
+      userMarker = L.marker(defaultCoords, { icon: userIcon }).addTo(map);
+      mapInitialized = true;
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    function setAuthMode(mode) {
+      const isLogin = mode === 'login';
+      document.getElementById('tabLogin').classList.toggle('active', isLogin);
+      document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+      document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
+    }
+
+    function goHome(mode) {
+      document.getElementById('splashScreen').style.display = 'flex';
+      document.getElementById('appScreen').style.display = 'none';
+      document.getElementById('navRegister').classList.toggle('active', mode === 'register');
+      document.getElementById('navPassenger').classList.remove('active');
+      document.getElementById('navDriver').classList.remove('active');
+      setAuthMode(mode || 'login');
+    }
+
+    function enterApp(role, userName) {
+      document.getElementById('splashScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+
+      const isPass = role === 'passenger';
+      document.getElementById('navPassenger').classList.toggle('active', isPass);
+      document.getElementById('navDriver').classList.toggle('active', !isPass);
+      document.getElementById('navRegister').classList.remove('active');
+
+      document.getElementById('passengerControls').style.display = isPass ? 'flex' : 'none';
+      document.getElementById('supportBtn').style.display = isPass ? 'flex' : 'none';
+      document.getElementById('passengerSheet').style.display = isPass ? 'block' : 'none';
+      document.getElementById('driverView').style.display = isPass ? 'none' : 'block';
+
+      if (!isPass && userName) {
+        document.getElementById('driverGreeting').textContent = `Conductor: ${userName}`;
+      }
+
+      initMapOnce();
+      if (userName) showToast(`Bienvenido, ${userName}`);
+    }
+
+    function handleLogin() {
+      const u = document.getElementById('loginUser').value.trim();
+      if (!u) {
+        showToast('Ingresa tu usuario o teléfono');
+        return;
+      }
+      const lower = u.toLowerCase();
+      if (lower.includes('moto') || lower.includes('cond')) {
+        enterApp('driver', u);
+      } else {
+        enterApp('passenger', u);
+      }
+    }
+
+    function handleRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const role = document.getElementById('regRole').value;
+      if (!name) {
+        showToast('Escribe tu nombre completo');
+        return;
+      }
+      enterApp(role, name);
+    }
+
+    function locateUser() {
+      if (!navigator.geolocation) {
+        showToast('GPS no disponible');
+        return;
+      }
+      showToast('Ubicando tu GPS...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = [pos.coords.latitude, pos.coords.longitude];
+          map.setView(coords, 16);
+          userMarker.setLatLng(coords);
+          document.getElementById('originInput').value = `GPS (${coords[0].toFixed(4)}, ${coords[1].toFixed(4)})`;
+          showToast('Ubicación actualizada');
+        },
+        () => {
+          map.setView(defaultCoords, 15);
+          showToast('Centrado en Ciudad Ojeda');
+        }
+      );
+    }
+
+    function selectService(el, name, baseMin) {
+      document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      currentService = name;
+      minFare = baseMin;
+      currentFare = baseMin;
+      updateFareUI();
+      document.getElementById('requestBtn').textContent = `Solicitar ${name}`;
+    }
+
+    function adjustFare(delta) {
+      const next = Math.round((currentFare + delta) * 100) / 100;
+      if (next >= minFare) {
+        currentFare = next;
+        updateFareUI();
+      } else {
+        showToast(`La tarifa mínima es $${minFare.toFixed(2)}`);
+      }
+    }
+
+    function toggleTripType() {
+      roundTrip = !roundTrip;
+      document.getElementById('tripTypeBtn').textContent = roundTrip ? '⇄ Ida y vuelta' : '⇄ Solo ida';
+      currentFare = roundTrip ? Math.round(currentFare * 1.8 * 100) / 100 : minFare;
+      updateFareUI();
+    }
+
+    function updateFareUI() {
+      document.getElementById('minFareLabel').textContent = minFare.toFixed(2);
+      document.getElementById('fareDisplay').textContent = currentFare.toFixed(2);
+      document.getElementById('bsDisplay').textContent = (currentFare * exchangeRate).toFixed(2).replace('.', ',');
+    }
+
+    function requestRide() {
+      const origin = document.getElementById('originInput').value.trim();
+      const dest = document.getElementById('destInput').value.trim();
+      const pay = document.getElementById('paymentMethod').value;
+
+      if (!dest) {
+        showToast('Escribe tu destino primero');
+        document.getElementById('destInput').focus();
+        return;
+      }
+
+      const list = document.getElementById('requestsList');
+      const card = document.createElement('div');
+      card.className = 'ride-request-item';
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;font-weight:800;font-size:13px;">
+          <span>${currentService} • ${origin} → ${dest}</span>
+          <span style="color:#10b981;">$${currentFare.toFixed(2)}</span>
+        </div>
+        <p style="font-size:11px;color:#64748b;margin:4px 0 8px;">Pago: ${pay} • ${roundTrip ? 'Ida y vuelta' : 'Solo ida'}</p>
+        <button class="primary-btn" style="padding:9px;font-size:12px;background:#10b981;" onclick="acceptRide(this)">Aceptar carrera</button>
+      `;
+      list.prepend(card);
+      showToast(`Buscando ${currentService} por $${currentFare.toFixed(2)} (${pay})...`);
+    }
+
+    function toggleOnline() {
+      isOnline = !isOnline;
+      const btn = document.getElementById('onlineToggle');
+      btn.textContent = isOnline ? 'En línea' : 'Desconectado';
+      btn.classList.toggle('offline', !isOnline);
+      document.getElementById('driverStatusText').textContent = isOnline ? 'Disponible para recibir carreras' : 'No recibirás solicitudes nuevas';
+    }
+
+    function acceptRide(btn) {
+      btn.textContent = '✓ Carrera aceptada (En camino)';
+      btn.style.background = '#0f172a';
+      btn.disabled = true;
+      showToast('¡Carrera asignada!');
+    }
+
+    document.getElementById('logoTrigger').addEventListener('click', () => {
+      logoClicks++;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => { logoClicks = 0; }, 1500);
+      if (logoClicks >= 5) {
+        logoClicks = 0;
+        const pin = prompt('Acceso Dueño - Ingresa el PIN:');
+        if (pin === '1234') {
+          document.getElementById('ownerModal').style.display = 'flex';
+        } else if (pin !== null) {
+          showToast('PIN incorrecto');
+        }
+      }
+    });
+
+    function saveAdminSettings() {
+      const newRate = parseFloat(document.getElementById('adminRateInput').value);
+      const newMoto = parseFloat(document.getElementById('adminMinMoto').value);
+      if (newRate > 0) exchangeRate = newRate;
+      if (newMoto > 0 && currentService === 'Mototaxi') {
+        minFare = newMoto;
+        currentFare = newMoto;
+      }
+      updateFareUI();
+      closeModal('ownerModal');
+      showToast('Configuración guardada');
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.display = 'none'; }, 2800);
+    }
+
+    updateFareUI();
+  </script>
+</body>
+</html>
