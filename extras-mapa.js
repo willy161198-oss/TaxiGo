@@ -1,5 +1,5 @@
 // =========================================================
-// TAXIGO · EXTRAS-MAPA.JS v5.0 (MAPA OSM + RUTA REAL POR CALLES SIEMPRE)
+// TAXIGO · EXTRAS-MAPA.JS v6.0 (GPS EXACTO + PIN CENTRAL + ROTACIÓN + TARIFA OCULTA $1.10 / $0.75)
 // =========================================================
 (function () {
   // 1. Forzar teselas OpenStreetMap gratuitas en todo Leaflet
@@ -30,7 +30,7 @@
     return true;
   }
 
-  // 2. Interceptar CUALQUIER línea recta de 2 puntos en Leaflet y convertirla en ruta por calles (OSRM)
+  // 2. Interceptar líneas rectas de 2 puntos y doblarlas por calles reales (OSRM)
   function snapStraightLinesToRoads() {
     if (typeof L === 'undefined' || !L.Polyline || L.Polyline.prototype._taxiGoRoadSnapped) return;
 
@@ -58,8 +58,7 @@
           origSetLatLngs.call(polylineInstance, roadCoords);
           polylineInstance._skipRoadSnap = false;
 
-          // Actualizar km y minutos reales en la tarjeta inferior
-          const distKm = Math.max(0.5, Number((r.distance / 1000).toFixed(1)));
+          const distKm = Math.max(0.3, Number((r.distance / 1000).toFixed(1)));
           const durMin = Math.max(2, Math.round(r.duration / 60));
 
           if (typeof state !== 'undefined') {
@@ -67,7 +66,6 @@
             state.durationMin = durMin;
           }
 
-          // Actualizar visualmente los textos de Km y Min en pantalla si existen
           document.querySelectorAll('#step-destination p, #step-destination span').forEach(el => {
             if (el.children.length === 0) {
               if (/^\d+(\.\d+)?\s*km$/i.test(el.textContent.trim())) {
@@ -105,6 +103,20 @@
     L.Polyline.prototype._taxiGoRoadSnapped = true;
   }
 
+  // Capturar la instancia real del mapa de Leaflet apenas se inicialice
+  let capturedPassMap = null;
+  if (typeof L !== 'undefined' && L.Map && !L.Map.prototype._taxiGoCaptured) {
+    const origInit = L.Map.prototype.initialize;
+    L.Map.prototype.initialize = function (id, options) {
+      const res = origInit.call(this, id, options);
+      if (id === 'map-passenger' || (id && id.id === 'map-passenger')) {
+        capturedPassMap = this;
+      }
+      return res;
+    };
+    L.Map.prototype._taxiGoCaptured = true;
+  }
+
   forceOpenStreetMapCore();
   snapStraightLinesToRoads();
 
@@ -114,52 +126,268 @@
   }, 250);
   setTimeout(() => clearInterval(bootWatcher), 10000);
 
-  // 3. Buscador mundial de direcciones + GPS
   function initGlobalMapFeatures() {
     forceOpenStreetMapCore();
     snapStraightLinesToRoads();
 
+    // 3. TARIFA OCULTA EN EL SISTEMA: Mínima $1.10 | Kilómetro $0.75 (sin mostrar fórmulas al público)
+    window.calculateFares = function () {
+      const km = Math.max(0.3, Number((typeof state !== 'undefined' && state.distanceKm) ? state.distanceKm : 1.0));
+      const rate = (typeof state !== 'undefined' && state.bcvRate) ? Number(state.bcvRate) : 45.0;
+
+      // Fórmula oculta: carrera mínima $1.10, costo por km $0.75
+      const motoUsd = Math.max(1.10, Number((km * 0.75).toFixed(2)));
+      const carroUsd = Math.max(1.80, Number((km * 1.15).toFixed(2)));
+      const envioUsd = Math.max(1.10, Number((km * 0.75).toFixed(2)));
+
+      return [
+        {
+          name: 'Moto Go',
+          desc: 'Rápido · 1 pasajero',
+          icon: '🏍️',
+          eta: `${Math.max(2, Math.round(km * 1.4))} min`,
+          usd: motoUsd,
+          bs: (motoUsd * rate).toFixed(2)
+        },
+        {
+          name: 'Carro Go',
+          desc: 'Confort · A/A · 4 puestos',
+          icon: '🚗',
+          eta: `${Math.max(3, Math.round(km * 1.8))} min`,
+          usd: carroUsd,
+          bs: (carroUsd * rate).toFixed(2)
+        },
+        {
+          name: 'Envío Express',
+          desc: 'Paquetes y encomiendas',
+          icon: '📦',
+          eta: `${Math.max(2, Math.round(km * 1.4))} min`,
+          usd: envioUsd,
+          bs: (envioUsd * rate).toFixed(2)
+        }
+      ];
+    };
+
     const destInput = document.getElementById('input-destination');
     const stepDest = document.getElementById('step-destination');
-    if (!destInput || !stepDest) {
+    const passScreen = document.getElementById('screen-passenger');
+    if (!destInput || !stepDest || !passScreen) {
       setTimeout(initGlobalMapFeatures, 150);
       return;
     }
 
     let originCoords = [10.2016, -71.3148];
-    let destCoords = null;
+    let originMarker = null;
+    let destMarker = null;
+    let activePolyline = null;
+    let isPinPickingMode = false;
+    let mapRotationDeg = 0;
+    let reverseTimer = null;
     let searchTimer = null;
 
-    window.locateUserGlobal = function () {
-      if (!navigator.geolocation) {
-        if (typeof showToast === 'function') showToast('Tu navegador no soporta GPS');
-        return;
+    function getPassMap() {
+      if (capturedPassMap) return capturedPassMap;
+      if (typeof mapPassenger !== 'undefined' && mapPassenger) return mapPassenger;
+      return null;
+    }
+
+    // 4. PIN FIJO EN EL CENTRO DEL MAPA AL MOVERLO ("Es aquí")
+    if (!document.getElementById('center-pin-overlay')) {
+      passScreen.insertAdjacentHTML('beforeend', `
+        <div id="center-pin-overlay" class="hidden pointer-events-none absolute inset-0 z-[35] flex flex-col items-center justify-center pb-28">
+          <div id="center-pin-label" class="mb-1.5 px-3 py-1 rounded-full bg-[#11131a] text-white text-[11px] font-extrabold shadow-lg max-w-[240px] truncate">
+            Mueve el mapa para ubicar el pin
+          </div>
+          <div class="relative flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-[#e51d2e] border-4 border-white shadow-xl flex items-center justify-center text-white text-xs font-extrabold">
+              📍
+            </div>
+            <div class="w-1 h-3 bg-[#11131a] rounded-b-full"></div>
+            <div class="w-3 h-1 rounded-full bg-black/35 mt-0.5"></div>
+          </div>
+        </div>
+
+        <div id="center-pin-confirm-bar" class="hidden absolute bottom-4 left-4 right-4 z-[45] bg-white dark:bg-[#1e2233] rounded-3xl p-4 shadow-2xl border border-gray-200 dark:border-gray-700 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Punto marcado con el pin</p>
+              <p id="center-pin-address-text" class="text-xs font-extrabold truncate">Moviendo mapa...</p>
+            </div>
+            <button type="button" onclick="cancelCenterPinPicker()" class="shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold">✕</button>
+          </div>
+          <button type="button" onclick="confirmCenterPinDestination()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow-lg active:scale-95 transition">
+            ✓ Confirmar este destino
+          </button>
+        </div>
+      `);
+    }
+
+    // Enlazar botón "Buscar en el mapa" para activar el pin central movible
+    const pickOnMapBtn = document.querySelector('#step-destination button[onclick*="enableMapPick"], #step-destination button.bg-\\[\\#11131a\\]');
+    if (pickOnMapBtn) {
+      pickOnMapBtn.setAttribute('onclick', 'startCenterPinPicker()');
+    }
+
+    window.startCenterPinPicker = function () {
+      const m = getPassMap();
+      isPinPickingMode = true;
+      stepDest.classList.add('hidden');
+      document.getElementById('center-pin-overlay').classList.remove('hidden');
+      document.getElementById('center-pin-confirm-bar').classList.remove('hidden');
+
+      if (m) {
+        updateCenterPinAddress(m.getCenter());
+        m.off('moveend', onMapMoveForPin);
+        m.on('moveend', onMapMoveForPin);
       }
-      if (typeof showToast === 'function') showToast('Obteniendo ubicación GPS...');
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          originCoords = [pos.coords.latitude, pos.coords.longitude];
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${originCoords[0]}&lon=${originCoords[1]}`);
-            const data = await res.json();
+    };
+
+    window.cancelCenterPinPicker = function () {
+      const m = getPassMap();
+      isPinPickingMode = false;
+      if (m) m.off('moveend', onMapMoveForPin);
+      document.getElementById('center-pin-overlay').classList.add('hidden');
+      document.getElementById('center-pin-confirm-bar').classList.add('hidden');
+      stepDest.classList.remove('hidden');
+    };
+
+    function onMapMoveForPin() {
+      const m = getPassMap();
+      if (!m || !isPinPickingMode) return;
+      updateCenterPinAddress(m.getCenter());
+    }
+
+    function updateCenterPinAddress(latlng) {
+      const lbl = document.getElementById('center-pin-label');
+      const addrTxt = document.getElementById('center-pin-address-text');
+      if (lbl) lbl.textContent = 'Ubicando calle...';
+      clearTimeout(reverseTimer);
+      reverseTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}`);
+          const data = await res.json();
+          const shortAddr = (data && data.display_name)
+            ? data.display_name.split(',').slice(0, 3).join(',')
+            : `Punto seleccionado (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`;
+          if (lbl) lbl.textContent = shortAddr;
+          if (addrTxt) addrTxt.textContent = shortAddr;
+          window._lastPickedPin = { lat: latlng.lat, lng: latlng.lng, label: shortAddr };
+        } catch (e) {
+          const fallback = `Punto (${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)})`;
+          if (lbl) lbl.textContent = fallback;
+          if (addrTxt) addrTxt.textContent = fallback;
+          window._lastPickedPin = { lat: latlng.lat, lng: latlng.lng, label: fallback };
+        }
+      }, 300);
+    }
+
+    window.confirmCenterPinDestination = async function () {
+      const m = getPassMap();
+      const picked = window._lastPickedPin || (m ? { lat: m.getCenter().lat, lng: m.getCenter().lng, label: 'Destino marcado en mapa' } : null);
+      if (!picked) return;
+
+      cancelCenterPinPicker();
+      await applyDestinationAndDrawStreetRoute(picked.lat, picked.lng, picked.label);
+    };
+
+    // 5. GPS REAL DE ALTA PRECISIÓN (Sincroniza tu punto exacto en el mapa)
+    function updateOriginOnMap(lat, lng, updateAddressText) {
+      originCoords = [lat, lng];
+      const m = getPassMap();
+      if (m) {
+        m.setView(originCoords, 16);
+        if (!originMarker) {
+          originMarker = L.circleMarker(originCoords, {
+            radius: 9,
+            fillColor: '#00b14f',
+            color: '#ffffff',
+            weight: 3,
+            fillOpacity: 1
+          }).addTo(m);
+        } else {
+          originMarker.setLatLng(originCoords);
+        }
+      }
+
+      if (updateAddressText) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(r => r.json())
+          .then(data => {
             if (data && data.display_name) {
               const shortName = data.display_name.split(',').slice(0, 3).join(',');
               const origInput = document.getElementById('input-origin');
               if (origInput) origInput.value = shortName;
             }
-          } catch (e) {}
-          if (typeof showToast === 'function') showToast('Ubicación actualizada');
+          })
+          .catch(() => {});
+      }
+    }
+
+    window.locateUserGlobal = function () {
+      if (!navigator.geolocation) {
+        if (typeof showToast === 'function') showToast('Tu dispositivo no soporta GPS');
+        return;
+      }
+      if (typeof showToast === 'function') showToast('Sincronizando tu GPS exacto...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          updateOriginOnMap(pos.coords.latitude, pos.coords.longitude, true);
+          if (typeof showToast === 'function') showToast('Ubicación GPS sincronizada');
         },
         () => {
-          if (typeof showToast === 'function') showToast('Activa el GPS del teléfono');
+          if (typeof showToast === 'function') showToast('Activa la ubicación (GPS) del teléfono');
         },
-        { enableHighAccuracy: true, timeout: 8000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     };
+
+    // Sincronizar automáticamente apenas abre el mapa
+    setTimeout(() => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => updateOriginOnMap(pos.coords.latitude, pos.coords.longitude, true),
+          () => {},
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+      }
+    }, 600);
 
     const gpsBtn = document.querySelector('#screen-passenger button[onclick*="centerPassengerMap"]');
     if (gpsBtn) gpsBtn.setAttribute('onclick', 'locateUserGlobal()');
 
+    // 6. ROTACIÓN DEL MAPA CON DOS DEDOS
+    const mapContainer = document.getElementById('map-passenger');
+    if (mapContainer && !mapContainer._rotationEnabled) {
+      let startAngle = 0;
+      let baseRotation = 0;
+
+      function getTouchAngle(t1, t2) {
+        return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * (180 / Math.PI);
+      }
+
+      mapContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          startAngle = getTouchAngle(e.touches[0], e.touches[1]);
+          baseRotation = mapRotationDeg;
+        }
+      }, { passive: true });
+
+      mapContainer.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+          const currentAngle = getTouchAngle(e.touches[0], e.touches[1]);
+          mapRotationDeg = (baseRotation + (currentAngle - startAngle)) % 360;
+          const pane = mapContainer.querySelector('.leaflet-map-pane');
+          if (pane) {
+            pane.style.transformOrigin = 'center center';
+            pane.style.rotate = `${mapRotationDeg}deg`;
+          }
+        }
+      }, { passive: true });
+
+      mapContainer._rotationEnabled = true;
+    }
+
+    // 7. Buscador mundial de direcciones + trazado por calles
     if (!document.getElementById('global-places-dropdown')) {
       destInput.insertAdjacentHTML('afterend', `
         <div id="global-places-dropdown" class="hidden mt-1.5 rounded-2xl bg-white dark:bg-[#1e2233] border border-gray-200 dark:border-gray-700 shadow-xl max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800 z-50"></div>
@@ -185,7 +413,7 @@
             const results = await res.json();
 
             if (!Array.isArray(results) || results.length === 0) {
-              drop.innerHTML = `<p class="p-3 text-xs text-gray-400">No se encontraron lugares.</p>`;
+              drop.innerHTML = `<p class="p-3 text-xs text-gray-400">No se encontraron lugares. Usa "Buscar en el mapa" para mover el pin.</p>`;
               return;
             }
 
@@ -210,36 +438,44 @@
     window.selectGlobalDestination = async function (lat, lon, label) {
       const drop = document.getElementById('global-places-dropdown');
       if (drop) drop.classList.add('hidden');
+      await applyDestinationAndDrawStreetRoute(lat, lon, label);
+    };
 
-      destCoords = [parseFloat(lat), parseFloat(lon)];
+    async function applyDestinationAndDrawStreetRoute(lat, lon, label) {
+      const dLat = parseFloat(lat);
+      const dLon = parseFloat(lon);
       if (typeof state !== 'undefined') state.destinationText = label;
       if (destInput) destInput.value = label;
 
+      const m = getPassMap();
       let distKm = 0;
       let durMin = 0;
+      let polyCoords = [originCoords, [dLat, dLon]];
 
       try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${destCoords[1]},${destCoords[0]}?overview=false`;
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${dLon},${dLat}?overview=full&geometries=geojson`;
         const res = await fetch(osrmUrl);
         const data = await res.json();
 
         if (data && data.routes && data.routes[0]) {
-          distKm = Math.max(0.5, Number((data.routes[0].distance / 1000).toFixed(1)));
-          durMin = Math.max(2, Math.round(data.routes[0].duration / 60));
+          const r = data.routes[0];
+          distKm = Math.max(0.3, Number((r.distance / 1000).toFixed(1)));
+          durMin = Math.max(2, Math.round(r.duration / 60));
+          polyCoords = r.geometry.coordinates.map(c => [c[1], c[0]]);
         } else {
           throw new Error('Fallback');
         }
       } catch (err) {
         const R = 6371;
-        const dLat = ((destCoords[0] - originCoords[0]) * Math.PI) / 180;
-        const dLon = ((destCoords[1] - originCoords[1]) * Math.PI) / 180;
+        const dLatRad = ((dLat - originCoords[0]) * Math.PI) / 180;
+        const dLonRad = ((dLon - originCoords[1]) * Math.PI) / 180;
         const a =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.sin(dLatRad / 2) * Math.sin(dLatRad / 2) +
           Math.cos((originCoords[0] * Math.PI) / 180) *
-            Math.cos((destCoords[0] * Math.PI) / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-        distKm = Math.max(0.5, Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.25).toFixed(1)));
+            Math.cos((dLat * Math.PI) / 180) *
+            Math.sin(dLonRad / 2) *
+            Math.sin(dLonRad / 2);
+        distKm = Math.max(0.3, Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1.25).toFixed(1)));
         durMin = Math.max(2, Math.round(distKm * 1.5));
       }
 
@@ -248,15 +484,36 @@
         state.durationMin = durMin;
       }
 
-      document.getElementById('step-destination').classList.add('hidden');
+      if (m) {
+        if (activePolyline) m.removeLayer(activePolyline);
+        if (destMarker) m.removeLayer(destMarker);
+
+        destMarker = L.circleMarker([dLat, dLon], {
+          radius: 9,
+          fillColor: '#e51d2e',
+          color: '#ffffff',
+          weight: 3,
+          fillOpacity: 1
+        }).addTo(m);
+
+        activePolyline = L.polyline(polyCoords, {
+          color: '#11131a',
+          weight: 5,
+          opacity: 0.9
+        }).addTo(m);
+
+        m.fitBounds(activePolyline.getBounds(), { padding: [50, 50] });
+      }
+
+      stepDest.classList.add('hidden');
       document.getElementById('step-vehicles').classList.remove('hidden');
       if (typeof renderVehicleOptions === 'function') {
         renderVehicleOptions();
       }
       if (typeof showToast === 'function') {
-        showToast(`Ruta calculada: ${distKm} km · ~${durMin} min`);
+        showToast(`Ruta lista: ${distKm} km · ~${durMin} min`);
       }
-    };
+    }
   }
 
   window.addEventListener('load', initGlobalMapFeatures);
