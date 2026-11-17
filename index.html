@@ -76,14 +76,14 @@
     .dot.orange { background: #f59e0b; }
     .input-box input { border: none; background: transparent; width: 100%; font-size: 13px; font-weight: 600; color: #0f172a; outline: none; }
 
-    /* Alerta Emergente Conductor (Estilo Captura) */
+    /* Alerta Emergente Conductor */
     .incoming-modal { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(15,23,42,0.75); align-items: center; justify-content: center; padding: 16px; }
     .incoming-card { background: #fff; width: 100%; max-width: 360px; border-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
     /* Pantalla Buscando Conductor */
     .searching-screen { display: none; position: fixed; inset: 0; z-index: 2000; background: #fff; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
 
-    /* VISTA CONDUCTOR (Estilo Captura) */
+    /* VISTA CONDUCTOR */
     .driver-view { display: none; position: fixed; inset: 0; z-index: 700; background: transparent; pointer-events: none; padding: 16px; }
     .driver-status-card { pointer-events: auto; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px; text-align: center; box-shadow: 0 -6px 25px rgba(0,0,0,0.12); }
     .connect-big-btn { width: 100%; background: var(--bg-dark); color: #fff; font-size: 16px; font-weight: 900; padding: 16px; border-radius: 999px; border: none; cursor: pointer; margin: 10px 0; }
@@ -114,7 +114,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- PORTADA Y REGISTROS -->
+  <!-- PORTADA Y REGISTROS CON VALIDACIÓN OTP POR TELÉFONO -->
   <main class="splash-screen" id="splashScreen">
     <div class="hero-card" id="logoTrigger">
       <div class="hero-icon">❖</div>
@@ -133,50 +133,62 @@
 
       <!-- LOGIN -->
       <div id="loginForm">
-        <div class="form-group"><label>Teléfono o Cédula</label><input type="text" id="loginUser" placeholder="Ej: 0414-0000000" /></div>
+        <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="loginPhone" placeholder="Ej: 04141234567" /></div>
         <div class="form-group"><label>PIN de Acceso</label><input type="password" id="loginPin" placeholder="••••" /></div>
         <button class="primary-btn" onclick="handleLogin()">Entrar a TaxiGo</button>
       </div>
 
-      <!-- REGISTRO PASAJERO (LIMPIO) -->
+      <!-- REGISTRO PASAJERO (PASO 1: TELÉFONO + OTP / PASO 2: DATOS) -->
       <div id="regPassForm" style="display:none;">
-        <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="pasName" placeholder="Tu nombre completo" /></div>
-        <div class="form-group"><label>Número de Cédula</label><input type="text" id="pasCedula" placeholder="Ej: V-30000000" /></div>
-        <div class="form-group"><label>Teléfono / WhatsApp</label><input type="tel" id="pasPhone" placeholder="Ej: 04121234567" /></div>
-        <div class="cop-box">
-          <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">Verificación C.O.P. (Pasajero)</label>
-          <div class="doc-upload-item"><div class="doc-info">Foto de Cédula <span class="doc-status" id="stPasId">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasId', 'stPasId')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">Foto Selfie <span class="doc-status" id="stPasSelfie">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasSelfie', 'stPasSelfie')" /></label></div>
+        <div id="otpPassStep1">
+          <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="regPasPhone" placeholder="04121234567" /></div>
+          <button class="primary-btn" onclick="sendOtp('passenger')">Enviar código de confirmación (OTP)</button>
         </div>
-        <div class="form-group"><label>Crea tu PIN</label><input type="password" id="pasPin" placeholder="1234" /></div>
-        <button class="primary-btn" onclick="registerPassenger()">Completar Registro</button>
+        <div id="otpPassStep2" style="display:none;">
+          <div class="form-group"><label>Código OTP recibido</label><input type="text" id="otpPasCode" placeholder="Ingresa 1234" /></div>
+          <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="pasName" placeholder="Tu nombre completo" /></div>
+          <div class="form-group"><label>Número de Cédula</label><input type="text" id="pasCedula" placeholder="Ej: V-30000000" /></div>
+          <div class="cop-box">
+            <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">Verificación C.O.P. (Pasajero)</label>
+            <div class="doc-upload-item"><div class="doc-info">Foto de Cédula <span class="doc-status" id="stPasId">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasId', 'stPasId')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">Foto Selfie <span class="doc-status" id="stPasSelfie">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'pasSelfie', 'stPasSelfie')" /></label></div>
+          </div>
+          <div class="form-group"><label>Crea tu PIN</label><input type="password" id="pasPin" placeholder="1234" /></div>
+          <button class="primary-btn" onclick="registerPassenger()">Verificar y Registrar</button>
+        </div>
       </div>
 
-      <!-- REGISTRO CONDUCTOR (LIMPIO + C.O.P. COMPLETO) -->
+      <!-- REGISTRO CONDUCTOR (PASO 1: TELÉFONO + OTP / PASO 2: DATOS Y C.O.P.) -->
       <div id="regDrvForm" style="display:none;">
-        <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="drvName" placeholder="Tu nombre" /></div>
-        <div class="form-group"><label>Cédula de Identidad</label><input type="text" id="drvCedula" placeholder="Ej: V-24000000" /></div>
-        <div class="form-group"><label>Teléfono</label><input type="tel" id="drvPhone" placeholder="Ej: 04141234567" /></div>
-        <div class="form-group"><label>Tipo de Vehículo</label>
-          <div class="vehicle-selector">
-            <button type="button" class="veh-btn active" id="vMoto" onclick="setVeh('Moto')">🏍️ Moto</button>
-            <button type="button" class="veh-btn" id="vCarro" onclick="setVeh('Carro')">🚗 Carro</button>
+        <div id="otpDrvStep1">
+          <div class="form-group"><label>Número de Teléfono (Usuario)</label><input type="tel" id="regDrvPhone" placeholder="04141234567" /></div>
+          <button class="primary-btn" onclick="sendOtp('driver')">Enviar código de confirmación (OTP)</button>
+        </div>
+        <div id="otpDrvStep2" style="display:none;">
+          <div class="form-group"><label>Código OTP recibido</label><input type="text" id="otpDrvCode" placeholder="Ingresa 1234" /></div>
+          <div class="form-group"><label>Nombre y Apellido</label><input type="text" id="drvName" placeholder="Tu nombre" /></div>
+          <div class="form-group"><label>Cédula de Identidad</label><input type="text" id="drvCedula" placeholder="Ej: V-24000000" /></div>
+          <div class="form-group"><label>Tipo de Vehículo</label>
+            <div class="vehicle-selector">
+              <button type="button" class="veh-btn active" id="vMoto" onclick="setVeh('Moto')">🏍️ Moto</button>
+              <button type="button" class="veh-btn" id="vCarro" onclick="setVeh('Carro')">🚗 Carro</button>
+            </div>
           </div>
+          <div class="form-group"><label>Modelo, Color y Placa</label><input type="text" id="drvVehDet" placeholder="Ej: Bera • Placa ABC1" /></div>
+          <div class="form-group"><label>Tu Pago Móvil (Para recibir pagos)</label><input type="text" id="drvPM" placeholder="Banco • Cédula • Teléfono" /></div>
+          <div class="cop-box">
+            <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">C.O.P. — Documentos del Conductor</label>
+            <div class="doc-upload-item"><div class="doc-info">1. Selfie <span class="doc-status" id="d1">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dSelfie', 'd1')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">2. Cédula <span class="doc-status" id="d2">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCed', 'd2')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">3. Vehículo y Placa <span class="doc-status" id="d3">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVeh', 'd3')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">4. Certificado Médico <span class="doc-status" id="d4">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dMed', 'd4')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">5. Certificado Vial <span class="doc-status" id="d5">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVial', 'd5')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">6. Póliza RCV <span class="doc-status" id="d6">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dRCV', 'd6')" /></label></div>
+            <div class="doc-upload-item"><div class="doc-info">7. Circulación <span class="doc-status" id="d7">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCirc', 'd7')" /></label></div>
+          </div>
+          <div class="form-group"><label>PIN de Acceso</label><input type="password" id="drvPin" placeholder="1234" /></div>
+          <button class="primary-btn" onclick="registerDriver()">Verificar y Enviar C.O.P.</button>
         </div>
-        <div class="form-group"><label>Modelo, Color y Placa</label><input type="text" id="drvVehDet" placeholder="Ej: Bera • Placa ABC1" /></div>
-        <div class="form-group"><label>Tu Pago Móvil (Para recibir pagos)</label><input type="text" id="drvPM" placeholder="Banco • Cédula • Teléfono" /></div>
-        <div class="cop-box">
-          <label style="font-size:11px;font-weight:800;color:#0f172a;margin-bottom:6px;display:block;">C.O.P. — Documentos del Conductor</label>
-          <div class="doc-upload-item"><div class="doc-info">1. Selfie <span class="doc-status" id="d1">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dSelfie', 'd1')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">2. Cédula <span class="doc-status" id="d2">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCed', 'd2')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">3. Vehículo y Placa <span class="doc-status" id="d3">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVeh', 'd3')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">4. Certificado Médico <span class="doc-status" id="d4">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dMed', 'd4')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">5. Certificado Vial <span class="doc-status" id="d5">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dVial', 'd5')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">6. Póliza RCV <span class="doc-status" id="d6">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dRCV', 'd6')" /></label></div>
-          <div class="doc-upload-item"><div class="doc-info">7. Circulación <span class="doc-status" id="d7">Pendiente</span></div><label class="file-label-btn">📷<input type="file" accept="image/*" style="display:none;" onchange="handleDoc(this, 'dCirc', 'd7')" /></label></div>
-        </div>
-        <div class="form-group"><label>PIN de Acceso</label><input type="password" id="drvPin" placeholder="1234" /></div>
-        <button class="primary-btn" onclick="registerDriver()">Enviar Registro y C.O.P.</button>
       </div>
     </div>
   </main>
@@ -185,7 +197,6 @@
   <section class="app-screen" id="appScreen">
     <div id="map"></div>
 
-    <!-- Barra Superior Pasajero -->
     <div class="top-bar-app" id="passengerTopBar">
       <button class="top-icon-btn" onclick="openAccountScreen()">☰</button>
       <button class="support-pill" onclick="showToast('Soporte TaxiGo 24/7')">🎧 Soporte</button>
@@ -244,12 +255,12 @@
       <button class="primary-btn red" style="max-width:280px;" onclick="cancelRideSearch()">Cancelar solicitud</button>
     </section>
 
-    <!-- VISTA CONDUCTOR (Estilo Capturas) -->
+    <!-- VISTA CONDUCTOR -->
     <section class="driver-view" id="driverView">
       <div style="position:fixed;top:12px;left:12px;right:12px;z-index:500;display:flex;align-items:center;justify-content:space-between;pointer-events:none;">
         <button class="top-icon-btn" onclick="goHome('login')" style="pointer-events:auto;">☰</button>
         <button class="support-pill" onclick="showToast('Soporte Conductor')" style="pointer-events:auto;">🎧 Soporte</button>
-        <button class="top-icon-btn" onclick="locateDriverGPS()" style="pointer-events:auto;">⌖</button>
+        <button class="top-icon-btn" onclick="locateUser()" style="pointer-events:auto;">⌖</button>
       </div>
 
       <div class="driver-status-card">
@@ -344,7 +355,7 @@
   </section>
 
   <script>
-    const STORAGE_KEY = 'taxigo_db_v7';
+    const STORAGE_KEY = 'taxigo_db_v8';
     const defaultDB = {
       settings: { rate: 914.02, pricePerKm: 0.75, minFare: 1.10 },
       drivers: [],
@@ -373,6 +384,7 @@
     let originCoords = [10.2016, -71.3125];
     let tempDocs = {};
     let logoClicks = 0, clickTimer = null;
+    let pendingPhone = '';
 
     function calcFare(km) {
       const perKm = Number(db.settings.pricePerKm) || 0.75;
@@ -382,7 +394,6 @@
 
     function initMap() {
       if (mapInitialized) { setTimeout(()=>map.invalidateSize(), 150); return; }
-      // MAPA LIBRE, GIRABLE Y FLUIDO (SIN ESTAR TIESO)
       map = L.map('map', { zoomControl: false, dragging: true, touchZoom: true, scrollWheelZoom: true, doubleClickZoom: true }).setView(originCoords, 15);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
 
@@ -434,40 +445,63 @@
       r.readAsDataURL(f);
     }
 
+    /* FLUJO OTP DE TELÉFONO */
+    function sendOtp(type) {
+      const phoneInput = type === 'passenger' ? document.getElementById('regPasPhone') : document.getElementById('regDrvPhone');
+      const phone = phoneInput.value.trim();
+      if (!phone) { showToast('Ingresa tu número de teléfono'); return; }
+      pendingPhone = phone;
+      showToast('Código OTP enviado (Usa 1234)');
+      if (type === 'passenger') {
+        document.getElementById('otpPassStep1').style.display = 'none';
+        document.getElementById('otpPassStep2').style.display = 'block';
+      } else {
+        document.getElementById('otpDrvStep1').style.display = 'none';
+        document.getElementById('otpDrvStep2').style.display = 'block';
+      }
+    }
+
     function registerPassenger() {
+      const code = document.getElementById('otpPasCode').value.trim();
+      if (code !== '1234') { showToast('Código OTP incorrecto (Usa 1234)'); return; }
       const name = document.getElementById('pasName').value.trim();
       const cedula = document.getElementById('pasCedula').value.trim();
-      const phone = document.getElementById('pasPhone').value.trim();
       const pin = document.getElementById('pasPin').value.trim() || '1234';
-      if (!name || !cedula || !phone) { showToast('Completa todos los campos'); return; }
-      const newU = { id: 'u'+Date.now(), name, cedula, phone, pin, status: 'approved', avatar: '' };
+      if (!name || !cedula) { showToast('Completa todos los campos'); return; }
+      
+      const newU = { id: 'u'+Date.now(), phone: pendingPhone, name, cedula, pin, status: 'approved', avatar: '' };
       db.users.unshift(newU);
       saveDB();
       enterApp('passenger', newU);
     }
 
     function registerDriver() {
+      const code = document.getElementById('otpDrvCode').value.trim();
+      if (code !== '1234') { showToast('Código OTP incorrecto (Usa 1234)'); return; }
       const name = document.getElementById('drvName').value.trim();
       const cedula = document.getElementById('drvCedula').value.trim();
-      const phone = document.getElementById('drvPhone').value.trim();
       const vehicleDetail = document.getElementById('drvVehDet').value.trim();
       const pagoMovil = document.getElementById('drvPM').value.trim();
       const pin = document.getElementById('drvPin').value.trim() || '1234';
-      if (!name || !cedula || !phone || !vehicleDetail || !pagoMovil) { showToast('Completa todos los campos'); return; }
-      db.drivers.unshift({ id: 'd'+Date.now(), name, cedula, phone, vehicleType: selectedVeh, vehicleDetail, pagoMovil, pin, status: 'approved', docs: { ...tempDocs }, avatar: '' });
+      if (!name || !cedula || !vehicleDetail || !pagoMovil) { showToast('Completa todos los campos'); return; }
+
+      const newD = { id: 'd'+Date.now(), phone: pendingPhone, name, cedula, vehicleType: selectedVeh, vehicleDetail, pagoMovil, pin, status: 'approved', docs: { ...tempDocs }, avatar: '' };
+      db.drivers.unshift(newD);
       saveDB();
       showToast('¡Registro exitoso! Ya puedes iniciar sesión');
       setAuthMode('login');
     }
 
     function handleLogin() {
-      const q = document.getElementById('loginUser').value.trim();
-      if (!q) { showToast('Ingresa tu teléfono o cédula'); return; }
-      const drv = db.drivers.find(d => d.phone.includes(q) || d.cedula.toLowerCase().includes(q.toLowerCase()));
+      const phone = document.getElementById('loginPhone').value.trim();
+      const pin = document.getElementById('loginPin').value.trim();
+      if (!phone) { showToast('Ingresa tu número de teléfono'); return; }
+      
+      const drv = db.drivers.find(d => d.phone === phone);
       if (drv) { enterApp('driver', drv); return; }
-      const usr = db.users.find(u => u.phone.includes(q) || u.cedula.toLowerCase().includes(q.toLowerCase()));
+      const usr = db.users.find(u => u.phone === phone);
       if (usr) { enterApp('passenger', usr); return; }
-      showToast('Usuario no encontrado');
+      showToast('Usuario (teléfono) no registrado');
     }
 
     function enterApp(role, profile) {
@@ -507,8 +541,6 @@
       }, () => showToast('Activa el GPS'));
     }
 
-    function locateDriverGPS() { locateUser(); }
-
     function setService(el, s) {
       document.querySelectorAll('.service-pill').forEach(p => p.classList.remove('active'));
       el.classList.add('active');
@@ -531,13 +563,11 @@
 
     function requestRide() {
       const dest = document.getElementById('destInput').value.trim();
-      const pay = document.getElementById('payMethod').value;
       if (!dest || dest.includes('Toca el mapa')) { showToast('Fija tu destino en el mapa'); return; }
 
       document.getElementById('passengerSheet').style.display = 'none';
       document.getElementById('searchingScreen').style.display = 'flex';
 
-      // Disparar alerta automática al conductor conectado
       setTimeout(() => {
         const modal = document.getElementById('incomingModal');
         document.getElementById('incomingFare').textContent = `$${currentFare.toFixed(2)}`;
@@ -617,7 +647,7 @@
       document.getElementById('ownerScreen').style.display = 'flex';
     }
 
-    function closeOwner() { document.getElementById('ownerScreen').style.display = 'none'; }
+    function closeOwner() { document.getElementById('ownerScreen'].style.display = 'none'; }
 
     function switchOwnerTab(t) {
       ['sum','drv','usr'].forEach(x => { document.getElementById('osec-'+x).style.display = (x===t)?'block':'none'; });
@@ -625,8 +655,8 @@
     }
 
     function renderAdmin() {
-      document.getElementById('adminDrvList').innerHTML = db.drivers.map(d=>`<div class="entity-item"><strong>🏍️ ${d.name}</strong> (${d.cedula})<br/><span style="font-size:11px;color:#64748b;">${d.vehicleDetail}</span></div>`).join('') || 'No hay conductores';
-      document.getElementById('adminUsrList').innerHTML = db.users.map(u=>`<div class="entity-item"><strong>🙋‍♀️ ${u.name}</strong> (${u.cedula})<br/><span style="font-size:11px;color:#64748b;">${u.phone}</span></div>`).join('') || 'No hay pasajeros';
+      document.getElementById('adminDrvList').innerHTML = db.drivers.map(d=>`<div class="entity-item"><strong>🏍️ ${d.name}</strong> (${d.phone})<br/><span style="font-size:11px;color:#64748b;">${d.vehicleDetail}</span></div>`).join('') || 'No hay conductores';
+      document.getElementById('adminUsrList').innerHTML = db.users.map(u=>`<div class="entity-item"><strong>🙋‍♀️ ${u.name}</strong> (${u.phone})<br/><span style="font-size:11px;color:#64748b;">Cédula: ${u.cedula}</span></div>`).join('') || 'No hay pasajeros';
     }
 
     function saveAdmin() {
