@@ -1325,6 +1325,167 @@
   // =========================================================
   // ZONA DE EXTENSIONES FUTURAS (PEGA AQUÍ ABAJO SIN BORRAR NADA)
   // =========================================================
+  // EXTENSIÓN: CÉDULA, FOTO DE CÉDULA Y SELFIE OBLIGATORIOS EN REGISTRO
+  (function () {
+    const regForm = document.getElementById('form-register');
+    const driverFields = document.getElementById('driver-register-fields');
+    if (!regForm || !driverFields || document.getElementById('kyc-user-fields')) return;
+
+    // 1. Insertar campos de Cédula, Foto de Cédula y Selfie en el formulario de registro
+    driverFields.insertAdjacentHTML('beforebegin', `
+      <div id="kyc-user-fields" class="space-y-2.5 pt-2 border-t border-white/15">
+        <p class="text-[11px] font-extrabold text-[#00b14f] uppercase">Verificación de Identidad (Obligatorio)</p>
+        <input type="text" id="reg-cedula-num" required placeholder="Número de Cédula (Ej: V-27123456)" class="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-xs text-white placeholder-gray-400" />
+        <label class="block text-[11px] font-bold text-gray-200">📸 Foto de Cédula de Identidad *
+          <input type="file" id="reg-cedula-photo" accept="image/*" required class="mt-1 block w-full text-[10px] text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-[#00b14f] file:text-white file:font-bold" />
+        </label>
+        <label class="block text-[11px] font-bold text-gray-200">🤳 Tomar Selfie en Vivo *
+          <input type="file" id="reg-selfie-photo" accept="image/*" capture="user" required class="mt-1 block w-full text-[10px] text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-[#00b14f] file:text-white file:font-bold" />
+        </label>
+      </div>
+    `);
+
+    // 2. Convertir imágenes a DataURL ligero para que el Dueño pueda verlas al autorizar
+    function fileToCompressedDataUrl(file) {
+      return new Promise(resolve => {
+        if (!file) return resolve('');
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxW = 420;
+            const scale = Math.min(1, maxW / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = () => resolve('');
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 3. Reemplazar handleRegister para guardar Cédula, Foto de Cédula y Selfie
+    window.handleRegister = async function (e) {
+      e.preventDefault();
+      const role = document.getElementById('reg-role').value;
+      const name = document.getElementById('reg-name').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const pass = document.getElementById('reg-pass').value.trim();
+      const cedulaNum = document.getElementById('reg-cedula-num').value.trim().toUpperCase();
+      const cedulaFile = document.getElementById('reg-cedula-photo').files[0];
+      const selfieFile = document.getElementById('reg-selfie-photo').files[0];
+
+      if (!cedulaNum || !cedulaFile || !selfieFile) {
+        showToast('Ingresa tu cédula, foto de cédula y selfie');
+        return;
+      }
+
+      if (appState.users.some(u => u.phone === phone || u.cedula === cedulaNum)) {
+        showToast('Este teléfono o cédula ya está registrado');
+        return;
+      }
+
+      let driverDocs = null;
+      let vehicleType = '';
+      let vehicleModel = '';
+      let plate = '';
+
+      if (role === 'driver') {
+        vehicleType = document.getElementById('reg-vehicle-type').value;
+        vehicleModel = document.getElementById('reg-vehicle-model').value.trim();
+        plate = document.getElementById('reg-plate').value.trim().toUpperCase();
+
+        const fCi = document.getElementById('doc-ci').files[0];
+        const fCarnet = document.getElementById('doc-carnet').files[0];
+        const fLic = document.getElementById('doc-licencia').files[0];
+        const fMed = document.getElementById('doc-medica').files[0];
+        const fRcv = document.getElementById('doc-rcv').files[0];
+
+        if (!vehicleModel || !plate || !fCi || !fCarnet || !fLic || !fMed || !fRcv) {
+          showToast('Completa vehículo y los 5 documentos obligatorios');
+          return;
+        }
+
+        driverDocs = {
+          ci: fCi.name,
+          carnet: fCarnet.name,
+          licencia: fLic.name,
+          medica: fMed.name,
+          rcv: fRcv.name
+        };
+      }
+
+      showToast('Procesando fotos de identidad...');
+      const cedulaImg = await fileToCompressedDataUrl(cedulaFile);
+      const selfieImg = await fileToCompressedDataUrl(selfieFile);
+
+      const newUser = {
+        id: 'usr-' + Date.now(),
+        role,
+        name,
+        phone,
+        pass,
+        cedula: cedulaNum,
+        cedulaImg,
+        selfieImg,
+        approved: false,
+        blocked: false,
+        online: true,
+        vehicleType,
+        vehicleModel,
+        plate,
+        docs: driverDocs,
+        tripsCount: 0,
+        earnedUsd: 0,
+        debtUsd: 0,
+        lat: null,
+        lng: null
+      };
+
+      appState.users.push(newUser);
+      appState.activeUserId = newUser.id;
+      saveAppState();
+      routeUserScreen();
+    };
+
+    // 4. Mostrar Cédula, Foto de Cédula y Selfie en el Panel de Dueño al autorizar
+    const origRenderOwner = window.renderOwnerDashboard;
+    window.renderOwnerDashboard = function () {
+      if (typeof origRenderOwner === 'function') origRenderOwner();
+      const pendingUsers = appState.users.filter(u => !u.approved);
+      const pendingList = document.getElementById('owner-pending-users-list');
+      if (!pendingList || pendingUsers.length === 0) return;
+
+      pendingList.innerHTML = pendingUsers.map(u => `
+        <div class="p-4 rounded-3xl bg-white border-2 border-amber-400 space-y-2.5 shadow-sm">
+          <div>
+            <p class="text-xs font-black">${u.name} (${u.role === 'driver' ? 'Conductor' : 'Pasajero'})</p>
+            <p class="text-[11px] font-bold text-gray-700">🪪 Cédula: ${u.cedula || 'No indicada'} · 📞 ${u.phone}</p>
+            ${u.role === 'driver' ? `
+              <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: ${u.plate}</p>
+              <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 Docs: C.I., Carnet, Licencia, Carta Médica y RCV cargados</p>
+            ` : ''}
+          </div>
+          ${(u.cedulaImg || u.selfieImg) ? `
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              ${u.cedulaImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Foto Cédula</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
+              ${u.selfieImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Selfie</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
+            </div>
+          ` : ''}
+          <div class="flex gap-2 pt-1">
+            <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold">✓ Autorizar Ingreso</button>
+            <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 text-xs font-extrabold">Rechazar</button>
+          </div>
+        </div>
+      `).join('');
+    };
+  })();
+
 </script>
 </body>
 </html>
