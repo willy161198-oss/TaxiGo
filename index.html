@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
@@ -27,11 +29,10 @@
       <span class="w-2.5 h-2.5 rounded-full bg-[#00b14f]"></span> TAXIGO VENEZUELA
     </div>
     <h1 class="text-3xl font-black tracking-tight">Taxi<span class="text-[#00b14f]">Go</span></h1>
-    <p class="text-xs text-gray-400">Traslados rápidos y envíos seguros en tu ciudad</p>
+    <p class="text-xs text-gray-400">Traslados rápidos y envíos seguros en Ciudad Ojeda</p>
   </div>
 
   <div class="my-auto py-6 max-w-md w-full mx-auto space-y-4">
-    <!-- Selector de Pestaña Login / Registro -->
     <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-white/10">
       <button type="button" id="tab-login" onclick="toggleAuthTab('login')" class="py-2.5 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold transition">Iniciar Sesión</button>
       <button type="button" id="tab-register" onclick="toggleAuthTab('register')" class="py-2.5 rounded-xl text-gray-300 text-xs font-extrabold transition">Crear Cuenta</button>
@@ -64,6 +65,18 @@
       <input type="tel" id="reg-phone" required placeholder="Teléfono (Ej: 04121234567)" class="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-xs text-white placeholder-gray-400" />
       <input type="password" id="reg-pass" required placeholder="Crea una contraseña" class="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-xs text-white placeholder-gray-400" />
 
+      <!-- Verificación de Identidad Obligatoria -->
+      <div id="kyc-user-fields" class="space-y-2.5 pt-2 border-t border-white/15">
+        <p class="text-[11px] font-extrabold text-[#00b14f] uppercase">Verificación de Identidad (Obligatorio)</p>
+        <input type="text" id="reg-cedula-num" required placeholder="Número de Cédula (Ej: V-27123456)" class="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-xs text-white placeholder-gray-400" />
+        <label class="block text-[11px] font-bold text-gray-200">📸 Foto de Cédula de Identidad *
+          <input type="file" id="reg-cedula-photo" accept="image/*" required class="mt-1 block w-full text-[10px] text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-[#00b14f] file:text-white file:font-bold" />
+        </label>
+        <label class="block text-[11px] font-bold text-gray-200">🤳 Tomar Selfie en Vivo *
+          <input type="file" id="reg-selfie-photo" accept="image/*" capture="user" required class="mt-1 block w-full text-[10px] text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-[#00b14f] file:text-white file:font-bold" />
+        </label>
+      </div>
+
       <!-- Campos exclusivos del Conductor (5 documentos obligatorios) -->
       <div id="driver-register-fields" class="hidden space-y-2.5 pt-2 border-t border-white/15">
         <p class="text-[11px] font-extrabold text-[#00b14f] uppercase">Datos del Vehículo y 5 Documentos</p>
@@ -95,7 +108,7 @@
         </div>
       </div>
 
-      <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-sm font-extrabold shadow-lg active:scale-95 transition">
+      <button type="submit" id="btn-submit-register" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-sm font-extrabold shadow-lg active:scale-95 transition">
         Registrarme
       </button>
     </form>
@@ -119,10 +132,10 @@
     Tu registro ha sido enviado. El administrador de TaxiGo debe verificar tus datos y autorizar tu ingreso antes de comenzar.
   </p>
   <div class="w-full max-w-xs space-y-2 pt-2">
-    <button type="button" onclick="checkApprovalStatus()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+    <button type="button" onclick="checkApprovalStatus()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold active:scale-95 transition">
       Verificar Aprobación
     </button>
-    <button type="button" onclick="logoutApp()" class="w-full py-3 rounded-2xl bg-red-500/20 text-red-400 text-xs font-extrabold border border-red-500/30">
+    <button type="button" onclick="logoutApp()" class="w-full py-3 rounded-2xl bg-red-500/20 text-red-400 text-xs font-extrabold border border-red-500/30 active:scale-95 transition">
       🚪 Cerrar Sesión
     </button>
   </div>
@@ -132,7 +145,6 @@
      PANTALLA 2: PASAJERO (MAPA EN VIVO + PIN CENTRAL + VIAJE)
      ========================================================= -->
 <div id="screen-passenger" class="hidden fixed inset-0 flex flex-col bg-gray-100">
-  <!-- Barra Superior -->
   <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
     <button type="button" onclick="openHistoryModal('passenger')" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1.5">
       📋 <span id="pass-header-name">Mis Viajes</span>
@@ -145,15 +157,13 @@
     </button>
   </div>
 
-  <!-- Botón GPS -->
   <button type="button" onclick="syncPassengerGps(true)" class="absolute right-3 top-16 z-20 w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación GPS">
     🎯
   </button>
 
-  <!-- Mapa Interactivo OpenStreetMap -->
   <div id="map-passenger" class="w-full h-full"></div>
 
-  <!-- PIN CENTRAL FIJO (Visible al tocar "Buscar en el mapa") -->
+  <!-- PIN CENTRAL FIJO -->
   <div id="pin-picker-overlay" class="hidden pointer-events-none fixed inset-0 z-30 flex flex-col items-center justify-center pb-28">
     <div id="pin-street-badge" class="mb-2 px-3.5 py-1.5 rounded-full bg-[#11131a] text-white text-xs font-extrabold shadow-xl max-w-[260px] truncate border border-white/15">
       Mueve el mapa para ubicar el pin
@@ -230,17 +240,16 @@
     </div>
   </div>
 
-  <!-- Panel Inferior Pasajero: Paso 3 Esperando / Conductor Asignado en Tiempo Real -->
+  <!-- Panel Inferior Pasajero: Paso 3 Esperando / Conductor Asignado -->
   <div id="pass-step-active-trip" class="hidden fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-3xl p-5 shadow-2xl border-t border-gray-200 space-y-3">
     <div id="active-trip-content"></div>
   </div>
 </div>
 
 <!-- =========================================================
-     PANTALLA 3: CONDUCTOR (SOLICITUDES + GPS EN VIVO + WAZE + COMISIÓN)
+     PANTALLA 3: CONDUCTOR
      ========================================================= -->
 <div id="screen-driver" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
-  <!-- Header Conductor -->
   <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20">
     <div>
       <p class="text-[10px] uppercase font-extrabold text-[#00b14f]">Panel Conductor</p>
@@ -257,7 +266,6 @@
   </div>
 
   <div class="p-4 space-y-4 max-w-lg w-full mx-auto">
-    <!-- Resumen Billetera y Comisión 10% -->
     <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 grid grid-cols-3 gap-2 text-center">
       <div>
         <p class="text-[10px] font-bold text-gray-400">Viajes</p>
@@ -273,15 +281,12 @@
       </div>
     </div>
 
-    <!-- Botón para Pagar Comisión (Aquí es el ÚNICO lugar donde el conductor ve los datos del dueño) -->
     <button type="button" onclick="openDriverCommissionModal()" class="w-full py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow">
       📲 Pagar Comisión 10% al Dueño
     </button>
 
-    <!-- Carrera Activa del Conductor -->
     <div id="drv-active-trip-box" class="hidden"></div>
 
-    <!-- Solicitudes Disponibles -->
     <div class="space-y-2">
       <h3 class="text-xs font-extrabold uppercase text-gray-500">Solicitudes de Pasajeros</h3>
       <div id="drv-requests-list" class="space-y-2.5"></div>
@@ -290,7 +295,7 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 4: DUEÑO (AUTORIZACIONES + DOCUMENTOS + PAGO MÓVIL + PIN 2026)
+     PANTALLA 4: DUEÑO
      ========================================================= -->
 <div id="screen-owner" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
   <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20">
@@ -309,7 +314,6 @@
   </div>
 
   <div class="p-4 space-y-4 max-w-lg w-full mx-auto">
-    <!-- Tasa BCV -->
     <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
       <div>
         <p class="text-[11px] font-extrabold text-gray-400">Tasa de Cambio (Bs / $)</p>
@@ -320,19 +324,16 @@
       </button>
     </div>
 
-    <!-- Solicitudes de Nuevos Integrantes por Autorizar -->
     <div class="space-y-2">
       <h3 class="text-xs font-extrabold uppercase text-amber-600">⏳ Nuevos Integrantes por Autorizar</h3>
       <div id="owner-pending-users-list" class="space-y-2.5"></div>
     </div>
 
-    <!-- Reportes de Pago de Comisión 10% -->
     <div class="space-y-2">
       <h3 class="text-xs font-extrabold uppercase text-[#00b14f]">💵 Pagos de Comisión Reportados</h3>
       <div id="owner-commissions-list" class="space-y-2.5"></div>
     </div>
 
-    <!-- Lista General de Usuarios Aprobados -->
     <div class="space-y-2">
       <h3 class="text-xs font-extrabold uppercase text-gray-500">👥 Integrantes Activos</h3>
       <div id="owner-approved-users-list" class="space-y-2"></div>
@@ -345,10 +346,25 @@
 
 <script>
   // =========================================================
-  // CONFIGURACIÓN Y ESTADO INICIAL LIMPIO (HISTORIALES EN 0)
+  // CONFIGURACIÓN FIREBASE EN VIVO (TAXIGO-OJEDA)
   // =========================================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCeen82DDXDg-wp2BWfnErEAtrDmjiZq8w",
+    authDomain: "taxigo-ojeda.firebaseapp.com",
+    databaseURL: "https://taxigo-ojeda-default-rtdb.firebaseio.com",
+    projectId: "taxigo-ojeda",
+    storageBucket: "taxigo-ojeda.firebasestorage.app",
+    messagingSenderId: "555461919124",
+    appId: "1:555461919124:web:74b9bfbc580e869895cf81"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+  }
+  const db = firebase.database();
+
   const OWNER_PIN = '2026';
-  const STORAGE_KEY = 'taxigo_launch_clean_v1';
+  const STORAGE_KEY = 'taxigo_ojeda_v2';
 
   let appState = {
     bcvRate: 45.00,
@@ -364,19 +380,36 @@
     activeUserId: null
   };
 
-  function loadAppState() {
+  function loadLocalSession() {
     try {
+      const savedId = localStorage.getItem(STORAGE_KEY + '_activeId');
+      if (savedId) appState.activeUserId = savedId;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        appState = Object.assign(appState, parsed);
+        if (parsed.bcvRate) appState.bcvRate = parsed.bcvRate;
+        if (parsed.ownerPayment) appState.ownerPayment = parsed.ownerPayment;
+        if (Array.isArray(parsed.users)) appState.users = parsed.users;
+        if (Array.isArray(parsed.trips)) appState.trips = parsed.trips;
+        if (Array.isArray(parsed.commissionReports)) appState.commissionReports = parsed.commissionReports;
       }
     } catch (e) {}
   }
 
-  function saveAppState() {
+  function saveLocalOnly() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      if (appState.activeUserId) {
+        localStorage.setItem(STORAGE_KEY + '_activeId', appState.activeUserId);
+      } else {
+        localStorage.removeItem(STORAGE_KEY + '_activeId');
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        bcvRate: appState.bcvRate,
+        ownerPayment: appState.ownerPayment,
+        users: appState.users,
+        trips: appState.trips,
+        commissionReports: appState.commissionReports
+      }));
     } catch (e) {}
   }
 
@@ -407,7 +440,70 @@
   }
 
   // =========================================================
-  // AUTENTICACIÓN, REGISTRO CON 5 DOCUMENTOS Y CIERRE DE SESIÓN
+  // SINCRONIZACIÓN EN TIEMPO REAL POR NODOS EN FIREBASE
+  // =========================================================
+  function startRealtimeSync() {
+    db.ref('config').on('value', snap => {
+      const cfg = snap.val();
+      if (!cfg) return;
+      if (cfg.bcvRate) appState.bcvRate = cfg.bcvRate;
+      if (cfg.ownerPayment) appState.ownerPayment = cfg.ownerPayment;
+      saveLocalOnly();
+      const bcvEl = document.getElementById('owner-bcv-display');
+      if (bcvEl) bcvEl.textContent = `Bs. ${Number(appState.bcvRate).toFixed(2)}`;
+    });
+
+    const usersRef = db.ref('users');
+    usersRef.on('child_added', snap => upsertItem(appState.users, snap.val()));
+    usersRef.on('child_changed', snap => upsertItem(appState.users, snap.val()));
+    usersRef.on('child_removed', snap => {
+      appState.users = appState.users.filter(u => u.id !== snap.key);
+      saveLocalOnly();
+      refreshCurrentView();
+    });
+
+    const tripsRef = db.ref('trips').limitToLast(100);
+    tripsRef.on('child_added', snap => upsertItem(appState.trips, snap.val()));
+    tripsRef.on('child_changed', snap => upsertItem(appState.trips, snap.val()));
+    tripsRef.on('child_removed', snap => {
+      appState.trips = appState.trips.filter(t => t.id !== snap.key);
+      saveLocalOnly();
+      refreshCurrentView();
+    });
+
+    const commRef = db.ref('commissionReports').limitToLast(50);
+    commRef.on('child_added', snap => upsertItem(appState.commissionReports, snap.val()));
+    commRef.on('child_changed', snap => upsertItem(appState.commissionReports, snap.val()));
+  }
+
+  function upsertItem(arr, item) {
+    if (!item || !item.id) return;
+    const idx = arr.findIndex(x => x.id === item.id);
+    if (idx >= 0) arr[idx] = item;
+    else arr.unshift(item);
+    saveLocalOnly();
+    refreshCurrentView();
+  }
+
+  function refreshCurrentView() {
+    const u = getActiveUser();
+    if (!u) return;
+    if (u.role === 'owner') {
+      renderOwnerDashboard();
+    } else if (!u.approved) {
+      document.getElementById('pending-user-msg').textContent =
+        `Hola ${u.name}, tu registro como ${u.role === 'driver' ? 'Conductor' : 'Pasajero'} fue recibido. El dueño de TaxiGo debe autorizar tu cuenta para poder ingresar.`;
+    } else if (u.approved && !document.getElementById('screen-pending').classList.contains('hidden')) {
+      routeUserScreen();
+    } else if (u.role === 'driver') {
+      renderDriverDashboard();
+    } else if (u.role === 'passenger') {
+      syncPassengerTripUI();
+    }
+  }
+
+  // =========================================================
+  // AUTENTICACIÓN, REGISTRO (CÉDULA + SELFIE + 5 DOCS) Y SALIDA
   // =========================================================
   function toggleAuthTab(tab) {
     const fLogin = document.getElementById('form-login');
@@ -445,15 +541,47 @@
     }
   }
 
-  function handleRegister(e) {
+  function fileToCompressedDataUrl(file) {
+    return new Promise(resolve => {
+      if (!file) return resolve('');
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxW = 320;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
+        };
+        img.onerror = () => resolve('');
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleRegister(e) {
     e.preventDefault();
+    const btn = document.getElementById('btn-submit-register');
     const role = document.getElementById('reg-role').value;
     const name = document.getElementById('reg-name').value.trim();
     const phone = document.getElementById('reg-phone').value.trim();
     const pass = document.getElementById('reg-pass').value.trim();
+    const cedulaNum = document.getElementById('reg-cedula-num').value.trim().toUpperCase();
+    const cedulaFile = document.getElementById('reg-cedula-photo').files[0];
+    const selfieFile = document.getElementById('reg-selfie-photo').files[0];
 
-    if (appState.users.some(u => u.phone === phone)) {
-      showToast('Este teléfono ya está registrado');
+    if (!cedulaNum || !cedulaFile || !selfieFile) {
+      showToast('Ingresa cédula, foto de cédula y selfie');
+      return;
+    }
+
+    if (appState.users.some(u => u.phone === phone || u.cedula === cedulaNum)) {
+      showToast('Este teléfono o cédula ya está registrado');
       return;
     }
 
@@ -487,13 +615,22 @@
       };
     }
 
+    btn.disabled = true;
+    btn.textContent = 'Subiendo registro a la nube...';
+
+    const cedulaImg = await fileToCompressedDataUrl(cedulaFile);
+    const selfieImg = await fileToCompressedDataUrl(selfieFile);
+
     const newUser = {
       id: 'usr-' + Date.now(),
       role,
       name,
       phone,
       pass,
-      approved: false, // Obligatorio que el dueño autorice
+      cedula: cedulaNum,
+      cedulaImg,
+      selfieImg,
+      approved: false,
       blocked: false,
       online: true,
       vehicleType,
@@ -507,18 +644,35 @@
       lng: null
     };
 
+    try {
+      await db.ref('users/' + newUser.id).set(newUser);
+    } catch (err) {}
+
     appState.users.push(newUser);
     appState.activeUserId = newUser.id;
-    saveAppState();
+    saveLocalOnly();
+
+    btn.disabled = false;
+    btn.textContent = 'Registrarme';
     routeUserScreen();
   }
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     const phone = document.getElementById('login-phone').value.trim();
     const pass = document.getElementById('login-pass').value.trim();
 
-    const user = appState.users.find(u => u.phone === phone && u.pass === pass);
+    let user = appState.users.find(u => u.phone === phone && u.pass === pass);
+    if (!user) {
+      try {
+        const snap = await db.ref('users').once('value');
+        snap.forEach(child => {
+          const val = child.val();
+          if (val && val.phone === phone && val.pass === pass) user = val;
+        });
+      } catch (err) {}
+    }
+
     if (!user) {
       showToast('Teléfono o contraseña incorrectos');
       return;
@@ -528,34 +682,49 @@
       return;
     }
 
+    upsertItem(appState.users, user);
     appState.activeUserId = user.id;
-    saveAppState();
+    saveLocalOnly();
     routeUserScreen();
   }
 
   function openOwnerPinLogin() {
     if (!requirePin('entrar al Panel de Dueño')) return;
     appState.activeUserId = 'OWNER';
-    saveAppState();
+    saveLocalOnly();
     routeUserScreen();
   }
 
   function logoutApp() {
     appState.activeUserId = null;
-    saveAppState();
-    routeUserScreen();
+    localStorage.removeItem(STORAGE_KEY + '_activeId');
+    ['screen-pending', 'screen-passenger', 'screen-driver', 'screen-owner'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById('screen-auth').classList.remove('hidden');
     showToast('Sesión cerrada');
   }
 
-  function checkApprovalStatus() {
-    loadAppState();
-    const u = getActiveUser();
-    if (u && u.approved) {
-      showToast('¡Cuenta autorizada!');
-      routeUserScreen();
-    } else {
-      showToast('Aún pendiente de autorización del dueño');
-    }
+  async function checkApprovalStatus() {
+    const id = appState.activeUserId;
+    if (!id || id === 'OWNER') return;
+    showToast('Consultando servidor...');
+    try {
+      const snap = await db.ref('users/' + id).once('value');
+      const remoteUser = snap.val();
+      if (remoteUser) {
+        upsertItem(appState.users, remoteUser);
+        if (remoteUser.approved) {
+          showToast('¡Cuenta autorizada!');
+          routeUserScreen();
+          return;
+        }
+      } else {
+        const localU = getActiveUser();
+        if (localU) await db.ref('users/' + localU.id).set(localU);
+      }
+    } catch (e) {}
+    showToast('Aún pendiente de autorización del dueño');
   }
 
   function routeUserScreen() {
@@ -579,6 +748,7 @@
       document.getElementById('pending-user-msg').textContent =
         `Hola ${user.name}, tu registro como ${user.role === 'driver' ? 'Conductor' : 'Pasajero'} fue recibido. El dueño de TaxiGo debe autorizar tu cuenta para poder ingresar.`;
       document.getElementById('screen-pending').classList.remove('hidden');
+      db.ref('users/' + user.id).update(user).catch(() => {});
       return;
     }
 
@@ -654,7 +824,6 @@
     );
   }
 
-  // Pin Central Movible al tocar "Buscar en el mapa"
   function openPinPicker() {
     isPinMode = true;
     document.getElementById('pass-step-destination').classList.add('hidden');
@@ -754,7 +923,6 @@
     if (destMarker && passMap) passMap.removeLayer(destMarker);
   }
 
-  // Trazado real calle por calle con OSRM
   async function calculateStreetRouteAndShowVehicles(lat, lon, label) {
     destCoords = [parseFloat(lat), parseFloat(lon)];
     document.getElementById('input-destination').value = label;
@@ -800,7 +968,7 @@
     document.getElementById('pass-step-destination').classList.remove('hidden');
   }
 
-  // TARIFA OCULTA EN EL SISTEMA: Mínima $1.10 | Kilómetro $0.75 (sin mostrar fórmulas)
+  // TARIFA OCULTA EN EL SISTEMA: Mínima $1.10 | Kilómetro $0.75
   function getCalculatedServices() {
     const rate = appState.bcvRate || 45;
     const motoUsd = Math.max(1.10, Number((currentDistKm * 0.75).toFixed(2)));
@@ -858,22 +1026,19 @@
       priceUsd: chosen.usd,
       priceBs: chosen.bs,
       paymentMethod: payMethod,
-      status: 'searching', // searching -> accepted -> completed
+      status: 'searching',
       driverId: null,
       driverLat: null,
       driverLng: null,
       createdAt: new Date().toLocaleString()
     };
 
-    appState.trips.unshift(newTrip);
-    saveAppState();
-    syncPassengerTripUI();
+    db.ref('trips/' + newTrip.id).set(newTrip).catch(() => {});
+    upsertItem(appState.trips, newTrip);
     showToast('Buscando conductor cercano...');
   }
 
-  // Pasajero ve al conductor en tiempo real y sus datos (NUNCA ve datos bancarios del dueño)
   function syncPassengerTripUI() {
-    loadAppState();
     const user = getActiveUser();
     if (!user || user.role !== 'passenger') return;
 
@@ -927,19 +1092,25 @@
         }
       }
 
+      const cleanPhone = (drv.phone || '').replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '58' + cleanPhone.slice(1) : cleanPhone;
+
       content.innerHTML = `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold uppercase">● Conductor en camino en vivo</span>
             <span class="text-sm font-black">$${activeTrip.priceUsd.toFixed(2)}</span>
           </div>
-          <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between">
+          <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between gap-2">
             <div>
               <p class="text-sm font-black">🧑🏻‍✈️ ${drv.name || 'Conductor Asignado'}</p>
               <p class="text-xs text-gray-600">🚘 ${drv.vehicleModel || 'Vehículo'} · Placa: <b>${drv.plate || '---'}</b></p>
               <p class="text-xs text-gray-600">📞 ${drv.phone || ''}</p>
             </div>
-            <a href="tel:${drv.phone || ''}" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold">Llamar</a>
+            <div class="flex flex-col gap-1.5">
+              <a href="tel:${drv.phone || ''}" class="px-3.5 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold text-center">📞 Llamar</a>
+              <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold text-center">💬 WhatsApp</a>
+            </div>
           </div>
         </div>
       `;
@@ -947,8 +1118,9 @@
   }
 
   function cancelActiveTrip(tripId) {
+    db.ref('trips/' + tripId).remove().catch(() => {});
     appState.trips = appState.trips.filter(t => t.id !== tripId);
-    saveAppState();
+    saveLocalOnly();
     syncPassengerTripUI();
     document.getElementById('pass-step-destination').classList.remove('hidden');
     showToast('Solicitud cancelada');
@@ -957,25 +1129,32 @@
   // =========================================================
   // CONDUCTOR: GPS EN VIVO, WAZE Y PAGO DE COMISIÓN AL DUEÑO
   // =========================================================
+  let lastGpsPush = 0;
   function startDriverGpsBroadcast() {
     if (!navigator.geolocation || window._drvGpsActive) return;
     window._drvGpsActive = true;
     navigator.geolocation.watchPosition(
       pos => {
+        const now = Date.now();
+        if (now - lastGpsPush < 3500) return;
+        lastGpsPush = now;
+
         const u = getActiveUser();
         if (!u || u.role !== 'driver') return;
         u.lat = pos.coords.latitude;
         u.lng = pos.coords.longitude;
+
+        db.ref(`users/${u.id}`).update({ lat: u.lat, lng: u.lng }).catch(() => {});
         appState.trips.forEach(t => {
           if (t.driverId === u.id && t.status === 'accepted') {
-            t.driverLat = pos.coords.latitude;
-            t.driverLng = pos.coords.longitude;
+            t.driverLat = u.lat;
+            t.driverLng = u.lng;
+            db.ref(`trips/${t.id}`).update({ driverLat: u.lat, driverLng: u.lng }).catch(() => {});
           }
         });
-        saveAppState();
       },
       () => {},
-      { enableHighAccuracy: true, maximumAge: 2500 }
+      { enableHighAccuracy: true, maximumAge: 3000 }
     );
   }
 
@@ -983,12 +1162,12 @@
     const u = getActiveUser();
     if (!u || u.role !== 'driver') return;
     u.online = !u.online;
-    saveAppState();
+    db.ref(`users/${u.id}`).update({ online: u.online }).catch(() => {});
+    saveLocalOnly();
     renderDriverDashboard();
   }
 
   function renderDriverDashboard() {
-    loadAppState();
     const u = getActiveUser();
     if (!u || u.role !== 'driver') return;
 
@@ -1063,7 +1242,13 @@
     trip.driverId = u.id;
     trip.driverLat = u.lat;
     trip.driverLng = u.lng;
-    saveAppState();
+    db.ref('trips/' + trip.id).update({
+      status: 'accepted',
+      driverId: u.id,
+      driverLat: u.lat,
+      driverLng: u.lng
+    }).catch(() => {});
+    saveLocalOnly();
     renderDriverDashboard();
     showToast('Carrera aceptada. GPS en vivo activado');
   }
@@ -1076,12 +1261,19 @@
     u.tripsCount = (u.tripsCount || 0) + 1;
     u.earnedUsd = Number(((u.earnedUsd || 0) + trip.priceUsd).toFixed(2));
     u.debtUsd = Number(((u.debtUsd || 0) + (trip.priceUsd * 0.10)).toFixed(2));
-    saveAppState();
+
+    db.ref('trips/' + trip.id).update({ status: 'completed' }).catch(() => {});
+    db.ref('users/' + u.id).update({
+      tripsCount: u.tripsCount,
+      earnedUsd: u.earnedUsd,
+      debtUsd: u.debtUsd
+    }).catch(() => {});
+
+    saveLocalOnly();
     renderDriverDashboard();
     showToast('Viaje finalizado');
   }
 
-  // Solo el conductor ve los datos del dueño al pagar comisión
   function openDriverCommissionModal() {
     const u = getActiveUser();
     const pay = appState.ownerPayment;
@@ -1115,7 +1307,7 @@
     const ref = document.getElementById('comm-ref-input').value.trim();
     if (!ref) { showToast('Ingresa la referencia'); return; }
     const u = getActiveUser();
-    appState.commissionReports.unshift({
+    const rep = {
       id: 'rep-' + Date.now(),
       driverId: u.id,
       driverName: u.name,
@@ -1123,8 +1315,9 @@
       reference: ref,
       status: 'pending',
       date: new Date().toLocaleString()
-    });
-    saveAppState();
+    };
+    db.ref('commissionReports/' + rep.id).set(rep).catch(() => {});
+    upsertItem(appState.commissionReports, rep);
     document.getElementById('modal-drv-comm').remove();
     showToast('Reporte enviado al Dueño');
   }
@@ -1133,7 +1326,6 @@
   // PANEL DE DUEÑO (AUTORIZACIONES + DOCUMENTOS + PIN 2026)
   // =========================================================
   function renderOwnerDashboard() {
-    loadAppState();
     document.getElementById('owner-bcv-display').textContent = `Bs. ${Number(appState.bcvRate).toFixed(2)}`;
 
     const pendingUsers = appState.users.filter(u => !u.approved);
@@ -1143,17 +1335,21 @@
       pendingList.innerHTML = `<div class="p-4 rounded-2xl bg-white border border-gray-200 text-xs font-bold text-[#00b14f]">✓ Sin solicitudes pendientes</div>`;
     } else {
       pendingList.innerHTML = pendingUsers.map(u => `
-        <div class="p-4 rounded-3xl bg-white border-2 border-amber-400 space-y-2 shadow-sm">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-xs font-black">${u.name} (${u.role === 'driver' ? 'Conductor' : 'Pasajero'})</p>
-              <p class="text-[11px] text-gray-500">📞 ${u.phone}</p>
-              ${u.role === 'driver' ? `
-                <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: ${u.plate}</p>
-                <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 Docs: C.I. (${u.docs?.ci}), Carnet (${u.docs?.carnet}), Licencia (${u.docs?.licencia}), Carta Médica (${u.docs?.medica}), RCV (${u.docs?.rcv})</p>
-              ` : ''}
-            </div>
+        <div class="p-4 rounded-3xl bg-white border-2 border-amber-400 space-y-2.5 shadow-sm">
+          <div>
+            <p class="text-xs font-black">${u.name} (${u.role === 'driver' ? 'Conductor' : 'Pasajero'})</p>
+            <p class="text-[11px] font-bold text-gray-700">🪪 Cédula: ${u.cedula || 'No indicada'} · 📞 ${u.phone}</p>
+            ${u.role === 'driver' ? `
+              <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: ${u.plate}</p>
+              <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 Docs: C.I., Carnet, Licencia, Carta Médica y RCV cargados</p>
+            ` : ''}
           </div>
+          ${(u.cedulaImg || u.selfieImg) ? `
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              ${u.cedulaImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Foto Cédula</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
+              ${u.selfieImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Selfie</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
+            </div>
+          ` : ''}
           <div class="flex gap-2 pt-1">
             <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold">✓ Autorizar Ingreso</button>
             <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 text-xs font-extrabold">Rechazar</button>
@@ -1199,7 +1395,8 @@
     if (!requirePin('autorizar el ingreso de este integrante')) return;
     const u = appState.users.find(x => x.id === userId);
     if (u) u.approved = true;
-    saveAppState();
+    db.ref('users/' + userId).update({ approved: true }).catch(() => {});
+    saveLocalOnly();
     renderOwnerDashboard();
     showToast('Integrante autorizado');
   }
@@ -1207,7 +1404,8 @@
   function ownerDeleteUser(userId) {
     if (!requirePin('eliminar este integrante')) return;
     appState.users = appState.users.filter(x => x.id !== userId);
-    saveAppState();
+    db.ref('users/' + userId).remove().catch(() => {});
+    saveLocalOnly();
     renderOwnerDashboard();
     showToast('Registro eliminado');
   }
@@ -1217,10 +1415,14 @@
     const rep = appState.commissionReports.find(r => r.id === repId);
     if (rep) {
       rep.status = 'approved';
+      db.ref('commissionReports/' + repId).update({ status: 'approved' }).catch(() => {});
       const drv = appState.users.find(u => u.id === rep.driverId);
-      if (drv) drv.debtUsd = 0;
+      if (drv) {
+        drv.debtUsd = 0;
+        db.ref('users/' + drv.id).update({ debtUsd: 0 }).catch(() => {});
+      }
     }
-    saveAppState();
+    saveLocalOnly();
     renderOwnerDashboard();
     showToast('Pago aprobado y deuda saldada');
   }
@@ -1231,7 +1433,8 @@
     const num = parseFloat(val);
     if (!isNaN(num) && num > 0) {
       appState.bcvRate = num;
-      saveAppState();
+      db.ref('config').update({ bcvRate: num }).catch(() => {});
+      saveLocalOnly();
       renderOwnerDashboard();
       showToast(`Tasa actualizada a Bs. ${num.toFixed(2)}`);
     }
@@ -1268,12 +1471,12 @@
       ci: document.getElementById('pm-ci').value.trim(),
       name: document.getElementById('pm-name').value.trim()
     };
-    saveAppState();
+    db.ref('config').update({ ownerPayment: appState.ownerPayment }).catch(() => {});
+    saveLocalOnly();
     document.getElementById('modal-owner-pm').remove();
     showToast('Pago Móvil guardado');
   }
 
-  // Historial limpio en 0
   function openHistoryModal(role) {
     const u = getActiveUser();
     const myTrips = appState.trips.filter(t => t.status === 'completed' && (t.passengerId === u?.id || t.driverId === u?.id));
@@ -1304,342 +1507,16 @@
     `);
   }
 
-  // Sincronización periódica ligera
-  setInterval(() => {
-    const u = getActiveUser();
-    if (!u) return;
-    if (u.role === 'passenger' && u.approved) syncPassengerTripUI();
-    if (u.role === 'driver' && u.approved) renderDriverDashboard();
-  }, 2500);
-
-  // Arranque
+  // Arranque inmediato
   window.addEventListener('DOMContentLoaded', () => {
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
-    loadAppState();
+    loadLocalSession();
+    startRealtimeSync();
     routeUserScreen();
   });
-
-  // =========================================================
-  // ZONA DE EXTENSIONES FUTURAS (PEGA AQUÍ ABAJO SIN BORRAR NADA)
-  // =========================================================
-  // EXTENSIÓN: CÉDULA, FOTO DE CÉDULA Y SELFIE OBLIGATORIOS EN REGISTRO
-  (function () {
-    const regForm = document.getElementById('form-register');
-    const driverFields = document.getElementById('driver-register-fields');
-    if (!regForm || !driverFields || document.getElementById('kyc-user-fields')) return;
-
-    // 1. Insertar campos de Cédula, Foto de Cédula y Selfie en el formulario de registro
-    driverFields.insertAdjacentHTML('beforebegin', `
-      <div id="kyc-user-fields" class="space-y-2.5 pt-2 border-t border-white/15">
-        <p class="text-[11px] font-extrabold text-[#00b14f] uppercase">Verificación de Identidad (Obligatorio)</p>
-        <input type="text" id="reg-cedula-num" required placeholder="Número de Cédula (Ej: V-27123456)" class="w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-xs text-white placeholder-gray-400" />
-        <label class="block text-[11px] font-bold text-gray-200">📸 Foto de Cédula de Identidad *
-          <input type="file" id="reg-cedula-photo" accept="image/*" required class="mt-1 block w-full text-[10px] text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-[#00b14f] file:text-white file:font-bold" />
-        </label>
-        <label class="block text-[11px] font-bold text-gray-200">🤳 Tomar Selfie en Vivo *
-          <input type="file" id="reg-selfie-photo" accept="image/*" capture="user" required class="mt-1 block w-full text-[10px] text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-[#00b14f] file:text-white file:font-bold" />
-        </label>
-      </div>
-    `);
-
-    // 2. Convertir imágenes a DataURL ligero para que el Dueño pueda verlas al autorizar
-    function fileToCompressedDataUrl(file) {
-      return new Promise(resolve => {
-        if (!file) return resolve('');
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const maxW = 420;
-            const scale = Math.min(1, maxW / img.width);
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-          img.onerror = () => resolve('');
-          img.src = e.target.result;
-        };
-        reader.onerror = () => resolve('');
-        reader.readAsDataURL(file);
-      });
-    }
-
-    // 3. Reemplazar handleRegister para guardar Cédula, Foto de Cédula y Selfie
-    window.handleRegister = async function (e) {
-      e.preventDefault();
-      const role = document.getElementById('reg-role').value;
-      const name = document.getElementById('reg-name').value.trim();
-      const phone = document.getElementById('reg-phone').value.trim();
-      const pass = document.getElementById('reg-pass').value.trim();
-      const cedulaNum = document.getElementById('reg-cedula-num').value.trim().toUpperCase();
-      const cedulaFile = document.getElementById('reg-cedula-photo').files[0];
-      const selfieFile = document.getElementById('reg-selfie-photo').files[0];
-
-      if (!cedulaNum || !cedulaFile || !selfieFile) {
-        showToast('Ingresa tu cédula, foto de cédula y selfie');
-        return;
-      }
-
-      if (appState.users.some(u => u.phone === phone || u.cedula === cedulaNum)) {
-        showToast('Este teléfono o cédula ya está registrado');
-        return;
-      }
-
-      let driverDocs = null;
-      let vehicleType = '';
-      let vehicleModel = '';
-      let plate = '';
-
-      if (role === 'driver') {
-        vehicleType = document.getElementById('reg-vehicle-type').value;
-        vehicleModel = document.getElementById('reg-vehicle-model').value.trim();
-        plate = document.getElementById('reg-plate').value.trim().toUpperCase();
-
-        const fCi = document.getElementById('doc-ci').files[0];
-        const fCarnet = document.getElementById('doc-carnet').files[0];
-        const fLic = document.getElementById('doc-licencia').files[0];
-        const fMed = document.getElementById('doc-medica').files[0];
-        const fRcv = document.getElementById('doc-rcv').files[0];
-
-        if (!vehicleModel || !plate || !fCi || !fCarnet || !fLic || !fMed || !fRcv) {
-          showToast('Completa vehículo y los 5 documentos obligatorios');
-          return;
-        }
-
-        driverDocs = {
-          ci: fCi.name,
-          carnet: fCarnet.name,
-          licencia: fLic.name,
-          medica: fMed.name,
-          rcv: fRcv.name
-        };
-      }
-
-      showToast('Procesando fotos de identidad...');
-      const cedulaImg = await fileToCompressedDataUrl(cedulaFile);
-      const selfieImg = await fileToCompressedDataUrl(selfieFile);
-
-      const newUser = {
-        id: 'usr-' + Date.now(),
-        role,
-        name,
-        phone,
-        pass,
-        cedula: cedulaNum,
-        cedulaImg,
-        selfieImg,
-        approved: false,
-        blocked: false,
-        online: true,
-        vehicleType,
-        vehicleModel,
-        plate,
-        docs: driverDocs,
-        tripsCount: 0,
-        earnedUsd: 0,
-        debtUsd: 0,
-        lat: null,
-        lng: null
-      };
-
-      appState.users.push(newUser);
-      appState.activeUserId = newUser.id;
-      saveAppState();
-      routeUserScreen();
-    };
-
-    // 4. Mostrar Cédula, Foto de Cédula y Selfie en el Panel de Dueño al autorizar
-    const origRenderOwner = window.renderOwnerDashboard;
-    window.renderOwnerDashboard = function () {
-      if (typeof origRenderOwner === 'function') origRenderOwner();
-      const pendingUsers = appState.users.filter(u => !u.approved);
-      const pendingList = document.getElementById('owner-pending-users-list');
-      if (!pendingList || pendingUsers.length === 0) return;
-
-      pendingList.innerHTML = pendingUsers.map(u => `
-        <div class="p-4 rounded-3xl bg-white border-2 border-amber-400 space-y-2.5 shadow-sm">
-          <div>
-            <p class="text-xs font-black">${u.name} (${u.role === 'driver' ? 'Conductor' : 'Pasajero'})</p>
-            <p class="text-[11px] font-bold text-gray-700">🪪 Cédula: ${u.cedula || 'No indicada'} · 📞 ${u.phone}</p>
-            ${u.role === 'driver' ? `
-              <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: ${u.plate}</p>
-              <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 Docs: C.I., Carnet, Licencia, Carta Médica y RCV cargados</p>
-            ` : ''}
-          </div>
-          ${(u.cedulaImg || u.selfieImg) ? `
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              ${u.cedulaImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Foto Cédula</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
-              ${u.selfieImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Selfie</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
-            </div>
-          ` : ''}
-          <div class="flex gap-2 pt-1">
-            <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold">✓ Autorizar Ingreso</button>
-            <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 text-xs font-extrabold">Rechazar</button>
-          </div>
-        </div>
-      `).join('');
-    };
-  })();
-
 </script>
 </body>
 </html>
-  // =========================================================
-  // EXTENSIÓN ESCALABLE FIREBASE (TAXIGO-OJEDA · +2.000 USUARIOS EN VIVO)
-  // =========================================================
-  (function () {
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCeen82DDXDg-wp2BWfnErEAtrDmjiZq8w",
-      authDomain: "taxigo-ojeda.firebaseapp.com",
-      databaseURL: "https://taxigo-ojeda-default-rtdb.firebaseio.com",
-      projectId: "taxigo-ojeda",
-      storageBucket: "taxigo-ojeda.firebasestorage.app",
-      messagingSenderId: "555461919124",
-      appId: "1:555461919124:web:74b9bfbc580e869895cf81"
-    };
-
-    function loadScript(src) {
-      return new Promise(resolve => {
-        if (document.querySelector(`script[src="${src}"]`)) return resolve();
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = resolve;
-        document.head.appendChild(s);
-      });
-    }
-
-    async function initScalableFirebase() {
-      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
-
-      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-      const db = firebase.database();
-
-      // 1. Sincronizar configuración (Tasa BCV y Pago Móvil del Dueño)
-      db.ref('config').on('value', snap => {
-        const cfg = snap.val();
-        if (!cfg) return;
-        if (cfg.bcvRate) appState.bcvRate = cfg.bcvRate;
-        if (cfg.ownerPayment) appState.ownerPayment = cfg.ownerPayment;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        const bcvEl = document.getElementById('owner-bcv-display');
-        if (bcvEl) bcvEl.textContent = `Bs. ${Number(appState.bcvRate).toFixed(2)}`;
-      });
-
-      // 2. Escuchar usuarios por nodos individuales (sin colapsar cuando haya miles conectados)
-      const usersRef = db.ref('users');
-      usersRef.on('child_added', snap => upsertLocalArray(appState.users, snap.val()));
-      usersRef.on('child_changed', snap => upsertLocalArray(appState.users, snap.val()));
-      usersRef.on('child_removed', snap => {
-        appState.users = appState.users.filter(u => u.id !== snap.key);
-        refreshActiveView();
-      });
-
-      // 3. Escuchar viajes en tiempo real
-      const tripsRef = db.ref('trips').limitToLast(100);
-      tripsRef.on('child_added', snap => upsertLocalArray(appState.trips, snap.val()));
-      tripsRef.on('child_changed', snap => upsertLocalArray(appState.trips, snap.val()));
-      tripsRef.on('child_removed', snap => {
-        appState.trips = appState.trips.filter(t => t.id !== snap.key);
-        refreshActiveView();
-      });
-
-      // 4. Escuchar reportes de pago de comisión 10%
-      const commRef = db.ref('commissionReports').limitToLast(50);
-      commRef.on('child_added', snap => upsertLocalArray(appState.commissionReports, snap.val()));
-      commRef.on('child_changed', snap => upsertLocalArray(appState.commissionReports, snap.val()));
-
-      function upsertLocalArray(arr, item) {
-        if (!item || !item.id) return;
-        const idx = arr.findIndex(x => x.id === item.id);
-        if (idx >= 0) arr[idx] = item;
-        else arr.unshift(item);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        refreshActiveView();
-      }
-
-      function refreshActiveView() {
-        const u = getActiveUser();
-        if (!u) return;
-        if (u.role === 'owner' && typeof renderOwnerDashboard === 'function') renderOwnerDashboard();
-        if (u.role === 'driver' && u.approved && typeof renderDriverDashboard === 'function') renderDriverDashboard();
-        if (u.role === 'passenger' && u.approved && typeof syncPassengerTripUI === 'function') syncPassengerTripUI();
-      }
-
-      // 5. Subir cambios a Firebase al instante cuando alguien se registra, pide viaje o aprueba
-      const origSave = window.saveAppState;
-      window.saveAppState = function () {
-        if (typeof origSave === 'function') origSave();
-
-        db.ref('config').update({
-          bcvRate: appState.bcvRate,
-          ownerPayment: appState.ownerPayment
-        }).catch(() => {});
-
-        const active = getActiveUser();
-        if (active && active.id && active.id !== 'OWNER') {
-          db.ref('users/' + active.id).set(active).catch(() => {});
-        }
-
-        if (active && active.role === 'owner') {
-          const validIds = new Set(appState.users.map(u => u.id));
-          appState.users.forEach(u => db.ref('users/' + u.id).set(u).catch(() => {}));
-          db.ref('users').once('value', snap => {
-            snap.forEach(child => {
-              if (!validIds.has(child.key)) db.ref('users/' + child.key).remove().catch(() => {});
-            });
-          });
-        }
-
-        appState.trips.slice(0, 30).forEach(t => {
-          db.ref('trips/' + t.id).set(t).catch(() => {});
-        });
-
-        appState.commissionReports.slice(0, 30).forEach(r => {
-          db.ref('commissionReports/' + r.id).set(r).catch(() => {});
-        });
-      };
-
-      // 6. Subir GPS del conductor en vivo cada 4 segundos (ligero y rápido)
-      let lastGpsPush = 0;
-      window.startDriverGpsBroadcast = function () {
-        if (!navigator.geolocation || window._drvScalableGps) return;
-        window._drvScalableGps = true;
-        navigator.geolocation.watchPosition(
-          pos => {
-            const now = Date.now();
-            if (now - lastGpsPush < 4000) return;
-            lastGpsPush = now;
-
-            const u = getActiveUser();
-            if (!u || u.role !== 'driver') return;
-            u.lat = pos.coords.latitude;
-            u.lng = pos.coords.longitude;
-
-            db.ref(`users/${u.id}`).update({ lat: u.lat, lng: u.lng }).catch(() => {});
-            appState.trips.forEach(t => {
-              if (t.driverId === u.id && t.status === 'accepted') {
-                t.driverLat = u.lat;
-                t.driverLng = u.lng;
-                db.ref(`trips/${t.id}`).update({ driverLat: u.lat, driverLng: u.lng }).catch(() => {});
-              }
-            });
-          },
-          () => {},
-          { enableHighAccuracy: true, maximumAge: 3500 }
-        );
-      };
-
-      // Subir cualquier usuario que ya estuviera registrado localmente en este teléfono
-      appState.users.forEach(u => {
-        if (u && u.id) db.ref('users/' + u.id).update(u).catch(() => {});
-      });
-    }
-
-    initScalableFirebase();
-  })();
