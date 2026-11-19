@@ -1489,3 +1489,157 @@
 </script>
 </body>
 </html>
+  // =========================================================
+  // EXTENSIÓN ESCALABLE FIREBASE (TAXIGO-OJEDA · +2.000 USUARIOS EN VIVO)
+  // =========================================================
+  (function () {
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCeen82DDXDg-wp2BWfnErEAtrDmjiZq8w",
+      authDomain: "taxigo-ojeda.firebaseapp.com",
+      databaseURL: "https://taxigo-ojeda-default-rtdb.firebaseio.com",
+      projectId: "taxigo-ojeda",
+      storageBucket: "taxigo-ojeda.firebasestorage.app",
+      messagingSenderId: "555461919124",
+      appId: "1:555461919124:web:74b9bfbc580e869895cf81"
+    };
+
+    function loadScript(src) {
+      return new Promise(resolve => {
+        if (document.querySelector(`script[src="${src}"]`)) return resolve();
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        document.head.appendChild(s);
+      });
+    }
+
+    async function initScalableFirebase() {
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      const db = firebase.database();
+
+      // 1. Sincronizar configuración (Tasa BCV y Pago Móvil del Dueño)
+      db.ref('config').on('value', snap => {
+        const cfg = snap.val();
+        if (!cfg) return;
+        if (cfg.bcvRate) appState.bcvRate = cfg.bcvRate;
+        if (cfg.ownerPayment) appState.ownerPayment = cfg.ownerPayment;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        const bcvEl = document.getElementById('owner-bcv-display');
+        if (bcvEl) bcvEl.textContent = `Bs. ${Number(appState.bcvRate).toFixed(2)}`;
+      });
+
+      // 2. Escuchar usuarios por nodos individuales (sin colapsar cuando haya miles conectados)
+      const usersRef = db.ref('users');
+      usersRef.on('child_added', snap => upsertLocalArray(appState.users, snap.val()));
+      usersRef.on('child_changed', snap => upsertLocalArray(appState.users, snap.val()));
+      usersRef.on('child_removed', snap => {
+        appState.users = appState.users.filter(u => u.id !== snap.key);
+        refreshActiveView();
+      });
+
+      // 3. Escuchar viajes en tiempo real
+      const tripsRef = db.ref('trips').limitToLast(100);
+      tripsRef.on('child_added', snap => upsertLocalArray(appState.trips, snap.val()));
+      tripsRef.on('child_changed', snap => upsertLocalArray(appState.trips, snap.val()));
+      tripsRef.on('child_removed', snap => {
+        appState.trips = appState.trips.filter(t => t.id !== snap.key);
+        refreshActiveView();
+      });
+
+      // 4. Escuchar reportes de pago de comisión 10%
+      const commRef = db.ref('commissionReports').limitToLast(50);
+      commRef.on('child_added', snap => upsertLocalArray(appState.commissionReports, snap.val()));
+      commRef.on('child_changed', snap => upsertLocalArray(appState.commissionReports, snap.val()));
+
+      function upsertLocalArray(arr, item) {
+        if (!item || !item.id) return;
+        const idx = arr.findIndex(x => x.id === item.id);
+        if (idx >= 0) arr[idx] = item;
+        else arr.unshift(item);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        refreshActiveView();
+      }
+
+      function refreshActiveView() {
+        const u = getActiveUser();
+        if (!u) return;
+        if (u.role === 'owner' && typeof renderOwnerDashboard === 'function') renderOwnerDashboard();
+        if (u.role === 'driver' && u.approved && typeof renderDriverDashboard === 'function') renderDriverDashboard();
+        if (u.role === 'passenger' && u.approved && typeof syncPassengerTripUI === 'function') syncPassengerTripUI();
+      }
+
+      // 5. Subir cambios a Firebase al instante cuando alguien se registra, pide viaje o aprueba
+      const origSave = window.saveAppState;
+      window.saveAppState = function () {
+        if (typeof origSave === 'function') origSave();
+
+        db.ref('config').update({
+          bcvRate: appState.bcvRate,
+          ownerPayment: appState.ownerPayment
+        }).catch(() => {});
+
+        const active = getActiveUser();
+        if (active && active.id && active.id !== 'OWNER') {
+          db.ref('users/' + active.id).set(active).catch(() => {});
+        }
+
+        if (active && active.role === 'owner') {
+          const validIds = new Set(appState.users.map(u => u.id));
+          appState.users.forEach(u => db.ref('users/' + u.id).set(u).catch(() => {}));
+          db.ref('users').once('value', snap => {
+            snap.forEach(child => {
+              if (!validIds.has(child.key)) db.ref('users/' + child.key).remove().catch(() => {});
+            });
+          });
+        }
+
+        appState.trips.slice(0, 30).forEach(t => {
+          db.ref('trips/' + t.id).set(t).catch(() => {});
+        });
+
+        appState.commissionReports.slice(0, 30).forEach(r => {
+          db.ref('commissionReports/' + r.id).set(r).catch(() => {});
+        });
+      };
+
+      // 6. Subir GPS del conductor en vivo cada 4 segundos (ligero y rápido)
+      let lastGpsPush = 0;
+      window.startDriverGpsBroadcast = function () {
+        if (!navigator.geolocation || window._drvScalableGps) return;
+        window._drvScalableGps = true;
+        navigator.geolocation.watchPosition(
+          pos => {
+            const now = Date.now();
+            if (now - lastGpsPush < 4000) return;
+            lastGpsPush = now;
+
+            const u = getActiveUser();
+            if (!u || u.role !== 'driver') return;
+            u.lat = pos.coords.latitude;
+            u.lng = pos.coords.longitude;
+
+            db.ref(`users/${u.id}`).update({ lat: u.lat, lng: u.lng }).catch(() => {});
+            appState.trips.forEach(t => {
+              if (t.driverId === u.id && t.status === 'accepted') {
+                t.driverLat = u.lat;
+                t.driverLng = u.lng;
+                db.ref(`trips/${t.id}`).update({ driverLat: u.lat, driverLng: u.lng }).catch(() => {});
+              }
+            });
+          },
+          () => {},
+          { enableHighAccuracy: true, maximumAge: 3500 }
+        );
+      };
+
+      // Subir cualquier usuario que ya estuviera registrado localmente en este teléfono
+      appState.users.forEach(u => {
+        if (u && u.id) db.ref('users/' + u.id).update(u).catch(() => {});
+      });
+    }
+
+    initScalableFirebase();
+  })();
