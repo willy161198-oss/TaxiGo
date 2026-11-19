@@ -191,3 +191,56 @@
   window.addEventListener('load', initOwnerPagoMovilExtension);
   setTimeout(initOwnerPagoMovilExtension, 250);
 })();
+// =========================================================
+// EXTENSIÓN COMPACTA: BOTÓN + VENTANA FLOTANTE PAGO MÓVIL
+// =========================================================
+(function () {
+  function compactOwnerPagoMovilUI() {
+    const oldBigCard = document.getElementById('txg-owner-pagomovil-card');
+    if (oldBigCard) oldBigCard.remove();
+
+    const ownerScreen = document.getElementById('screen-owner');
+    if (!ownerScreen) return;
+
+    // 1. Insertar botón compacto en lugar de la pantalla grande
+    if (!document.getElementById('txg-btn-open-pagomovil')) {
+      const anchor = document.getElementById('txg-owner-approvals-box') || ownerScreen.querySelector('.space-y-4, .p-4') || ownerScreen;
+      anchor.insertAdjacentHTML('afterend', `
+        <button id="txg-btn-open-pagomovil" type="button" onclick="openOwnerPagoMovilModal()" class="w-full mb-3 px-4 py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-between shadow-md active:scale-95 transition">
+          <span>📲 Configurar Mi Pago Móvil</span>
+          <span class="text-[10px] text-[#00b14f]">PIN 2026</span>
+        </button>
+      `);
+    }
+  }
+
+  // 2. Abrir ventana flotante limpia al tocar el botón
+  window.openOwnerPagoMovilModal = function () {
+    document.getElementById('txg-pagomovil-modal')?.remove();
+    const pay = (typeof state !== 'undefined' && state.ownerPayment) ? state.ownerPayment : {};
+
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="txg-pagomovil-modal" class="fixed inset-0 z-[9995] bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#1e2233] rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold">📲 Mi Pago Móvil (Comisiones 10%)</h3>
+            <button type="button" onclick="document.getElementById('txg-pagomovil-modal').remove()" class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-[10px] text-gray-400">Solo los conductores verán estos datos al reportar su comisión.</p>
+          <div class="space-y-2">
+            <input type="text" id="txg-owner-bank" value="${pay.bank || ''}" placeholder="Banco (ej. Banco de Venezuela 0102)" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <input type="tel" id="txg-owner-phone" value="${pay.phone || ''}" placeholder="Teléfono Pago Móvil (ej. 0412-1234567)" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <input type="text" id="txg-owner-ci" value="${pay.ci || ''}" placeholder="Cédula o RIF (ej. V-27123456)" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <input type="text" id="txg-owner-name" value="${pay.name || ''}" placeholder="Nombre del Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+          </div>
+          <button type="button" onclick="saveOwnerPagoMovilForm(); document.getElementById('txg-pagomovil-modal')?.remove();" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
+            💾 Guardar Pago Móvil (PIN 2026)
+          </button>
+        </div>
+      </div>
+    `);
+  };
+
+  setInterval(compactOwnerPagoMovilUI, 800);
+  compactOwnerPagoMovilUI();
+})();
