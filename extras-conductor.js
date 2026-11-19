@@ -131,3 +131,22 @@
   window.addEventListener('load', initDriverLaunchModule);
   setTimeout(initDriverLaunchModule, 200);
 })();
+// =========================================================
+// EXTENSIÓN: BOTÓN CERRAR SESIÓN EN PANEL DE CONDUCTOR
+// =========================================================
+(function () {
+  function injectDriverLogoutBtn() {
+    const drvScreen = document.getElementById('screen-driver');
+    if (!drvScreen || document.getElementById('txg-btn-driver-logout')) return;
+
+    const target = drvScreen.querySelector('.space-y-4, .p-4') || drvScreen;
+    target.insertAdjacentHTML('afterbegin', `
+      <button id="txg-btn-driver-logout" type="button" onclick="if(typeof logoutCurrentUserSession==='function'){logoutCurrentUserSession();}else{state.activeUserId=null;location.reload();}" class="w-full mb-3 px-4 py-3 rounded-2xl bg-red-500/15 text-red-500 border border-red-500/30 text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95 transition">
+        <span>🚪 Cerrar Sesión de Conductor</span>
+      </button>
+    `);
+  }
+
+  setInterval(injectDriverLogoutBtn, 1000);
+  injectDriverLogoutBtn();
+})();
