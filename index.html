@@ -8,8 +8,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
@@ -21,14 +19,17 @@
 <body class="bg-gray-100 text-[#11131a] select-none">
 
 <!-- =========================================================
-     PANTALLA 1: ACCESO / REGISTRO POR ROLES
+     PANTALLA 1: ACCESO / REGISTRO POR ROLES (DUEÑO CALETA: 5 TOQUES AL LOGO)
      ========================================================= -->
 <div id="screen-auth" class="fixed inset-0 z-50 bg-[#11131a] text-white flex flex-col justify-between p-6 overflow-y-auto">
   <div class="pt-4 text-center space-y-2">
     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-xs font-extrabold tracking-wide">
       <span class="w-2.5 h-2.5 rounded-full bg-[#00b14f]"></span> TAXIGO VENEZUELA
     </div>
-    <h1 class="text-3xl font-black tracking-tight">Taxi<span class="text-[#00b14f]">Go</span></h1>
+    <!-- TOQUE SECRETO: 5 toques rápidos aquí abren el acceso de Dueño -->
+    <h1 id="secret-owner-trigger" onclick="handleSecretOwnerTap()" class="text-3xl font-black tracking-tight cursor-pointer">
+      Taxi<span class="text-[#00b14f]">Go</span>
+    </h1>
     <p class="text-xs text-gray-400">Traslados rápidos y envíos seguros en Ciudad Ojeda</p>
   </div>
 
@@ -45,10 +46,10 @@
         <input type="tel" id="login-phone" required placeholder="Ej: 04121234567" class="mt-1 w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#00b14f]" />
       </div>
       <div>
-        <label class="text-[11px] font-bold text-gray-300">Contraseña o PIN</label>
+        <label class="text-[11px] font-bold text-gray-300">Contraseña</label>
         <input type="password" id="login-pass" required placeholder="••••" class="mt-1 w-full px-4 py-3 rounded-2xl bg-white/10 border border-white/15 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#00b14f]" />
       </div>
-      <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-sm font-extrabold shadow-lg active:scale-95 transition">
+      <button type="submit" id="btn-submit-login" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-sm font-extrabold shadow-lg active:scale-95 transition">
         Entrar a TaxiGo
       </button>
     </form>
@@ -114,11 +115,8 @@
     </form>
   </div>
 
-  <!-- Acceso Directo Dueño con PIN -->
   <div class="pb-2 text-center">
-    <button type="button" onclick="openOwnerPinLogin()" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 text-[11px] font-extrabold text-gray-300 border border-white/10">
-      👑 Acceso Administración / Dueño
-    </button>
+    <p class="text-[10px] text-gray-500 font-semibold">Ciudad Ojeda · Zulia · Venezuela</p>
   </div>
 </div>
 
@@ -304,10 +302,13 @@
       <h2 class="text-sm font-black">Panel de Dueño</h2>
     </div>
     <div class="flex items-center gap-2">
-      <button type="button" onclick="openOwnerPagoMovilModal()" class="px-3 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold">
+      <button type="button" onclick="forceCloudPull()" class="px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
+        🔄 Actualizar
+      </button>
+      <button type="button" onclick="openOwnerPagoMovilModal()" class="px-2.5 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold">
         📲 Pago Móvil
       </button>
-      <button type="button" onclick="logoutApp()" class="px-3 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
+      <button type="button" onclick="logoutApp()" class="px-2.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
         🚪 Salir
       </button>
     </div>
@@ -346,25 +347,11 @@
 
 <script>
   // =========================================================
-  // CONFIGURACIÓN FIREBASE EN VIVO (TAXIGO-OJEDA)
+  // MOTOR DE SINCRONIZACIÓN DIRECTA REST + TIEMPO REAL (TAXIGO-OJEDA)
   // =========================================================
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCeen82DDXDg-wp2BWfnErEAtrDmjiZq8w",
-    authDomain: "taxigo-ojeda.firebaseapp.com",
-    databaseURL: "https://taxigo-ojeda-default-rtdb.firebaseio.com",
-    projectId: "taxigo-ojeda",
-    storageBucket: "taxigo-ojeda.firebasestorage.app",
-    messagingSenderId: "555461919124",
-    appId: "1:555461919124:web:74b9bfbc580e869895cf81"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(FIREBASE_CONFIG);
-  }
-  const db = firebase.database();
-
+  const DB_BASE_URL = "https://taxigo-ojeda-default-rtdb.firebaseio.com";
   const OWNER_PIN = '2026';
-  const STORAGE_KEY = 'taxigo_ojeda_v2';
+  const STORAGE_KEY = 'taxigo_ojeda_v3';
 
   let appState = {
     bcvRate: 45.00,
@@ -379,6 +366,49 @@
     commissionReports: [],
     activeUserId: null
   };
+
+  // Funciones REST directas (funcionan en cualquier red móvil y dentro de Telegram sin bloquearse)
+  async function cloudPut(path, data) {
+    try {
+      const res = await fetch(`${DB_BASE_URL}/${path}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function cloudPatch(path, data) {
+    try {
+      const res = await fetch(`${DB_BASE_URL}/${path}.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function cloudDelete(path) {
+    try {
+      await fetch(`${DB_BASE_URL}/${path}.json`, { method: 'DELETE' });
+    } catch (e) {}
+  }
+
+  async function cloudGet(path) {
+    try {
+      const res = await fetch(`${DB_BASE_URL}/${path}.json?t=${Date.now()}`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
 
   function loadLocalSession() {
     try {
@@ -413,6 +443,60 @@
     } catch (e) {}
   }
 
+  // Descarga toda la nube de Firebase cada 3.5 segundos y actualiza pantallas
+  async function syncFromCloud() {
+    const cloudData = await cloudGet('');
+    if (!cloudData || typeof cloudData !== 'object') return;
+
+    if (cloudData.config) {
+      if (cloudData.config.bcvRate) appState.bcvRate = cloudData.config.bcvRate;
+      if (cloudData.config.ownerPayment) appState.ownerPayment = cloudData.config.ownerPayment;
+    }
+
+    if (cloudData.users && typeof cloudData.users === 'object') {
+      appState.users = Object.values(cloudData.users).filter(u => u && u.id);
+    } else if (cloudData.users === null) {
+      appState.users = [];
+    }
+
+    if (cloudData.trips && typeof cloudData.trips === 'object') {
+      appState.trips = Object.values(cloudData.trips).filter(t => t && t.id).reverse();
+    } else if (cloudData.trips === null) {
+      appState.trips = [];
+    }
+
+    if (cloudData.commissionReports && typeof cloudData.commissionReports === 'object') {
+      appState.commissionReports = Object.values(cloudData.commissionReports).filter(r => r && r.id).reverse();
+    }
+
+    saveLocalOnly();
+    refreshCurrentView();
+  }
+
+  async function forceCloudPull() {
+    showToast('Sincronizando con la nube...');
+    await syncFromCloud();
+    showToast('Datos actualizados ✓');
+  }
+
+  function refreshCurrentView() {
+    const u = getActiveUser();
+    if (!u) return;
+    if (u.role === 'owner') {
+      renderOwnerDashboard();
+    } else if (!u.approved) {
+      document.getElementById('pending-user-msg').textContent =
+        `Hola ${u.name}, tu registro como ${u.role === 'driver' ? 'Conductor' : 'Pasajero'} fue recibido. El dueño de TaxiGo debe autorizar tu cuenta para poder ingresar.`;
+    } else if (u.approved && !document.getElementById('screen-pending').classList.contains('hidden')) {
+      showToast('¡Cuenta autorizada!');
+      routeUserScreen();
+    } else if (u.role === 'driver') {
+      renderDriverDashboard();
+    } else if (u.role === 'passenger') {
+      syncPassengerTripUI();
+    }
+  }
+
   function showToast(msg) {
     const t = document.getElementById('global-toast');
     if (!t) return;
@@ -440,70 +524,27 @@
   }
 
   // =========================================================
-  // SINCRONIZACIÓN EN TIEMPO REAL POR NODOS EN FIREBASE
+  // ACCESO SECRETO DEL DUEÑO (5 TOQUES EN EL LOGO "TAXIGO")
   // =========================================================
-  function startRealtimeSync() {
-    db.ref('config').on('value', snap => {
-      const cfg = snap.val();
-      if (!cfg) return;
-      if (cfg.bcvRate) appState.bcvRate = cfg.bcvRate;
-      if (cfg.ownerPayment) appState.ownerPayment = cfg.ownerPayment;
+  let secretTapCount = 0;
+  let secretTapTimer = null;
+
+  function handleSecretOwnerTap() {
+    secretTapCount++;
+    clearTimeout(secretTapTimer);
+    secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1800);
+
+    if (secretTapCount >= 5) {
+      secretTapCount = 0;
+      if (!requirePin('entrar al Panel de Dueño')) return;
+      appState.activeUserId = 'OWNER';
       saveLocalOnly();
-      const bcvEl = document.getElementById('owner-bcv-display');
-      if (bcvEl) bcvEl.textContent = `Bs. ${Number(appState.bcvRate).toFixed(2)}`;
-    });
-
-    const usersRef = db.ref('users');
-    usersRef.on('child_added', snap => upsertItem(appState.users, snap.val()));
-    usersRef.on('child_changed', snap => upsertItem(appState.users, snap.val()));
-    usersRef.on('child_removed', snap => {
-      appState.users = appState.users.filter(u => u.id !== snap.key);
-      saveLocalOnly();
-      refreshCurrentView();
-    });
-
-    const tripsRef = db.ref('trips').limitToLast(100);
-    tripsRef.on('child_added', snap => upsertItem(appState.trips, snap.val()));
-    tripsRef.on('child_changed', snap => upsertItem(appState.trips, snap.val()));
-    tripsRef.on('child_removed', snap => {
-      appState.trips = appState.trips.filter(t => t.id !== snap.key);
-      saveLocalOnly();
-      refreshCurrentView();
-    });
-
-    const commRef = db.ref('commissionReports').limitToLast(50);
-    commRef.on('child_added', snap => upsertItem(appState.commissionReports, snap.val()));
-    commRef.on('child_changed', snap => upsertItem(appState.commissionReports, snap.val()));
-  }
-
-  function upsertItem(arr, item) {
-    if (!item || !item.id) return;
-    const idx = arr.findIndex(x => x.id === item.id);
-    if (idx >= 0) arr[idx] = item;
-    else arr.unshift(item);
-    saveLocalOnly();
-    refreshCurrentView();
-  }
-
-  function refreshCurrentView() {
-    const u = getActiveUser();
-    if (!u) return;
-    if (u.role === 'owner') {
-      renderOwnerDashboard();
-    } else if (!u.approved) {
-      document.getElementById('pending-user-msg').textContent =
-        `Hola ${u.name}, tu registro como ${u.role === 'driver' ? 'Conductor' : 'Pasajero'} fue recibido. El dueño de TaxiGo debe autorizar tu cuenta para poder ingresar.`;
-    } else if (u.approved && !document.getElementById('screen-pending').classList.contains('hidden')) {
       routeUserScreen();
-    } else if (u.role === 'driver') {
-      renderDriverDashboard();
-    } else if (u.role === 'passenger') {
-      syncPassengerTripUI();
     }
   }
 
   // =========================================================
-  // AUTENTICACIÓN, REGISTRO (CÉDULA + SELFIE + 5 DOCS) Y SALIDA
+  // AUTENTICACIÓN, REGISTRO Y CIERRE DE SESIÓN
   // =========================================================
   function toggleAuthTab(tab) {
     const fLogin = document.getElementById('form-login');
@@ -549,12 +590,12 @@
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const maxW = 320;
+          const maxW = 280;
           const scale = Math.min(1, maxW / img.width);
           canvas.width = img.width * scale;
           canvas.height = img.height * scale;
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', 0.6));
+          resolve(canvas.toDataURL('image/jpeg', 0.55));
         };
         img.onerror = () => resolve('');
         img.src = e.target.result;
@@ -579,6 +620,8 @@
       showToast('Ingresa cédula, foto de cédula y selfie');
       return;
     }
+
+    await syncFromCloud();
 
     if (appState.users.some(u => u.phone === phone || u.cedula === cedulaNum)) {
       showToast('Este teléfono o cédula ya está registrado');
@@ -616,7 +659,7 @@
     }
 
     btn.disabled = true;
-    btn.textContent = 'Subiendo registro a la nube...';
+    btn.textContent = 'Enviando registro...';
 
     const cedulaImg = await fileToCompressedDataUrl(cedulaFile);
     const selfieImg = await fileToCompressedDataUrl(selfieFile);
@@ -644,9 +687,13 @@
       lng: null
     };
 
-    try {
-      await db.ref('users/' + newUser.id).set(newUser);
-    } catch (err) {}
+    const ok = await cloudPut(`users/${newUser.id}`, newUser);
+    if (!ok) {
+      showToast('Error de conexión con la nube. Revisa tu internet.');
+      btn.disabled = false;
+      btn.textContent = 'Registrarme';
+      return;
+    }
 
     appState.users.push(newUser);
     appState.activeUserId = newUser.id;
@@ -659,20 +706,17 @@
 
   async function handleLogin(e) {
     e.preventDefault();
+    const btn = document.getElementById('btn-submit-login');
     const phone = document.getElementById('login-phone').value.trim();
     const pass = document.getElementById('login-pass').value.trim();
 
-    let user = appState.users.find(u => u.phone === phone && u.pass === pass);
-    if (!user) {
-      try {
-        const snap = await db.ref('users').once('value');
-        snap.forEach(child => {
-          const val = child.val();
-          if (val && val.phone === phone && val.pass === pass) user = val;
-        });
-      } catch (err) {}
-    }
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+    await syncFromCloud();
+    btn.disabled = false;
+    btn.textContent = 'Entrar a TaxiGo';
 
+    const user = appState.users.find(u => u.phone === phone && u.pass === pass);
     if (!user) {
       showToast('Teléfono o contraseña incorrectos');
       return;
@@ -682,15 +726,7 @@
       return;
     }
 
-    upsertItem(appState.users, user);
     appState.activeUserId = user.id;
-    saveLocalOnly();
-    routeUserScreen();
-  }
-
-  function openOwnerPinLogin() {
-    if (!requirePin('entrar al Panel de Dueño')) return;
-    appState.activeUserId = 'OWNER';
     saveLocalOnly();
     routeUserScreen();
   }
@@ -709,21 +745,21 @@
     const id = appState.activeUserId;
     if (!id || id === 'OWNER') return;
     showToast('Consultando servidor...');
-    try {
-      const snap = await db.ref('users/' + id).once('value');
-      const remoteUser = snap.val();
-      if (remoteUser) {
-        upsertItem(appState.users, remoteUser);
-        if (remoteUser.approved) {
-          showToast('¡Cuenta autorizada!');
-          routeUserScreen();
-          return;
-        }
-      } else {
-        const localU = getActiveUser();
-        if (localU) await db.ref('users/' + localU.id).set(localU);
+    const remoteUser = await cloudGet(`users/${id}`);
+    if (remoteUser && remoteUser.id) {
+      const idx = appState.users.findIndex(u => u.id === id);
+      if (idx >= 0) appState.users[idx] = remoteUser;
+      else appState.users.push(remoteUser);
+      saveLocalOnly();
+      if (remoteUser.approved) {
+        showToast('¡Cuenta autorizada!');
+        routeUserScreen();
+        return;
       }
-    } catch (e) {}
+    } else {
+      const localU = getActiveUser();
+      if (localU) await cloudPut(`users/${localU.id}`, localU);
+    }
     showToast('Aún pendiente de autorización del dueño');
   }
 
@@ -741,6 +777,7 @@
     if (user.role === 'owner') {
       document.getElementById('screen-owner').classList.remove('hidden');
       renderOwnerDashboard();
+      syncFromCloud();
       return;
     }
 
@@ -748,7 +785,7 @@
       document.getElementById('pending-user-msg').textContent =
         `Hola ${user.name}, tu registro como ${user.role === 'driver' ? 'Conductor' : 'Pasajero'} fue recibido. El dueño de TaxiGo debe autorizar tu cuenta para poder ingresar.`;
       document.getElementById('screen-pending').classList.remove('hidden');
-      db.ref('users/' + user.id).update(user).catch(() => {});
+      cloudPatch(`users/${user.id}`, user);
       return;
     }
 
@@ -1005,7 +1042,7 @@
     }).join('');
   }
 
-  function requestRideNow() {
+  async function requestRideNow() {
     const user = getActiveUser();
     if (!user || !destCoords) return;
 
@@ -1033,8 +1070,10 @@
       createdAt: new Date().toLocaleString()
     };
 
-    db.ref('trips/' + newTrip.id).set(newTrip).catch(() => {});
-    upsertItem(appState.trips, newTrip);
+    await cloudPut(`trips/${newTrip.id}`, newTrip);
+    appState.trips.unshift(newTrip);
+    saveLocalOnly();
+    syncPassengerTripUI();
     showToast('Buscando conductor cercano...');
   }
 
@@ -1117,8 +1156,8 @@
     }
   }
 
-  function cancelActiveTrip(tripId) {
-    db.ref('trips/' + tripId).remove().catch(() => {});
+  async function cancelActiveTrip(tripId) {
+    await cloudDelete(`trips/${tripId}`);
     appState.trips = appState.trips.filter(t => t.id !== tripId);
     saveLocalOnly();
     syncPassengerTripUI();
@@ -1144,12 +1183,12 @@
         u.lat = pos.coords.latitude;
         u.lng = pos.coords.longitude;
 
-        db.ref(`users/${u.id}`).update({ lat: u.lat, lng: u.lng }).catch(() => {});
+        cloudPatch(`users/${u.id}`, { lat: u.lat, lng: u.lng });
         appState.trips.forEach(t => {
           if (t.driverId === u.id && t.status === 'accepted') {
             t.driverLat = u.lat;
             t.driverLng = u.lng;
-            db.ref(`trips/${t.id}`).update({ driverLat: u.lat, driverLng: u.lng }).catch(() => {});
+            cloudPatch(`trips/${t.id}`, { driverLat: u.lat, driverLng: u.lng });
           }
         });
       },
@@ -1158,11 +1197,11 @@
     );
   }
 
-  function toggleDriverOnline() {
+  async function toggleDriverOnline() {
     const u = getActiveUser();
     if (!u || u.role !== 'driver') return;
     u.online = !u.online;
-    db.ref(`users/${u.id}`).update({ online: u.online }).catch(() => {});
+    await cloudPatch(`users/${u.id}`, { online: u.online });
     saveLocalOnly();
     renderDriverDashboard();
   }
@@ -1234,7 +1273,7 @@
     }
   }
 
-  function acceptTripDriver(tripId) {
+  async function acceptTripDriver(tripId) {
     const u = getActiveUser();
     const trip = appState.trips.find(t => t.id === tripId && t.status === 'searching');
     if (!u || !trip) return;
@@ -1242,18 +1281,18 @@
     trip.driverId = u.id;
     trip.driverLat = u.lat;
     trip.driverLng = u.lng;
-    db.ref('trips/' + trip.id).update({
+    await cloudPatch(`trips/${trip.id}`, {
       status: 'accepted',
       driverId: u.id,
       driverLat: u.lat,
       driverLng: u.lng
-    }).catch(() => {});
+    });
     saveLocalOnly();
     renderDriverDashboard();
     showToast('Carrera aceptada. GPS en vivo activado');
   }
 
-  function completeTripDriver(tripId) {
+  async function completeTripDriver(tripId) {
     const u = getActiveUser();
     const trip = appState.trips.find(t => t.id === tripId);
     if (!u || !trip) return;
@@ -1262,12 +1301,12 @@
     u.earnedUsd = Number(((u.earnedUsd || 0) + trip.priceUsd).toFixed(2));
     u.debtUsd = Number(((u.debtUsd || 0) + (trip.priceUsd * 0.10)).toFixed(2));
 
-    db.ref('trips/' + trip.id).update({ status: 'completed' }).catch(() => {});
-    db.ref('users/' + u.id).update({
+    await cloudPatch(`trips/${trip.id}`, { status: 'completed' });
+    await cloudPatch(`users/${u.id}`, {
       tripsCount: u.tripsCount,
       earnedUsd: u.earnedUsd,
       debtUsd: u.debtUsd
-    }).catch(() => {});
+    });
 
     saveLocalOnly();
     renderDriverDashboard();
@@ -1303,7 +1342,7 @@
     `);
   }
 
-  function sendDriverCommissionReport() {
+  async function sendDriverCommissionReport() {
     const ref = document.getElementById('comm-ref-input').value.trim();
     if (!ref) { showToast('Ingresa la referencia'); return; }
     const u = getActiveUser();
@@ -1316,8 +1355,9 @@
       status: 'pending',
       date: new Date().toLocaleString()
     };
-    db.ref('commissionReports/' + rep.id).set(rep).catch(() => {});
-    upsertItem(appState.commissionReports, rep);
+    await cloudPut(`commissionReports/${rep.id}`, rep);
+    appState.commissionReports.unshift(rep);
+    saveLocalOnly();
     document.getElementById('modal-drv-comm').remove();
     showToast('Reporte enviado al Dueño');
   }
@@ -1391,35 +1431,35 @@
     }
   }
 
-  function ownerApproveUser(userId) {
+  async function ownerApproveUser(userId) {
     if (!requirePin('autorizar el ingreso de este integrante')) return;
     const u = appState.users.find(x => x.id === userId);
     if (u) u.approved = true;
-    db.ref('users/' + userId).update({ approved: true }).catch(() => {});
+    await cloudPatch(`users/${userId}`, { approved: true });
     saveLocalOnly();
     renderOwnerDashboard();
     showToast('Integrante autorizado');
   }
 
-  function ownerDeleteUser(userId) {
+  async function ownerDeleteUser(userId) {
     if (!requirePin('eliminar este integrante')) return;
     appState.users = appState.users.filter(x => x.id !== userId);
-    db.ref('users/' + userId).remove().catch(() => {});
+    await cloudDelete(`users/${userId}`);
     saveLocalOnly();
     renderOwnerDashboard();
     showToast('Registro eliminado');
   }
 
-  function ownerApproveCommission(repId) {
+  async function ownerApproveCommission(repId) {
     if (!requirePin('aprobar este pago de comisión')) return;
     const rep = appState.commissionReports.find(r => r.id === repId);
     if (rep) {
       rep.status = 'approved';
-      db.ref('commissionReports/' + repId).update({ status: 'approved' }).catch(() => {});
+      await cloudPatch(`commissionReports/${repId}`, { status: 'approved' });
       const drv = appState.users.find(u => u.id === rep.driverId);
       if (drv) {
         drv.debtUsd = 0;
-        db.ref('users/' + drv.id).update({ debtUsd: 0 }).catch(() => {});
+        await cloudPatch(`users/${drv.id}`, { debtUsd: 0 });
       }
     }
     saveLocalOnly();
@@ -1427,13 +1467,13 @@
     showToast('Pago aprobado y deuda saldada');
   }
 
-  function updateBcvRateOwner() {
+  async function updateBcvRateOwner() {
     if (!requirePin('actualizar la tasa BCV')) return;
     const val = prompt('Ingresa la nueva tasa en Bolívares por 1 USD:', appState.bcvRate);
     const num = parseFloat(val);
     if (!isNaN(num) && num > 0) {
       appState.bcvRate = num;
-      db.ref('config').update({ bcvRate: num }).catch(() => {});
+      await cloudPatch('config', { bcvRate: num });
       saveLocalOnly();
       renderOwnerDashboard();
       showToast(`Tasa actualizada a Bs. ${num.toFixed(2)}`);
@@ -1463,7 +1503,7 @@
     `);
   }
 
-  function saveOwnerPagoMovil() {
+  async function saveOwnerPagoMovil() {
     if (!requirePin('guardar tu Pago Móvil')) return;
     appState.ownerPayment = {
       bank: document.getElementById('pm-bank').value.trim(),
@@ -1471,7 +1511,7 @@
       ci: document.getElementById('pm-ci').value.trim(),
       name: document.getElementById('pm-name').value.trim()
     };
-    db.ref('config').update({ ownerPayment: appState.ownerPayment }).catch(() => {});
+    await cloudPatch('config', { ownerPayment: appState.ownerPayment });
     saveLocalOnly();
     document.getElementById('modal-owner-pm').remove();
     showToast('Pago Móvil guardado');
@@ -1507,15 +1547,20 @@
     `);
   }
 
+  // Sincronización automática cada 3.5 segundos con la nube
+  setInterval(() => {
+    if (getActiveUser()) syncFromCloud();
+  }, 3500);
+
   // Arranque inmediato
-  window.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('DOMContentLoaded', async () => {
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
     loadLocalSession();
-    startRealtimeSync();
     routeUserScreen();
+    await syncFromCloud();
   });
 </script>
 </body>
