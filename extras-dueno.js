@@ -109,3 +109,85 @@
   window.addEventListener('load', initOwnerLaunchModule);
   setTimeout(initOwnerLaunchModule, 200);
 })();
+// =========================================================
+// EXTENSIÓN PAGO MÓVIL DEL DUEÑO (PIN 2026)
+// =========================================================
+(function () {
+  const OWNER_PIN = '2026';
+
+  function initOwnerPagoMovilExtension() {
+    if (typeof state === 'undefined') {
+      setTimeout(initOwnerPagoMovilExtension, 150);
+      return;
+    }
+
+    if (!state.ownerPayment) {
+      try {
+        const saved = localStorage.getItem('taxigo_owner_payment');
+        state.ownerPayment = saved ? JSON.parse(saved) : {
+          bank: 'Banco de Venezuela (0102)',
+          phone: '',
+          ci: '',
+          name: 'Administración TaxiGo'
+        };
+      } catch (e) {
+        state.ownerPayment = { bank: 'Banco de Venezuela (0102)', phone: '', ci: '', name: 'Administración TaxiGo' };
+      }
+    }
+
+    window.saveOwnerPagoMovilForm = function () {
+      const pin = prompt('🔐 Seguridad TaxiGo\nIngresa el PIN de Dueño para guardar tu Pago Móvil:');
+      if (pin !== OWNER_PIN) {
+        if (typeof showToast === 'function') showToast('PIN incorrecto');
+        return;
+      }
+
+      const bank = (document.getElementById('txg-owner-bank')?.value || '').trim();
+      const phone = (document.getElementById('txg-owner-phone')?.value || '').trim();
+      const ci = (document.getElementById('txg-owner-ci')?.value || '').trim();
+      const name = (document.getElementById('txg-owner-name')?.value || '').trim();
+
+      if (!bank || !phone || !ci) {
+        if (typeof showToast === 'function') showToast('Completa Banco, Teléfono y Cédula/RIF');
+        return;
+      }
+
+      state.ownerPayment = { bank, phone, ci, name: name || 'Administración TaxiGo' };
+      localStorage.setItem('taxigo_owner_payment', JSON.stringify(state.ownerPayment));
+      if (typeof saveState === 'function') saveState();
+      if (typeof showToast === 'function') showToast('✅ Pago Móvil guardado correctamente');
+    };
+
+    function injectPagoMovilCard() {
+      const ownerScreen = document.getElementById('screen-owner');
+      if (!ownerScreen || document.getElementById('txg-owner-pagomovil-card')) return;
+
+      const pay = state.ownerPayment || {};
+      const target = document.getElementById('txg-owner-approvals-box') || ownerScreen.querySelector('.space-y-4, .p-4') || ownerScreen;
+
+      target.insertAdjacentHTML('afterend', `
+        <div id="txg-owner-pagomovil-card" class="p-4 rounded-3xl bg-white dark:bg-[#1e2233] border border-gray-200 dark:border-gray-700 space-y-3 shadow-md mb-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-extrabold uppercase text-[#00b14f]">📲 Mi Pago Móvil (Comisiones 10%)</p>
+            <span class="text-[10px] text-gray-400 font-bold">Solo visible a conductores</span>
+          </div>
+          <div class="space-y-2">
+            <input type="text" id="txg-owner-bank" value="${pay.bank || ''}" placeholder="Banco (ej. Banco de Venezuela 0102)" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <input type="tel" id="txg-owner-phone" value="${pay.phone || ''}" placeholder="Teléfono Pago Móvil (ej. 0412-1234567)" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <input type="text" id="txg-owner-ci" value="${pay.ci || ''}" placeholder="Cédula o RIF (ej. V-27123456)" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <input type="text" id="txg-owner-name" value="${pay.name || ''}" placeholder="Nombre del Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+          </div>
+          <button type="button" onclick="saveOwnerPagoMovilForm()" class="w-full py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+            💾 Guardar Pago Móvil (PIN 2026)
+          </button>
+        </div>
+      `);
+    }
+
+    setInterval(injectPagoMovilCard, 1500);
+    injectPagoMovilCard();
+  }
+
+  window.addEventListener('load', initOwnerPagoMovilExtension);
+  setTimeout(initOwnerPagoMovilExtension, 250);
+})();
