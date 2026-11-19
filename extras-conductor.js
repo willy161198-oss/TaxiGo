@@ -1,294 +1,133 @@
 // =========================================================
-// TAXIGO · EXTRAS-AUTH.JS v2.0 (MENÚ BLINDADO + CERRAR SESIÓN REAL)
+// TAXIGO · EXTRAS-CONDUCTOR.JS · VERSIÓN DE LANZAMIENTO
 // =========================================================
 (function () {
-  function bootAuthModule() {
-    if (typeof state === 'undefined' || !document.getElementById('app-shell')) {
-      setTimeout(bootAuthModule, 60);
+  function initDriverLaunchModule() {
+    if (typeof state === 'undefined') {
+      setTimeout(initDriverLaunchModule, 150);
       return;
     }
 
-    // 1. Limpieza segura de datos iniciales
-    if (!Array.isArray(state.users)) state.users = [];
-    if (!state.ownerPagoMovil || state.ownerPagoMovil.banco === 'Banesco (0134)') {
-      state.ownerPagoMovil = { banco: '', cedula: '', telefono: '', titular: '' };
-    }
-    state.users.forEach(u => {
-      if (u && u.role === 'driver' && (!u.pagoMovil || u.pagoMovil.banco === 'Banco de Venezuela (0102)')) {
-        u.pagoMovil = { banco: '', cedula: '', telefono: '' };
-      }
-    });
-    if (!Array.isArray(state.openRequests)) state.openRequests = [];
-    if (!Array.isArray(state.paymentReports)) state.paymentReports = [];
-    if (!Array.isArray(state.ledger)) state.ledger = [];
-    if (typeof state.isLoggedIn === 'undefined') state.isLoggedIn = false;
-    saveState();
+    // 1. Transmitir ubicación GPS del conductor en tiempo real mientras esté conectado o en carrera
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        pos => {
+          const u = typeof getActiveUser === 'function' ? getActiveUser() : null;
+          if (!u || u.role !== 'driver') return;
+          u.lat = pos.coords.latitude;
+          u.lng = pos.coords.longitude;
 
-    const appShell = document.getElementById('app-shell');
-
-    // 2. Pantalla de Bienvenida / Login / Registro separado
-    if (!document.getElementById('screen-auth')) {
-      appShell.insertAdjacentHTML('beforeend', `
-        <section id="screen-auth" class="screen" style="background: linear-gradient(165deg, #11131a 0%, #1b2030 65%, #2a1218 100%); color: #fff;">
-          <div class="flex-1 flex flex-col justify-between p-6 overflow-y-auto">
-            <div class="flex items-center justify-between pt-1">
-              <div onclick="handleLogoTap()" class="taxigo-logo-trigger text-2xl font-extrabold tracking-tight select-none">
-                Taxi<span class="text-[#e51d2e]">Go</span>
-              </div>
-              <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-white/10 text-gray-200">Ciudad Ojeda</span>
-            </div>
-
-            <div class="my-4">
-              <span class="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400">Plataforma de Movilidad</span>
-              <h1 class="text-2xl font-extrabold leading-tight mt-1">Inicia sesión o crea tu cuenta</h1>
-              <p class="text-xs text-gray-300 mt-1">Pasajeros y conductores entran cada uno con su cuenta independiente.</p>
-            </div>
-
-            <div class="rounded-3xl p-4 bg-white text-[#11131a] shadow-xl space-y-3 mb-4">
-              <p class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Ya tengo cuenta</p>
-              <input id="login-identifier" type="text" placeholder="Ingresa tu teléfono o Cédula" class="w-full bg-gray-100 rounded-2xl px-4 py-3 text-sm font-bold text-gray-900 focus:outline-none" />
-              <button type="button" onclick="loginWithAccount()" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-                Iniciar sesión
-              </button>
-            </div>
-
-            <div class="rounded-3xl p-4 bg-white/10 border border-white/15 backdrop-blur-md text-white space-y-3">
-              <p class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Crear cuenta nueva</p>
-              <div class="grid grid-cols-2 gap-2.5">
-                <button type="button" onclick="goCreateAccount('passenger')" class="py-3.5 px-3 rounded-2xl bg-white text-[#11131a] text-xs font-extrabold flex flex-col items-center gap-1 shadow active:scale-95 transition">
-                  <span class="text-xl">🧍</span>
-                  <span>Soy Pasajero</span>
-                </button>
-                <button type="button" onclick="goCreateAccount('driver')" class="py-3.5 px-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold flex flex-col items-center gap-1 shadow active:scale-95 transition">
-                  <span class="text-xl">🏍️</span>
-                  <span>Soy Conductor</span>
-                </button>
-              </div>
-            </div>
-
-            <p class="text-center text-[11px] text-gray-400 pt-4">© 2026 TaxiGo · Todos los derechos reservados</p>
-          </div>
-        </section>
-      `);
-    }
-
-    // 3. Blindar botón atrás en registro
-    const regBackBtn = document.querySelector('#screen-register button[onclick*="switchScreen"]');
-    if (regBackBtn) regBackBtn.setAttribute('onclick', 'handleRegisterBack()');
-
-    window.handleRegisterBack = function () {
-      if (state.isLoggedIn) {
-        const u = getActiveUser();
-        switchScreen(u && u.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-      } else {
-        switchScreen('screen-auth');
-      }
-    };
-
-    window.goCreateAccount = function (role) {
-      ['reg-name', 'reg-cedula', 'reg-phone', 'reg-address', 'reg-plate', 'reg-model', 'reg-color'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      uploadedDocs = { face: '', cedula: '', vehicle: '', license: '' };
-      const labels = {
-        face: '🤳 Toca para subir o tomar foto de tu cara',
-        cedula: '🪪 Toca para subir foto de la cédula',
-        vehicle: '🏍️ Toca para subir foto del vehículo',
-        license: '📄 Toca para subir documentos del vehículo'
-      };
-      Object.keys(labels).forEach(k => {
-        const box = document.getElementById('box-photo-' + k);
-        const prev = document.getElementById('preview-photo-' + k);
-        const inp = document.getElementById('file-photo-' + k);
-        if (box) box.classList.remove('has-file');
-        if (prev) prev.innerHTML = labels[k];
-        if (inp) inp.value = '';
-      });
-
-      switchScreen('screen-register');
-      if (typeof setRegRole === 'function') setRegRole(role);
-    };
-
-    window.loginWithAccount = function () {
-      const query = (document.getElementById('login-identifier').value || '').trim().toLowerCase();
-      if (!query) { showToast('Escribe tu teléfono o cédula'); return; }
-      const user = state.users.find(u =>
-        (u.phone && u.phone.toLowerCase().includes(query)) ||
-        (u.cedula && u.cedula.toLowerCase().includes(query))
+          (state.trips || []).forEach(t => {
+            if (t.driverId === u.id && ['accepted', 'arriving', 'in_progress'].includes(t.status)) {
+              t.driverLat = pos.coords.latitude;
+              t.driverLng = pos.coords.longitude;
+            }
+          });
+          if (typeof saveState === 'function') saveState();
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 2500 }
       );
-      if (!user) { showToast('Cuenta no encontrada. Regístrate abajo'); return; }
-
-      state.activeUserId = user.id;
-      state.mode = user.role;
-      state.isLoggedIn = true;
-      saveState();
-      window.rebuildCleanDrawer();
-      switchScreen(user.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-      updateAllUI();
-      showToast(`Bienvenido, ${user.name}`);
-    };
-
-    window.submitRegistration = function () {
-      const name = (document.getElementById('reg-name').value || '').trim();
-      const cedula = (document.getElementById('reg-cedula').value || '').trim();
-      const phone = (document.getElementById('reg-phone').value || '').trim();
-      const address = (document.getElementById('reg-address').value || '').trim();
-
-      if (name.length < 3) { showToast('Escribe tu nombre y apellido completo'); return; }
-      if (cedula.length < 5) { showToast('Escribe tu cédula válida'); return; }
-      if (phone.length < 7) { showToast('Escribe tu número de teléfono'); return; }
-      if (address.length < 4) { showToast('Escribe tu dirección'); return; }
-
-      const docs = (typeof uploadedDocs !== 'undefined' && uploadedDocs) ? uploadedDocs : {};
-      if (!docs.face) { showToast('Sube la foto de tu rostro (Selfie)'); return; }
-      if (!docs.cedula) { showToast('Sube la foto de tu Cédula'); return; }
-
-      const currentRole = (typeof regRole !== 'undefined') ? regRole : 'passenger';
-      const newUser = {
-        id: 'usr-' + Date.now(),
-        role: currentRole,
-        name,
-        cedula,
-        phone,
-        address,
-        status: 'pending',
-        debtUsd: 0,
-        mondayBlocked: false,
-        earnedToday: 0,
-        tripsToday: 0,
-        tripsTotal: 0,
-        joined: 'Hoy',
-        docs: { ...docs }
-      };
-
-      if (currentRole === 'driver') {
-        const plate = (document.getElementById('reg-plate').value || '').trim().toUpperCase();
-        const model = (document.getElementById('reg-model').value || '').trim();
-        const color = (document.getElementById('reg-color').value || '').trim();
-
-        if (!plate || !model || !color) { showToast('Completa placa, modelo y color'); return; }
-        if (!docs.vehicle || !docs.license) { showToast('Sube fotos del vehículo y licencia'); return; }
-
-        newUser.vehicleType = document.getElementById('reg-vehicle-type').value;
-        newUser.plate = plate;
-        newUser.model = model;
-        newUser.color = color;
-        newUser.pagoMovil = { banco: '', cedula: '', telefono: '' };
-      }
-
-      state.users.unshift(newUser);
-      state.activeUserId = newUser.id;
-      state.mode = newUser.role;
-      state.isLoggedIn = true;
-      saveState();
-
-      uploadedDocs = { face: '', cedula: '', vehicle: '', license: '' };
-      window.rebuildCleanDrawer();
-      switchScreen(newUser.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-      updateAllUI();
-      showToast('Registro enviado para aprobación');
-    };
-
-    // 4. RECONSTRUCCIÓN BLINDADA DEL MENÚ LATERAL (SE EJECUTA CADA VEZ QUE SE ABRE EL MENÚ)
-    window.rebuildCleanDrawer = function () {
-      const u = getActiveUser();
-      const isDriver = u && u.role === 'driver';
-      const drawerMenu = document.querySelector('#side-drawer .flex-1');
-      const drawerFooter = document.querySelector('#side-drawer .p-4.border-t');
-
-      if (drawerMenu) {
-        if (isDriver) {
-          drawerMenu.innerHTML = `
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-driver')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>🏍️</span> Panel de solicitudes
-            </button>
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-account')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>👤</span> Tu cuenta y perfil
-            </button>
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-driver-history')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>🕒</span> Historial de carreras
-            </button>
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-settings')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>⚙️</span> Ajustes y Pago Móvil
-            </button>
-            <button type="button" onclick="closeDrawer(); openSupportModal()" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>🎧</span> Soporte técnico
-            </button>
-          `;
-        } else {
-          drawerMenu.innerHTML = `
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-passenger')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>🗺️</span> Pedir un viaje o envío
-            </button>
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-account')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>👤</span> Tu cuenta y perfil
-            </button>
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-passenger-history')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>🕒</span> Historial de viajes
-            </button>
-            <button type="button" onclick="closeDrawer(); switchScreen('screen-settings')" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>⚙️</span> Ajustes
-            </button>
-            <button type="button" onclick="closeDrawer(); openSupportModal()" class="w-full p-3 rounded-xl flex items-center gap-3 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800">
-              <span>🎧</span> Soporte técnico
-            </button>
-          `;
-        }
-      }
-
-      if (drawerFooter) {
-        drawerFooter.innerHTML = `
-          <button type="button" onclick="closeDrawer(); logoutUser()" class="w-full py-3.5 rounded-2xl bg-[#e51d2e] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow active:scale-95 transition">
-            <span>🚪</span> Cerrar sesión
-          </button>
-        `;
-      }
-
-      // Ocultar accesos cruzados dentro de "Tu cuenta"
-      const profileSwitchBanner = document.querySelector('#screen-account div[onclick="switchToDriverMode()"]');
-      if (profileSwitchBanner) profileSwitchBanner.classList.add('hidden');
-
-      const regInAccountBtn = document.querySelector('#screen-account button[onclick="switchScreen(\'screen-register\')"]');
-      if (regInAccountBtn) regInAccountBtn.classList.add('hidden');
-
-      const accBackBtn = document.querySelector('#screen-account button[onclick*="switchScreen"]');
-      if (accBackBtn) {
-        accBackBtn.setAttribute('onclick', isDriver ? "switchScreen('screen-driver')" : "switchScreen('screen-passenger')");
-      }
-    };
-
-    // Interceptar openDrawer para garantizar que SIEMPRE muestre el menú limpio
-    const origOpenDrawer = window.openDrawer;
-    window.openDrawer = function () {
-      window.rebuildCleanDrawer();
-      if (typeof origOpenDrawer === 'function') origOpenDrawer();
-    };
-
-    window.logoutUser = function () {
-      state.isLoggedIn = false;
-      if (typeof driverOnline !== 'undefined' && driverOnline) toggleDriverOnline();
-      saveState();
-      switchScreen('screen-auth');
-      showToast('Sesión cerrada');
-    };
-
-    // Aplicar pantalla inicial correcta incluso después de que index.html cargue
-    function enforceInitialScreen() {
-      window.rebuildCleanDrawer();
-      const u = getActiveUser();
-      if (!state.isLoggedIn || !u) {
-        switchScreen('screen-auth');
-      } else {
-        state.mode = u.role;
-        switchScreen(u.role === 'driver' ? 'screen-driver' : 'screen-passenger');
-      }
     }
 
-    enforceInitialScreen();
-    setTimeout(enforceInitialScreen, 250);
+    // 2. Botón de navegación directa en Waze para el conductor durante la carrera activa
+    function injectWazeNavigationForDriver() {
+      const drvScreen = document.getElementById('screen-driver');
+      if (!drvScreen) return;
+      const u = typeof getActiveUser === 'function' ? getActiveUser() : null;
+      if (!u || u.role !== 'driver') return;
+
+      const activeTrip = (state.trips || []).find(t =>
+        t.driverId === u.id && ['accepted', 'arriving', 'in_progress'].includes(t.status)
+      );
+
+      let wazeBox = document.getElementById('txg-driver-waze-nav');
+      if (!activeTrip) {
+        if (wazeBox) wazeBox.remove();
+        return;
+      }
+
+      const destLat = activeTrip.destLat || (window._taxiGoDest && window._taxiGoDest[0]) || 10.2016;
+      const destLng = activeTrip.destLng || (window._taxiGoDest && window._taxiGoDest[1]) || -71.3148;
+      const wazeUrl = `https://waze.com/ul?ll=${destLat},${destLng}&navigate=yes`;
+
+      if (!wazeBox) {
+        drvScreen.insertAdjacentHTML('beforeend', `<div id="txg-driver-waze-nav" class="fixed bottom-4 left-4 right-4 z-[9980]"></div>`);
+        wazeBox = document.getElementById('txg-driver-waze-nav');
+      }
+
+      wazeBox.innerHTML = `
+        <div class="bg-[#11131a] text-white rounded-3xl p-3.5 shadow-2xl border border-white/15 flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Carrera Activa · Pasajero: ${activeTrip.passengerName || 'Cliente'}</p>
+            <p class="text-xs font-bold truncate">${activeTrip.destination || 'Destino del viaje'}</p>
+          </div>
+          <a href="${wazeUrl}" target="_blank" rel="noopener" class="shrink-0 px-4 py-2.5 rounded-2xl bg-[#33ccff] text-[#11131a] text-xs font-extrabold shadow">
+            🧭 Abrir Waze
+          </a>
+        </div>
+      `;
+    }
+
+    // 3. Mostrar los datos bancarios / Pago Móvil del dueño ÚNICAMENTE dentro del modal de pagar comisión del conductor
+    window.openDriverCommissionPayModal = function () {
+      const ownerPay = state.ownerPayment || {
+        bank: 'Banco de Venezuela (0102)',
+        phone: '0412-0000000',
+        ci: 'V-00000000',
+        name: 'Administración TaxiGo'
+      };
+
+      const existing = document.getElementById('txg-driver-commission-modal');
+      if (existing) existing.remove();
+
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="txg-driver-commission-modal" class="fixed inset-0 z-[9995] bg-black/70 flex items-center justify-center p-4">
+          <div class="bg-white dark:bg-[#1e2233] rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold">Pagar Comisión del 10%</h3>
+              <button type="button" onclick="document.getElementById('txg-driver-commission-modal').remove()" class="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-bold">✕</button>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/70 space-y-1 text-xs">
+              <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Datos de Pago Móvil del Dueño</p>
+              <p><b>Banco:</b> ${ownerPay.bank}</p>
+              <p><b>Teléfono:</b> ${ownerPay.phone}</p>
+              <p><b>Cédula / RIF:</b> ${ownerPay.ci}</p>
+              <p><b>Titular:</b> ${ownerPay.name}</p>
+            </div>
+            <input type="text" id="txg-comm-ref" placeholder="Últimos 6 dígitos de referencia" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-xs">
+            <button type="button" onclick="submitDriverCommissionReport()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+              Reportar Pago de Comisión
+            </button>
+          </div>
+        </div>
+      `);
+    };
+
+    window.submitDriverCommissionReport = function () {
+      const ref = (document.getElementById('txg-comm-ref')?.value || '').trim();
+      if (!ref) {
+        if (typeof showToast === 'function') showToast('Ingresa el número de referencia');
+        return;
+      }
+      const u = typeof getActiveUser === 'function' ? getActiveUser() : null;
+      state.commissionReports = state.commissionReports || [];
+      state.commissionReports.push({
+        id: 'rep-' + Date.now(),
+        driverId: u ? u.id : 'drv',
+        driverName: u ? u.name : 'Conductor',
+        reference: ref,
+        status: 'pending',
+        date: new Date().toLocaleString()
+      });
+      if (typeof saveState === 'function') saveState();
+      document.getElementById('txg-driver-commission-modal')?.remove();
+      if (typeof showToast === 'function') showToast('Reporte enviado al dueño para aprobación');
+    };
+
+    setInterval(injectWazeNavigationForDriver, 2500);
   }
 
-  window.addEventListener('load', bootAuthModule);
-  setTimeout(bootAuthModule, 120);
+  window.addEventListener('load', initDriverLaunchModule);
+  setTimeout(initDriverLaunchModule, 200);
 })();
