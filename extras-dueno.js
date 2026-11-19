@@ -283,3 +283,42 @@
   setInterval(injectOwnerLogoutBtn, 1000);
   injectOwnerLogoutBtn();
 })();
+// =========================================================
+// EXTENSIÓN: BOTÓN CERRAR SESIÓN EN PANEL DE DUEÑO
+// =========================================================
+(function () {
+  window.logoutOwnerSession = function () {
+    if (typeof state !== 'undefined') {
+      state.activeUserId = null;
+      state.currentRole = 'passenger';
+      if (typeof saveState === 'function') saveState();
+    }
+
+    if (typeof switchRole === 'function') {
+      switchRole('passenger');
+    } else {
+      document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+      const passScreen = document.getElementById('screen-passenger');
+      if (passScreen) passScreen.classList.remove('hidden');
+    }
+
+    if (typeof updateAllUI === 'function') updateAllUI();
+    if (typeof showToast === 'function') showToast('Sesión de Dueño cerrada');
+  };
+
+  function injectOwnerLogoutBtn() {
+    const ownerScreen = document.getElementById('screen-owner');
+    if (!ownerScreen || document.getElementById('txg-btn-owner-logout')) return;
+
+    const anchor = document.getElementById('txg-btn-open-pagomovil') || document.getElementById('txg-owner-approvals-box') || ownerScreen.querySelector('.space-y-4, .p-4') || ownerScreen;
+
+    anchor.insertAdjacentHTML('afterend', `
+      <button id="txg-btn-owner-logout" type="button" onclick="logoutOwnerSession()" class="w-full mb-4 px-4 py-3 rounded-2xl bg-red-500/15 text-red-500 border border-red-500/30 text-xs font-extrabold flex items-center justify-center gap-2 active:scale-95 transition">
+        <span>🚪 Cerrar Sesión de Dueño</span>
+      </button>
+    `);
+  }
+
+  setInterval(injectOwnerLogoutBtn, 1000);
+  injectOwnerLogoutBtn();
+})();
