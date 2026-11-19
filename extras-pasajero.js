@@ -131,3 +131,49 @@
   window.addEventListener('load', initPassengerLaunchModule);
   setTimeout(initPassengerLaunchModule, 200);
 })();
+// =========================================================
+// EXTENSIÓN: BOTÓN CERRAR SESIÓN EN PASAJERO Y MENÚ LATERAL
+// =========================================================
+(function () {
+  window.logoutCurrentUserSession = function () {
+    if (typeof state !== 'undefined') {
+      state.activeUserId = null;
+      state.currentRole = 'passenger';
+      if (typeof saveState === 'function') saveState();
+    }
+
+    document.getElementById('txg-pending-approval-screen')?.remove();
+    document.getElementById('txg-live-driver-card')?.remove();
+    document.getElementById('txg-driver-waze-nav')?.remove();
+
+    if (typeof switchRole === 'function') {
+      switchRole('passenger');
+    } else {
+      document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+      const passScreen = document.getElementById('screen-passenger');
+      if (passScreen) passScreen.classList.remove('hidden');
+    }
+
+    // Cerrar menú lateral si está abierto
+    const drawer = document.getElementById('drawer-menu') || document.getElementById('sidebar-menu');
+    if (drawer) drawer.classList.add('hidden');
+
+    if (typeof updateAllUI === 'function') updateAllUI();
+    if (typeof showToast === 'function') showToast('Sesión cerrada correctamente');
+  };
+
+  function injectPassengerLogoutBtn() {
+    const drawerMenu = document.querySelector('#drawer-menu .space-y-2, #sidebar-menu, #menu-drawer');
+    if (drawerMenu && !document.getElementById('txg-btn-menu-logout')) {
+      drawerMenu.insertAdjacentHTML('beforeend', `
+        <button id="txg-btn-menu-logout" type="button" onclick="logoutCurrentUserSession()" class="w-full text-left px-4 py-3 rounded-2xl bg-red-500/15 text-red-500 border border-red-500/30 text-xs font-extrabold flex items-center justify-between mt-2">
+          <span>🚪 Cerrar Sesión</span>
+          <span class="text-[10px]">Salir</span>
+        </button>
+      `);
+    }
+  }
+
+  setInterval(injectPassengerLogoutBtn, 1000);
+  injectPassengerLogoutBtn();
+})();
