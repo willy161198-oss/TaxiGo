@@ -1,7 +1,9 @@
 // =========================================================
-// TAXIGO · EXTRAS-AUTH.JS · VERSIÓN DE LANZAMIENTO
+// TAXIGO · EXTRAS-AUTH.JS · VERSIÓN DE LANZAMIENTO (ACCESO DUEÑO + APROBACIÓN)
 // =========================================================
 (function () {
+  const OWNER_PIN = '2026';
+
   function initAuthLaunchModule() {
     if (typeof state === 'undefined') {
       setTimeout(initAuthLaunchModule, 120);
@@ -25,8 +27,50 @@
       if (typeof saveState === 'function') saveState();
     }
 
-    // 2. Formulario de Registro de Conductor con los 6 documentos obligatorios:
-    // C.I., Carnet de Circulación, Licencia, Carta Médica y RCV (más fotos/archivo)
+    // 2. Función directa para entrar al Perfil de Dueño con PIN 2026
+    window.enterOwnerPanelDirect = function () {
+      const pin = prompt('🔐 Acceso Dueño TaxiGo\nIngresa tu PIN de administrador:');
+      if (pin !== OWNER_PIN) {
+        if (typeof showToast === 'function') showToast('PIN incorrecto');
+        return;
+      }
+
+      document.getElementById('txg-pending-approval-screen')?.remove();
+
+      let ownerUser = (state.users || []).find(u => u.role === 'owner' || u.id === 'usr-owner');
+      if (!ownerUser) {
+        ownerUser = { id: 'usr-owner', name: 'Dueño TaxiGo', role: 'owner', approved: true };
+        state.users = state.users || [];
+        state.users.unshift(ownerUser);
+      }
+      ownerUser.approved = true;
+      state.activeUserId = ownerUser.id;
+      state.currentRole = 'owner';
+      if (typeof saveState === 'function') saveState();
+
+      if (typeof switchRole === 'function') {
+        switchRole('owner');
+      } else {
+        document.querySelectorAll('[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+        const ownerScreen = document.getElementById('screen-owner');
+        if (ownerScreen) ownerScreen.classList.remove('hidden');
+      }
+      if (typeof updateAllUI === 'function') updateAllUI();
+      if (typeof showToast === 'function') showToast('Bienvenido al Panel de Dueño');
+    };
+
+    // 3. Agregar botón visible de "Panel Dueño" en el menú lateral para que siempre puedas entrar
+    const drawerMenu = document.querySelector('#drawer-menu .space-y-2, #sidebar-menu, #menu-drawer');
+    if (drawerMenu && !document.getElementById('btn-menu-owner-direct')) {
+      drawerMenu.insertAdjacentHTML('beforeend', `
+        <button id="btn-menu-owner-direct" type="button" onclick="enterOwnerPanelDirect()" class="w-full text-left px-4 py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-between mt-2">
+          <span>👑 Panel de Dueño</span>
+          <span class="text-[10px] text-[#00b14f]">PIN</span>
+        </button>
+      `);
+    }
+
+    // 4. Formulario de Registro de Conductor con los 5 documentos obligatorios
     const regForm = document.getElementById('register-driver-form') || document.querySelector('#modal-auth form');
     if (regForm && !document.getElementById('driver-docs-launch-box')) {
       const submitBtn = regForm.querySelector('button[type="submit"], button:last-of-type');
@@ -60,13 +104,18 @@
       }
     }
 
-    // 3. Bloquear acceso a cuentas nuevas (conductores o pasajeros) hasta que el dueño las autorice
+    // 5. Mostrar pantalla de espera SOLO a cuentas registradas pendientes (sin bloquear invitado ni dueño)
     const origGetActive = window.getActiveUser;
     if (typeof origGetActive === 'function' && !window._authApprovalWrapped) {
       window.getActiveUser = function () {
         const u = origGetActive();
-        if (u && u.role !== 'owner' && u.id !== 'usr-owner' && u.approved === false) {
+        const isDefaultGuest = !u || u.id === 'usr-default' || u.id === 'usr-passenger' || u.isGuest;
+        const isOwner = u && (u.role === 'owner' || u.id === 'usr-owner');
+
+        if (u && !isDefaultGuest && !isOwner && u.approved === false) {
           showPendingApprovalOverlay(u);
+        } else {
+          document.getElementById('txg-pending-approval-screen')?.remove();
         }
         return u;
       };
@@ -82,20 +131,16 @@
           <p class="text-xs text-gray-300 max-w-xs">
             Hola <b>${user.name || 'Usuario'}</b>, tu registro y documentos fueron recibidos. El administrador de <b>TaxiGo</b> debe autorizar tu ingreso antes de operar.
           </p>
-          <button type="button" onclick="location.reload()" class="px-5 py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
-            Verificar si ya fui aprobado
-          </button>
+          <div class="flex flex-col gap-2.5 w-full max-w-xs">
+            <button type="button" onclick="location.reload()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+              Verificar si ya fui aprobado
+            </button>
+            <button type="button" onclick="enterOwnerPanelDirect()" class="w-full py-3 rounded-2xl bg-white/10 text-white text-xs font-extrabold border border-white/15">
+              👑 Soy el Dueño (Entrar con PIN)
+            </button>
+          </div>
         </div>
       `);
-    }
-
-    // Asegurar que todo nuevo registro nazca con approved: false y historial en 0
-    if (Array.isArray(state.users)) {
-      state.users.forEach(u => {
-        if (u.role !== 'owner' && u.id !== 'usr-owner' && typeof u.approved === 'undefined') {
-          u.approved = false;
-        }
-      });
     }
   }
 
