@@ -79,7 +79,7 @@
 
       <!-- Campos exclusivos del Conductor (5 documentos obligatorios) -->
       <div id="driver-register-fields" class="hidden space-y-2.5 pt-2 border-t border-white/15">
-        <p class="text-[11px] font-extrabold text-[#00b14f] uppercase">Datos del Vehículo y 5 Documentos</p>
+        <p class="text-[11px] font-extrabold text-[#00b14f] uppercase">Datos del Vehículo Principal y 5 Documentos</p>
         <div class="grid grid-cols-2 gap-2">
           <select id="reg-vehicle-type" class="px-3 py-2.5 rounded-xl bg-[#1c2030] border border-white/15 text-xs text-white">
             <option value="Moto">🏍️ Moto</option>
@@ -161,12 +161,12 @@
     </button>
   </div>
 
-  <!-- Botones Flotantes Derecha: GPS y Abrir Google Maps -->
+  <!-- Botones Flotantes Derecha: GPS y Google Maps (Opcional) -->
   <div class="absolute right-3 top-16 z-20 flex flex-col gap-2">
     <button type="button" onclick="syncPassengerGps(true)" class="w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación GPS">
       🎯
     </button>
-    <button type="button" onclick="openPassengerGoogleMaps()" class="w-11 h-11 rounded-full bg-[#4285F4] text-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Abrir Google Maps en segundo plano">
+    <button type="button" onclick="openPassengerGoogleMaps()" class="w-11 h-11 rounded-full bg-[#4285F4] text-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Abrir Google Maps">
       🗺️
     </button>
   </div>
@@ -221,14 +221,9 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-2">
-      <button type="button" onclick="openPinPicker()" class="col-span-2 py-3.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md active:scale-95 transition">
-        📍 Pin en el mapa
-      </button>
-      <button type="button" onclick="openPassengerGoogleMaps()" class="py-3.5 rounded-2xl bg-[#4285F4] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition">
-        🗺️ Maps
-      </button>
-    </div>
+    <button type="button" onclick="openPinPicker()" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md active:scale-95 transition">
+      📍 Pin en el mapa
+    </button>
   </div>
 
   <!-- Panel Inferior Pasajero: Paso 2 Selección de Vehículo -->
@@ -238,10 +233,7 @@
         <h3 class="text-sm font-black">Elige tu servicio</h3>
         <p id="trip-summary-metrics" class="text-[11px] font-bold text-gray-500">0.0 km · 0 min</p>
       </div>
-      <div class="flex items-center gap-1.5">
-        <button type="button" onclick="openPassengerGoogleMaps()" class="px-3 py-1.5 rounded-xl bg-[#4285F4]/15 text-[#4285F4] text-xs font-extrabold">🗺️ Maps</button>
-        <button type="button" onclick="backToDestinationStep()" class="px-3 py-1.5 rounded-xl bg-gray-100 text-xs font-extrabold">Cambiar</button>
-      </div>
+      <button type="button" onclick="backToDestinationStep()" class="px-3 py-1.5 rounded-xl bg-gray-100 text-xs font-extrabold">Cambiar</button>
     </div>
 
     <div id="vehicle-options-list" class="space-y-2 max-h-52 overflow-y-auto no-scrollbar"></div>
@@ -257,26 +249,26 @@
     </div>
   </div>
 
-  <!-- Panel Inferior Pasajero: Paso 3 Esperando / Conductor Asignado -->
+  <!-- Panel Inferior Pasajero: Paso 3 Viaje Activo -->
   <div id="pass-step-active-trip" class="hidden fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-3xl p-5 shadow-2xl border-t border-gray-200 space-y-3">
     <div id="active-trip-content"></div>
   </div>
 </div>
 
 <!-- =========================================================
-     PANTALLA 3: CONDUCTOR
+     PANTALLA 3: CONDUCTOR (MULTI-VEHÍCULO + MAPA EN VIVO + FLUJO)
      ========================================================= -->
 <div id="screen-driver" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
-  <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20">
-    <div>
+  <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20 gap-1">
+    <div class="min-w-0">
       <p class="text-[10px] uppercase font-extrabold text-[#00b14f]">Panel Conductor</p>
-      <h2 id="drv-header-name" class="text-sm font-black">Conductor</h2>
+      <h2 id="drv-header-name" class="text-sm font-black truncate">Conductor</h2>
     </div>
-    <div class="flex items-center gap-1.5">
-      <button type="button" onclick="openDriverGoogleMapsGeneral()" class="px-2.5 py-1.5 rounded-full bg-[#4285F4] text-white text-[11px] font-extrabold">
-        🗺️ Maps
+    <div class="flex items-center gap-1 shrink-0">
+      <button type="button" onclick="forceCloudPull()" class="px-2 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Actualizar solicitudes">
+        🔄
       </button>
-      <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="px-3 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
+      <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
         ● En Línea
       </button>
       <button type="button" onclick="logoutApp()" class="px-2.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
@@ -286,6 +278,10 @@
   </div>
 
   <div class="p-4 space-y-4 max-w-lg w-full mx-auto">
+    <!-- BARRA DE VEHÍCULO ACTIVO / REGISTRAR SEGUNDO VEHÍCULO (MOTO O CARRO) -->
+    <div id="drv-vehicle-switcher-box" class="bg-white rounded-3xl p-3.5 shadow-sm border border-gray-200"></div>
+
+    <!-- Estadísticas -->
     <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 grid grid-cols-3 gap-2 text-center">
       <div>
         <p class="text-[10px] font-bold text-gray-400">Viajes</p>
@@ -305,8 +301,22 @@
       📲 Pagar Comisión al Dueño
     </button>
 
-    <div id="drv-active-trip-box" class="hidden"></div>
+    <!-- MAPA EN VIVO INTEGRADO PARA EL CONDUCTOR + BOTONES DE ESTADO -->
+    <div id="drv-active-trip-wrapper" class="hidden space-y-3">
+      <div class="relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#11131a]">
+        <div id="map-driver" class="w-full h-64 bg-gray-200"></div>
+        <button type="button" onclick="openDriverOptionalGoogleMaps()" class="absolute top-2.5 right-2.5 z-20 px-3 py-1.5 rounded-full bg-[#4285F4] text-white text-[11px] font-extrabold shadow-lg flex items-center gap-1 active:scale-95 transition">
+          🗺️ Maps
+        </button>
+        <div id="drv-map-route-badge" class="absolute bottom-2.5 left-2.5 right-2.5 z-20 px-3 py-1.5 rounded-xl bg-[#11131a]/90 text-white text-[11px] font-bold truncate">
+          Calculando ruta en mapa...
+        </div>
+      </div>
 
+      <div id="drv-active-trip-box"></div>
+    </div>
+
+    <!-- Solicitudes de Pasajeros -->
     <div class="space-y-2">
       <h3 class="text-xs font-extrabold uppercase text-gray-500">Solicitudes de Pasajeros</h3>
       <div id="drv-requests-list" class="space-y-2.5"></div>
@@ -417,7 +427,7 @@
   // =========================================================
   const DB_BASE_URL = "https://taxigo-ojeda-default-rtdb.firebaseio.com";
   const OWNER_PIN = '2026';
-  const STORAGE_KEY = 'taxigo_ojeda_v5';
+  const STORAGE_KEY = 'taxigo_ojeda_v8';
 
   let appState = {
     bcvRate: 45.00,
@@ -450,8 +460,50 @@
   };
 
   let currentOpenOwnerTab = null;
+  let driverManualOffline = false;
+  let lastNotifiedTripStatus = {};
 
-  // Abre Google Maps en ventana externa / app nativa dejando TaxiGo en segundo plano
+  function isUserTyping() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  }
+
+  // Helper para obtener la lista normalizada de vehículos de un conductor (soporta registros previos y multi-vehículo)
+  function getDriverVehiclesList(u) {
+    if (!u || u.role !== 'driver') return [];
+    if (Array.isArray(u.vehicles) && u.vehicles.length > 0) return u.vehicles;
+    if (u.vehicleType && u.plate) {
+      return [{
+        id: 'veh-main',
+        type: u.vehicleType,
+        model: u.vehicleModel || '',
+        plate: u.plate,
+        docs: u.docs || null,
+        approved: u.approved === true
+      }];
+    }
+    return [];
+  }
+
+  // Helper para saber cuál vehículo tiene activo el conductor en este momento
+  function getDriverActiveVehicle(u) {
+    const list = getDriverVehiclesList(u).filter(v => v.approved);
+    if (list.length === 0) {
+      return {
+        type: u.vehicleType || 'Moto',
+        model: u.vehicleModel || '',
+        plate: u.plate || ''
+      };
+    }
+    if (u.activeVehicleType) {
+      const found = list.find(v => v.type === u.activeVehicleType);
+      if (found) return found;
+    }
+    return list[0];
+  }
+
   function openExternalGoogleMaps(url) {
     if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
       window.Telegram.WebApp.openLink(url);
@@ -463,7 +515,7 @@
 
   function openPassengerGoogleMaps() {
     const u = getActiveUser();
-    const activeTrip = u ? appState.trips.find(t => t.passengerId === u.id && ['searching', 'accepted'].includes(t.status)) : null;
+    const activeTrip = u ? appState.trips.find(t => t.passengerId === u.id && ['searching', 'accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)) : null;
 
     if (activeTrip && activeTrip.originCoords && activeTrip.destCoords) {
       const url = `https://www.google.com/maps/dir/?api=1&origin=${activeTrip.originCoords[0]},${activeTrip.originCoords[1]}&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
@@ -479,17 +531,16 @@
     }
   }
 
-  function openDriverGoogleMapsGeneral() {
+  function openDriverOptionalGoogleMaps() {
     const u = getActiveUser();
-    const activeTrip = u ? appState.trips.find(t => t.driverId === u.id && t.status === 'accepted') : null;
-    if (activeTrip && activeTrip.destCoords) {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
-      openExternalGoogleMaps(url);
-    } else if (u && u.lat && u.lng) {
-      openExternalGoogleMaps(`https://www.google.com/maps/search/?api=1&query=${u.lat},${u.lng}`);
-    } else {
+    const activeTrip = u ? appState.trips.find(t => t.driverId === u.id && ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)) : null;
+    if (!activeTrip) {
       openExternalGoogleMaps('https://www.google.com/maps/search/?api=1&query=Ciudad+Ojeda+Zulia');
+      return;
     }
+    const targetCoords = (activeTrip.status === 'in_progress') ? activeTrip.destCoords : activeTrip.originCoords;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${targetCoords[0]},${targetCoords[1]}&travelmode=driving`;
+    openExternalGoogleMaps(url);
   }
 
   async function cloudPut(path, data) {
@@ -593,9 +644,11 @@
   function refreshCurrentView() {
     const u = getActiveUser();
     if (!u) return;
+
     if (u.role === 'owner') {
       updateOwnerBadges();
-      if (currentOpenOwnerTab && currentOpenOwnerTab !== 'mapa_vivo') {
+      const editableTabs = ['bcv', 'comision', 'datos_app', 'tarifas', 'terminos', 'edit_user'];
+      if (currentOpenOwnerTab && !editableTabs.includes(currentOpenOwnerTab) && currentOpenOwnerTab !== 'mapa_vivo' && !isUserTyping()) {
         renderOwnerModalContent(currentOpenOwnerTab);
       }
     } else if (!u.approved) {
@@ -617,7 +670,7 @@
     t.textContent = msg;
     t.classList.remove('hidden');
     clearTimeout(window._toastTimer);
-    window._toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+    window._toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
   }
 
   function requirePin(label) {
@@ -746,6 +799,7 @@
     let vehicleType = '';
     let vehicleModel = '';
     let plate = '';
+    let vehicles = [];
 
     if (role === 'driver') {
       vehicleType = document.getElementById('reg-vehicle-type').value;
@@ -770,6 +824,15 @@
         medica: fMed.name,
         rcv: fRcv.name
       };
+
+      vehicles = [{
+        id: 'veh-' + Date.now(),
+        type: vehicleType,
+        model: vehicleModel,
+        plate,
+        docs: driverDocs,
+        approved: false
+      }];
     }
 
     btn.disabled = true;
@@ -793,6 +856,8 @@
       vehicleType,
       vehicleModel,
       plate,
+      activeVehicleType: vehicleType,
+      vehicles,
       docs: driverDocs,
       tripsCount: 0,
       earnedUsd: 0,
@@ -841,6 +906,7 @@
       return;
     }
 
+    driverManualOffline = false;
     appState.activeUserId = user.id;
     saveLocalOnly();
     routeUserScreen();
@@ -848,6 +914,7 @@
 
   function logoutApp() {
     appState.activeUserId = null;
+    driverManualOffline = false;
     closeOwnerModal();
     localStorage.removeItem(STORAGE_KEY + '_activeId');
     ['screen-pending', 'screen-passenger', 'screen-driver', 'screen-owner'].forEach(id => {
@@ -917,7 +984,13 @@
       initPassengerMap();
       syncPassengerTripUI();
     } else if (user.role === 'driver') {
-      document.getElementById('drv-header-name').textContent = `${user.name} · ${user.plate}`;
+      if (!driverManualOffline && user.online !== true) {
+        user.online = true;
+        cloudPatch(`users/${user.id}`, { online: true });
+        saveLocalOnly();
+      }
+      const activeVeh = getDriverActiveVehicle(user);
+      document.getElementById('drv-header-name').textContent = `${user.name} · ${activeVeh.plate}`;
       document.getElementById('screen-driver').classList.remove('hidden');
       startDriverGpsBroadcast();
       renderDriverDashboard();
@@ -925,11 +998,184 @@
   }
 
   // =========================================================
-  // PANEL DE DUEÑO
+  // MULTI-VEHÍCULO PARA CONDUCTOR (REGISTRAR SEGUNDO VEHÍCULO Y ALTERNAR)
+  // =========================================================
+  function renderDriverVehicleSwitcher(u) {
+    const box = document.getElementById('drv-vehicle-switcher-box');
+    if (!box) return;
+
+    const allVehicles = getDriverVehiclesList(u);
+    const approvedVehicles = allVehicles.filter(v => v.approved);
+    const pendingVehicles = allVehicles.filter(v => !v.approved);
+    const activeVeh = getDriverActiveVehicle(u);
+
+    const hasMoto = approvedVehicles.some(v => v.type === 'Moto');
+    const hasCarro = approvedVehicles.some(v => v.type === 'Carro');
+    const hasBothApproved = hasMoto && hasCarro;
+    const hasBothRegistered = allVehicles.some(v => v.type === 'Moto') && allVehicles.some(v => v.type === 'Carro');
+
+    let switcherHtml = '';
+
+    // Solo muestra selector Moto / Carro si el conductor tiene AMBOS aprobados
+    if (hasBothApproved) {
+      switcherHtml = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Modo de Trabajo Activo</p>
+            <span class="text-[10px] font-bold text-gray-500">Placa: <b>${activeVeh.plate}</b></span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="switchDriverVehicleType('Moto')" class="py-2.5 rounded-2xl text-xs font-extrabold border-2 transition ${activeVeh.type === 'Moto' ? 'bg-[#00b14f] text-white border-[#00b14f] shadow' : 'bg-gray-100 text-gray-600 border-gray-200'}">
+              🏍️ Trabajar en Moto
+            </button>
+            <button type="button" onclick="switchDriverVehicleType('Carro')" class="py-2.5 rounded-2xl text-xs font-extrabold border-2 transition ${activeVeh.type === 'Carro' ? 'bg-[#00b14f] text-white border-[#00b14f] shadow' : 'bg-gray-100 text-gray-600 border-gray-200'}">
+              🚗 Trabajar en Carro
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      const missingType = activeVeh.type === 'Moto' ? 'Carro' : 'Moto';
+      switcherHtml = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[10px] font-extrabold uppercase text-gray-400">Vehículo Activo</p>
+            <p class="text-xs font-black truncate">${activeVeh.type === 'Moto' ? '🏍️' : '🚗'} ${activeVeh.model} · <b>${activeVeh.plate}</b></p>
+            ${pendingVehicles.length > 0 ? `<p class="text-[10px] font-bold text-amber-600 mt-0.5">⏳ Segundo vehículo (${pendingVehicles[0].type}) esperando aprobación del dueño</p>` : ''}
+          </div>
+          ${!hasBothRegistered ? `
+            <button type="button" onclick="openAddSecondVehicleModal('${missingType}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold active:scale-95 transition">
+              + Registrar ${missingType}
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    box.innerHTML = switcherHtml;
+  }
+
+  async function switchDriverVehicleType(targetType) {
+    const u = getActiveUser();
+    if (!u || u.role !== 'driver') return;
+    const list = getDriverVehiclesList(u).filter(v => v.approved);
+    const chosen = list.find(v => v.type === targetType);
+    if (!chosen) return;
+
+    u.activeVehicleType = chosen.type;
+    u.vehicleType = chosen.type;
+    u.vehicleModel = chosen.model;
+    u.plate = chosen.plate;
+
+    await cloudPatch(`users/${u.id}`, {
+      activeVehicleType: chosen.type,
+      vehicleType: chosen.type,
+      vehicleModel: chosen.model,
+      plate: chosen.plate
+    });
+    saveLocalOnly();
+    document.getElementById('drv-header-name').textContent = `${u.name} · ${chosen.plate}`;
+    renderDriverDashboard();
+    showToast(`Modo cambiado a ${chosen.type === 'Moto' ? '🏍️ Moto' : '🚗 Carro'} (${chosen.plate})`);
+  }
+
+  function openAddSecondVehicleModal(suggestedType) {
+    document.getElementById('modal-add-vehicle')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-add-vehicle" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+        <form onsubmit="submitSecondVehicle(event)" class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl max-h-[88vh] overflow-y-auto">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">+ Registrar Segundo Vehículo</h3>
+            <button type="button" onclick="document.getElementById('modal-add-vehicle').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-[11px] text-gray-500">Al registrar ambos vehículos (Moto y Carro) podrás alternar entre ellos cuando el dueño apruebe el nuevo registro.</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-gray-600">Tipo</label>
+              <input type="text" id="sec-veh-type" readonly value="${suggestedType}" class="mt-1 w-full px-3 py-2.5 rounded-xl bg-gray-100 border font-black text-xs" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-600">Placa *</label>
+              <input type="text" id="sec-veh-plate" required placeholder="Ej: AB123CD" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs uppercase" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-gray-600">Marca / Modelo / Color *</label>
+            <input type="text" id="sec-veh-model" required placeholder="Ej: Chevrolet Aveo Gris" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs" />
+          </div>
+          <div class="space-y-2 text-[11px] pt-1 border-t">
+            <label class="block font-bold text-gray-700">Carnet de Circulación *
+              <input type="file" id="sec-doc-carnet" required accept="image/*,.pdf" class="mt-1 block w-full text-[10px]" />
+            </label>
+            <label class="block font-bold text-gray-700">Póliza RCV Vigente *
+              <input type="file" id="sec-doc-rcv" required accept="image/*,.pdf" class="mt-1 block w-full text-[10px]" />
+            </label>
+            <label class="block font-bold text-gray-700">Licencia de Conducir *
+              <input type="file" id="sec-doc-licencia" required accept="image/*,.pdf" class="mt-1 block w-full text-[10px]" />
+            </label>
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
+            Enviar para Aprobación
+          </button>
+        </form>
+      </div>
+    `);
+  }
+
+  async function submitSecondVehicle(e) {
+    e.preventDefault();
+    const u = getActiveUser();
+    if (!u || u.role !== 'driver') return;
+
+    const type = document.getElementById('sec-veh-type').value;
+    const plate = document.getElementById('sec-veh-plate').value.trim().toUpperCase();
+    const model = document.getElementById('sec-veh-model').value.trim();
+    const fCarnet = document.getElementById('sec-doc-carnet').files[0];
+    const fRcv = document.getElementById('sec-doc-rcv').files[0];
+    const fLic = document.getElementById('sec-doc-licencia').files[0];
+
+    if (!plate || !model || !fCarnet || !fRcv || !fLic) {
+      showToast('Completa placa, modelo y documentos');
+      return;
+    }
+
+    const existingList = getDriverVehiclesList(u);
+    if (existingList.some(v => v.type === type)) {
+      showToast(`Ya tienes un vehículo tipo ${type} registrado`);
+      return;
+    }
+
+    const newVeh = {
+      id: 'veh-' + Date.now(),
+      type,
+      model,
+      plate,
+      docs: {
+        carnet: fCarnet.name,
+        rcv: fRcv.name,
+        licencia: fLic.name
+      },
+      approved: false
+    };
+
+    const updatedVehicles = [...existingList, newVeh];
+    u.vehicles = updatedVehicles;
+
+    await cloudPatch(`users/${u.id}`, { vehicles: updatedVehicles });
+    saveLocalOnly();
+    document.getElementById('modal-add-vehicle')?.remove();
+    renderDriverDashboard();
+    showToast('Segundo vehículo enviado al dueño para aprobación');
+  }
+
+  // =========================================================
+  // PANEL DE DUEÑO (INCLUYE APROBACIÓN DE SEGUNDO VEHÍCULO)
   // =========================================================
   function updateOwnerBadges() {
     const pendingPass = appState.users.filter(u => !u.approved && u.role === 'passenger').length;
-    const pendingDrv = appState.users.filter(u => !u.approved && u.role === 'driver').length;
+    const pendingDrv = appState.users.filter(u =>
+      u.role === 'driver' && (!u.approved || getDriverVehiclesList(u).some(v => !v.approved))
+    ).length;
     const pendingComm = appState.commissionReports.filter(r => r.status === 'pending').length;
 
     const bPass = document.getElementById('badge-pending-pass');
@@ -1020,10 +1266,32 @@
         : list.map(u => renderPendingCardHtml(u)).join('');
     } else if (tab === 'pending_drivers') {
       titleEl.textContent = '🚖 Conductores por Aprobación';
-      const list = appState.users.filter(u => !u.approved && u.role === 'driver');
-      bodyEl.innerHTML = list.length === 0
-        ? `<p class="py-8 text-center font-bold text-[#00b14f]">✓ No hay conductores pendientes por aprobar</p>`
-        : list.map(u => renderPendingCardHtml(u)).join('');
+      const newDrivers = appState.users.filter(u => !u.approved && u.role === 'driver');
+      const driversWithExtraVeh = appState.users.filter(u =>
+        u.approved && u.role === 'driver' && getDriverVehiclesList(u).some(v => !v.approved)
+      );
+
+      if (newDrivers.length === 0 && driversWithExtraVeh.length === 0) {
+        bodyEl.innerHTML = `<p class="py-8 text-center font-bold text-[#00b14f]">✓ No hay conductores ni vehículos pendientes por aprobar</p>`;
+      } else {
+        const htmlNew = newDrivers.map(u => renderPendingCardHtml(u)).join('');
+        const htmlExtra = driversWithExtraVeh.map(u => {
+          const pendVeh = getDriverVehiclesList(u).find(v => !v.approved);
+          return `
+            <div class="p-4 rounded-3xl bg-blue-50/70 border-2 border-blue-400 space-y-2">
+              <p class="text-[10px] font-extrabold uppercase text-blue-700">+ Segundo Vehículo Registrado</p>
+              <p class="text-xs font-black">${u.name} · 🪪 ${u.cedula || '---'}</p>
+              <p class="text-xs font-bold text-gray-800">🚘 ${pendVeh.type}: ${pendVeh.model} · Placa: <b>${pendVeh.plate}</b></p>
+              <p class="text-[10px] text-[#00b14f] font-bold">📄 Docs: Carnet, RCV y Licencia cargados</p>
+              <div class="flex gap-2 pt-1">
+                <button type="button" onclick="ownerApproveSecondVehicle('${u.id}', '${pendVeh.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white font-extrabold">✓ Aprobar ${pendVeh.type}</button>
+                <button type="button" onclick="ownerRejectSecondVehicle('${u.id}', '${pendVeh.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 font-extrabold">Rechazar</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        bodyEl.innerHTML = htmlNew + htmlExtra;
+      }
     } else if (tab === 'comision') {
       titleEl.textContent = '📊 Porcentaje de Comisión';
       bodyEl.innerHTML = `
@@ -1063,7 +1331,8 @@
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(m);
         onlineDrivers.forEach(d => {
           if (d.lat && d.lng) {
-            L.marker([d.lat, d.lng]).addTo(m).bindPopup(`<b>${d.name}</b><br>${d.vehicleType} · ${d.plate}`);
+            const v = getDriverActiveVehicle(d);
+            L.marker([d.lat, d.lng]).addTo(m).bindPopup(`<b>${d.name}</b><br>${v.type} · ${v.plate}`);
           }
         });
       }, 150);
@@ -1175,32 +1444,130 @@
         ` : ''}
         <div class="flex gap-2 pt-1">
           <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white font-extrabold">✓ Aprobar</button>
-          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 font-extrabold">Rechazar</button>
+          <button type="button" onclick="ownerEditUserForm('${u.id}')" class="px-3 py-2.5 rounded-xl bg-[#11131a] text-white font-extrabold">✏️ Editar</button>
+          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3 py-2.5 rounded-xl bg-red-500/15 text-red-600 font-extrabold">✕</button>
         </div>
       </div>
     `;
   }
 
   function renderActiveUserCardHtml(u) {
+    const vehs = getDriverVehiclesList(u);
+    const vehSummary = vehs.map(v => `${v.type === 'Moto' ? '🏍️' : '🚗'} ${v.model} (${v.plate})${v.approved ? '' : ' [Pendiente]'}`).join(' · ');
     return `
       <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
         <div class="flex items-center justify-between">
           <div>
             <p class="font-black">${u.name} ${u.blocked ? '<span class="text-red-600">(SUSPENDIDO)</span>' : ''}</p>
             <p class="text-[10px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
-            ${u.role === 'driver' ? `<p class="text-[10px] font-bold text-gray-700">🚘 ${u.vehicleModel} (${u.plate}) · Deuda: <span class="text-red-600">$${Number(u.debtUsd || 0).toFixed(2)}</span></p>` : ''}
+            ${u.role === 'driver' ? `<p class="text-[10px] font-bold text-gray-700">${vehSummary} · Deuda: <span class="text-red-600">$${Number(u.debtUsd || 0).toFixed(2)}</span></p>` : ''}
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-1.5">
+          <button type="button" onclick="ownerEditUserForm('${u.id}')" class="px-3 py-2 rounded-xl bg-[#11131a] text-white font-extrabold">
+            ✏️ Editar
+          </button>
           <button type="button" onclick="ownerToggleBlockUser('${u.id}')" class="flex-1 py-2 rounded-xl ${u.blocked ? 'bg-[#00b14f] text-white' : 'bg-amber-500/20 text-amber-700'} font-extrabold">
             ${u.blocked ? 'Reactivar' : 'Suspender'}
           </button>
-          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2 rounded-xl bg-red-500/15 text-red-600 font-extrabold">
+          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3 py-2 rounded-xl bg-red-500/15 text-red-600 font-extrabold">
             Eliminar
           </button>
         </div>
       </div>
     `;
+  }
+
+  async function ownerApproveSecondVehicle(userId, vehId) {
+    if (!requirePin('aprobar el segundo vehículo')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    const list = getDriverVehiclesList(u).map(v => v.id === vehId ? Object.assign({}, v, { approved: true }) : v);
+    u.vehicles = list;
+    await cloudPatch(`users/${userId}`, { vehicles: list });
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Segundo vehículo aprobado ✓');
+  }
+
+  async function ownerRejectSecondVehicle(userId, vehId) {
+    if (!requirePin('rechazar este vehículo')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    const list = getDriverVehiclesList(u).filter(v => v.id !== vehId);
+    u.vehicles = list;
+    await cloudPatch(`users/${userId}`, { vehicles: list });
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Vehículo rechazado');
+  }
+
+  function ownerEditUserForm(userId) {
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    currentOpenOwnerTab = 'edit_user';
+    document.getElementById('owner-submodal-title').textContent = `✏️ Editar: ${u.name}`;
+    document.getElementById('owner-submodal-body').innerHTML = `
+      <div class="space-y-2.5">
+        <div>
+          <label class="font-bold text-gray-600">Nombre y Apellido</label>
+          <input type="text" id="edit-u-name" value="${u.name || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Cédula</label>
+          <input type="text" id="edit-u-cedula" value="${u.cedula || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Teléfono</label>
+          <input type="tel" id="edit-u-phone" value="${u.phone || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Contraseña</label>
+          <input type="text" id="edit-u-pass" value="${u.pass || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        ${u.role === 'driver' ? `
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="font-bold text-gray-600">Placa Principal</label>
+              <input type="text" id="edit-u-plate" value="${u.plate || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+            </div>
+            <div>
+              <label class="font-bold text-gray-600">Vehículo Principal</label>
+              <input type="text" id="edit-u-model" value="${u.vehicleModel || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+            </div>
+          </div>
+        ` : ''}
+        <button type="button" onclick="saveEditedUser('${u.id}')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Guardar Cambios (PIN 2026)
+        </button>
+      </div>
+    `;
+  }
+
+  async function saveEditedUser(userId) {
+    if (!requirePin('guardar los cambios de este usuario')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+
+    u.name = document.getElementById('edit-u-name').value.trim();
+    u.cedula = document.getElementById('edit-u-cedula').value.trim().toUpperCase();
+    u.phone = document.getElementById('edit-u-phone').value.trim();
+    u.pass = document.getElementById('edit-u-pass').value.trim();
+
+    const patchData = { name: u.name, cedula: u.cedula, phone: u.phone, pass: u.pass };
+    if (u.role === 'driver') {
+      u.plate = document.getElementById('edit-u-plate').value.trim().toUpperCase();
+      u.vehicleModel = document.getElementById('edit-u-model').value.trim();
+      patchData.plate = u.plate;
+      patchData.vehicleModel = u.vehicleModel;
+    }
+
+    await cloudPatch(`users/${userId}`, patchData);
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Datos actualizados ✓');
   }
 
   async function saveBcvFromModal() {
@@ -1277,8 +1644,17 @@
   async function ownerApproveUser(userId) {
     if (!requirePin('autorizar el ingreso de este integrante')) return;
     const u = appState.users.find(x => x.id === userId);
-    if (u) u.approved = true;
-    await cloudPatch(`users/${userId}`, { approved: true });
+    if (!u) return;
+    u.approved = true;
+    u.online = true;
+    const vehs = getDriverVehiclesList(u).map(v => Object.assign({}, v, { approved: true }));
+    if (u.role === 'driver') u.vehicles = vehs;
+
+    await cloudPatch(`users/${userId}`, {
+      approved: true,
+      online: true,
+      ...(u.role === 'driver' ? { vehicles: vehs } : {})
+    });
     saveLocalOnly();
     updateOwnerBadges();
     if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
@@ -1362,7 +1738,7 @@
   }
 
   // =========================================================
-  // MAPA OPENSTREETMAP + PIN CENTRAL + RUTAS POR CALLES (OSRM)
+  // MAPA PASAJERO + SEGUIMIENTO DE ESTADOS EN TIEMPO REAL
   // =========================================================
   let passMap = null;
   let originCoords = [10.2016, -71.3148];
@@ -1371,6 +1747,7 @@
   let destMarker = null;
   let liveDriverMarker = null;
   let streetPolyline = null;
+  let passLastDrawnRouteKey = '';
   let currentDistKm = 0;
   let currentDurMin = 0;
   let selectedService = 'Moto Go';
@@ -1519,37 +1896,41 @@
     if (destMarker && passMap) passMap.removeLayer(destMarker);
   }
 
-  async function calculateStreetRouteAndShowVehicles(lat, lon, label) {
-    destCoords = [parseFloat(lat), parseFloat(lon)];
-    document.getElementById('input-destination').value = label;
-
-    let routePoints = [originCoords, destCoords];
-    currentDistKm = 1.0;
-    currentDurMin = 3;
+  async function drawOsrmRouteOnMap(mapObj, startCoords, endCoords, colorHex, existingLine) {
+    let routePoints = [startCoords, endCoords];
+    let distKm = 1.0;
+    let durMin = 3;
 
     try {
-      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${originCoords[1]},${originCoords[0]};${destCoords[1]},${destCoords[0]}?overview=full&geometries=geojson`);
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson`);
       const data = await res.json();
       if (data && data.routes && data.routes[0]) {
         const r = data.routes[0];
-        currentDistKm = Math.max(0.3, Number((r.distance / 1000).toFixed(1)));
-        currentDurMin = Math.max(2, Math.round(r.duration / 60));
+        distKm = Math.max(0.2, Number((r.distance / 1000).toFixed(1)));
+        durMin = Math.max(1, Math.round(r.duration / 60));
         routePoints = r.geometry.coordinates.map(c => [c[1], c[0]]);
       }
     } catch (e) {}
 
-    if (passMap) {
-      if (streetPolyline) passMap.removeLayer(streetPolyline);
-      if (destMarker) passMap.removeLayer(destMarker);
+    if (existingLine && mapObj) mapObj.removeLayer(existingLine);
+    const poly = L.polyline(routePoints, { color: colorHex, weight: 5, opacity: 0.9 }).addTo(mapObj);
+    return { poly, distKm, durMin };
+  }
 
+  async function calculateStreetRouteAndShowVehicles(lat, lon, label) {
+    destCoords = [parseFloat(lat), parseFloat(lon)];
+    document.getElementById('input-destination').value = label;
+
+    if (passMap) {
+      if (destMarker) passMap.removeLayer(destMarker);
       destMarker = L.circleMarker(destCoords, {
         radius: 9, fillColor: '#e51d2e', color: '#ffffff', weight: 3, fillOpacity: 1
       }).addTo(passMap);
 
-      streetPolyline = L.polyline(routePoints, {
-        color: '#11131a', weight: 5, opacity: 0.9
-      }).addTo(passMap);
-
+      const res = await drawOsrmRouteOnMap(passMap, originCoords, destCoords, '#11131a', streetPolyline);
+      streetPolyline = res.poly;
+      currentDistKm = res.distKm;
+      currentDurMin = res.durMin;
       passMap.fitBounds(streetPolyline.getBounds(), { padding: [55, 55] });
     }
 
@@ -1624,6 +2005,8 @@
       paymentMethod: payMethod,
       status: 'searching',
       driverId: null,
+      driverVehicleModel: null,
+      driverPlate: null,
       driverLat: null,
       driverLng: null,
       createdAt: new Date().toLocaleString()
@@ -1636,12 +2019,13 @@
     showToast('Buscando conductor cercano...');
   }
 
-  function syncPassengerTripUI() {
+  async function syncPassengerTripUI() {
     const user = getActiveUser();
     if (!user || user.role !== 'passenger') return;
 
+    const activeStatuses = ['searching', 'accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'];
     const activeTrip = appState.trips.find(t =>
-      t.passengerId === user.id && ['searching', 'accepted'].includes(t.status)
+      t.passengerId === user.id && activeStatuses.includes(t.status)
     );
 
     const stepDest = document.getElementById('pass-step-destination');
@@ -1655,7 +2039,15 @@
         passMap.removeLayer(liveDriverMarker);
         liveDriverMarker = null;
       }
+      passLastDrawnRouteKey = '';
       return;
+    }
+
+    if (lastNotifiedTripStatus[activeTrip.id] !== activeTrip.status) {
+      lastNotifiedTripStatus[activeTrip.id] = activeTrip.status;
+      if (activeTrip.status === 'heading_pickup') showToast('🚀 ¡Tu conductor va saliendo a buscarte!');
+      if (activeTrip.status === 'arrived_pickup') showToast('📍 ¡Tu conductor ha llegado al punto de recogida!');
+      if (activeTrip.status === 'in_progress') showToast('▶️ ¡Viaje iniciado rumbo a tu destino!');
     }
 
     stepDest.classList.add('hidden');
@@ -1668,18 +2060,16 @@
           <div class="w-10 h-10 mx-auto rounded-full bg-[#00b14f]/15 text-[#00b14f] flex items-center justify-center text-xl animate-pulse">📡</div>
           <h3 class="text-sm font-black">Buscando conductor disponible...</h3>
           <p class="text-xs text-gray-500">${activeTrip.service} · $${activeTrip.priceUsd.toFixed(2)} (Bs. ${activeTrip.priceBs})</p>
-          <div class="flex justify-center gap-2 pt-1">
-            <button type="button" onclick="openPassengerGoogleMaps()" class="px-4 py-2.5 rounded-2xl bg-[#4285F4] text-white text-xs font-extrabold">
-              🗺️ Ver en Google Maps
-            </button>
-            <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="px-4 py-2.5 rounded-2xl bg-red-500/15 text-red-600 text-xs font-extrabold">
-              Cancelar
-            </button>
-          </div>
+          <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="mt-1 px-6 py-2.5 rounded-2xl bg-red-600 text-white text-xs font-extrabold shadow">
+            ✕ Cancelar Solicitud
+          </button>
         </div>
       `;
-    } else if (activeTrip.status === 'accepted') {
+    } else {
       const drv = appState.users.find(u => u.id === activeTrip.driverId) || {};
+      const activeVeh = drv.id ? getDriverActiveVehicle(drv) : {};
+      const showModel = activeTrip.driverVehicleModel || activeVeh.model || drv.vehicleModel || 'Vehículo';
+      const showPlate = activeTrip.driverPlate || activeVeh.plate || drv.plate || '---';
       const dLat = drv.lat || activeTrip.driverLat;
       const dLng = drv.lng || activeTrip.driverLng;
 
@@ -1693,96 +2083,195 @@
         } else {
           liveDriverMarker.setLatLng([dLat, dLng]);
         }
+
+        const routeKey = `${activeTrip.status}-${Math.round(dLat*1000)}-${Math.round(dLng*1000)}`;
+        if (passLastDrawnRouteKey !== routeKey) {
+          passLastDrawnRouteKey = routeKey;
+          if (['accepted', 'heading_pickup'].includes(activeTrip.status) && activeTrip.originCoords) {
+            const res = await drawOsrmRouteOnMap(passMap, [dLat, dLng], activeTrip.originCoords, '#00b14f', streetPolyline);
+            streetPolyline = res.poly;
+          } else if (activeTrip.status === 'in_progress' && activeTrip.destCoords) {
+            const res = await drawOsrmRouteOnMap(passMap, [dLat, dLng], activeTrip.destCoords, '#11131a', streetPolyline);
+            streetPolyline = res.poly;
+          }
+        }
       }
+
+      const statusLabels = {
+        accepted: { badge: '✓ Conductor asignado · Preparándose', color: 'bg-blue-500/15 text-blue-700' },
+        heading_pickup: { badge: '🚀 Voy saliendo · Conductor en camino a buscarte', color: 'bg-[#00b14f]/15 text-[#00b14f]' },
+        arrived_pickup: { badge: '📍 ¡El conductor ha llegado por ti!', color: 'bg-amber-500/20 text-amber-800 animate-pulse' },
+        in_progress: { badge: '▶️ En viaje hacia tu destino final', color: 'bg-[#11131a] text-white' }
+      };
+      const stInfo = statusLabels[activeTrip.status] || statusLabels.accepted;
 
       const cleanPhone = (drv.phone || '').replace(/[^0-9]/g, '');
       const waPhone = cleanPhone.startsWith('0') ? '58' + cleanPhone.slice(1) : cleanPhone;
+      const canCancel = activeTrip.status !== 'in_progress';
 
       content.innerHTML = `
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold uppercase">● Conductor en camino en vivo</span>
-            <span class="text-sm font-black">$${activeTrip.priceUsd.toFixed(2)}</span>
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="px-2.5 py-1 rounded-full ${stInfo.color} text-[10px] font-extrabold uppercase">${stInfo.badge}</span>
+            <span class="text-sm font-black shrink-0">$${activeTrip.priceUsd.toFixed(2)}</span>
           </div>
-          <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between gap-2">
+          <div class="p-3 rounded-2xl bg-gray-100 flex items-center justify-between gap-2">
             <div>
               <p class="text-sm font-black">🧑🏻‍✈️ ${drv.name || 'Conductor Asignado'}</p>
-              <p class="text-xs text-gray-600">🚘 ${drv.vehicleModel || 'Vehículo'} · Placa: <b>${drv.plate || '---'}</b></p>
+              <p class="text-xs text-gray-600">🚘 ${showModel} · Placa: <b>${showPlate}</b></p>
               <p class="text-xs text-gray-600">📞 ${drv.phone || ''}</p>
             </div>
             <div class="flex flex-col gap-1.5">
-              <a href="tel:${drv.phone || ''}" class="px-3.5 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold text-center">📞 Llamar</a>
-              <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold text-center">💬 WhatsApp</a>
+              <a href="tel:${drv.phone || ''}" class="px-3.5 py-1.5 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold text-center">📞 Llamar</a>
+              <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-3.5 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold text-center">💬 WhatsApp</a>
             </div>
           </div>
-          <button type="button" onclick="openPassengerGoogleMaps()" class="w-full py-3 rounded-2xl bg-[#4285F4] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow">
-            🗺️ Seguir ruta en Google Maps (2do plano)
-          </button>
+          ${canCancel ? `
+            <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="w-full py-2.5 rounded-2xl bg-red-500/15 text-red-600 text-xs font-extrabold">
+              ✕ Cancelar Viaje
+            </button>
+          ` : ''}
         </div>
       `;
     }
   }
 
   async function cancelActiveTrip(tripId) {
+    if (!confirm('¿Seguro que deseas cancelar este viaje?')) return;
     const trip = appState.trips.find(t => t.id === tripId);
     if (trip) trip.status = 'cancelled';
     await cloudPatch(`trips/${tripId}`, { status: 'cancelled' });
     saveLocalOnly();
     syncPassengerTripUI();
     document.getElementById('pass-step-destination').classList.remove('hidden');
-    showToast('Solicitud cancelada');
+    showToast('Viaje cancelado');
   }
 
   // =========================================================
-  // CONDUCTOR: GPS EN VIVO, GOOGLE MAPS, WAZE Y COMISIÓN
+  // CONDUCTOR: MAPA EN VIVO + FLUJO PASO A PASO + FILTRO POR VEHÍCULO
   // =========================================================
+  let drvMap = null;
+  let drvSelfMarker = null;
+  let drvTargetMarker = null;
+  let drvRouteLine = null;
+  let drvLastDrawnRouteKey = '';
   let lastGpsPush = 0;
+
   function startDriverGpsBroadcast() {
     if (!navigator.geolocation || window._drvGpsActive) return;
     window._drvGpsActive = true;
     navigator.geolocation.watchPosition(
       pos => {
-        const now = Date.now();
-        if (now - lastGpsPush < 3500) return;
-        lastGpsPush = now;
-
         const u = getActiveUser();
         if (!u || u.role !== 'driver') return;
         u.lat = pos.coords.latitude;
         u.lng = pos.coords.longitude;
 
+        const now = Date.now();
+        if (now - lastGpsPush < 3000) return;
+        lastGpsPush = now;
+
         cloudPatch(`users/${u.id}`, { lat: u.lat, lng: u.lng });
         appState.trips.forEach(t => {
-          if (t.driverId === u.id && t.status === 'accepted') {
+          if (t.driverId === u.id && ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)) {
             t.driverLat = u.lat;
             t.driverLng = u.lng;
             cloudPatch(`trips/${t.id}`, { driverLat: u.lat, driverLng: u.lng });
           }
         });
+        renderDriverDashboard();
       },
       () => {},
-      { enableHighAccuracy: true, maximumAge: 3000 }
+      { enableHighAccuracy: true, maximumAge: 2500 }
     );
   }
 
   async function toggleDriverOnline() {
     const u = getActiveUser();
     if (!u || u.role !== 'driver') return;
-    u.online = !u.online;
-    await cloudPatch(`users/${u.id}`, { online: u.online });
+    const nextState = !(u.online === true);
+    u.online = nextState;
+    driverManualOffline = !nextState;
+    await cloudPatch(`users/${u.id}`, { online: nextState });
     saveLocalOnly();
     renderDriverDashboard();
+    showToast(nextState ? '● Ahora estás En Línea' : '○ Te has desconectado');
+  }
+
+  async function updateDriverLiveMap(u, activeTrip) {
+    const mapContainer = document.getElementById('map-driver');
+    if (!mapContainer) return;
+
+    const dLat = u.lat || activeTrip.driverLat || (activeTrip.originCoords ? activeTrip.originCoords[0] : 10.2016);
+    const dLng = u.lng || activeTrip.driverLng || (activeTrip.originCoords ? activeTrip.originCoords[1] : -71.3148);
+
+    if (!drvMap) {
+      drvMap = L.map('map-driver', { zoomControl: false }).setView([dLat, dLng], 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(drvMap);
+    }
+    setTimeout(() => drvMap.invalidateSize(), 150);
+
+    if (!drvSelfMarker) {
+      const icon = L.divIcon({
+        html: `<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">🚖</div>`,
+        className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+      });
+      drvSelfMarker = L.marker([dLat, dLng], { icon }).addTo(drvMap);
+    } else {
+      drvSelfMarker.setLatLng([dLat, dLng]);
+    }
+
+    let routeStart = [dLat, dLng];
+    let routeEnd = activeTrip.originCoords;
+    let routeColor = '#00b14f';
+    let badgePrefix = '🟢 Ruta hacia punto de recogida';
+
+    if (activeTrip.status === 'in_progress') {
+      routeStart = [dLat, dLng];
+      routeEnd = activeTrip.destCoords;
+      routeColor = '#11131a';
+      badgePrefix = '🔴 Ruta hacia destino final';
+    }
+
+    if (routeEnd && routeEnd.length === 2) {
+      if (drvTargetMarker) drvMap.removeLayer(drvTargetMarker);
+      drvTargetMarker = L.circleMarker(routeEnd, {
+        radius: 9,
+        fillColor: activeTrip.status === 'in_progress' ? '#e51d2e' : '#00b14f',
+        color: '#ffffff',
+        weight: 3,
+        fillOpacity: 1
+      }).addTo(drvMap);
+
+      const routeKey = `${activeTrip.id}-${activeTrip.status}-${Math.round(dLat*1000)}-${Math.round(dLng*1000)}`;
+      if (drvLastDrawnRouteKey !== routeKey) {
+        drvLastDrawnRouteKey = routeKey;
+        const res = await drawOsrmRouteOnMap(drvMap, routeStart, routeEnd, routeColor, drvRouteLine);
+        drvRouteLine = res.poly;
+        const badgeEl = document.getElementById('drv-map-route-badge');
+        if (badgeEl) badgeEl.textContent = `${badgePrefix} · ${res.distKm} km (~${res.durMin} min)`;
+        drvMap.fitBounds(drvRouteLine.getBounds(), { padding: [35, 35] });
+      }
+    }
   }
 
   function renderDriverDashboard() {
     const u = getActiveUser();
     if (!u || u.role !== 'driver') return;
 
+    renderDriverVehicleSwitcher(u);
+    const activeVeh = getDriverActiveVehicle(u);
+    document.getElementById('drv-header-name').textContent = `${u.name} · ${activeVeh.plate}`;
+
+    const isOnline = u.online !== false && !driverManualOffline;
     const toggleBtn = document.getElementById('drv-online-toggle');
-    toggleBtn.textContent = u.online ? '● En Línea' : '○ Desconectado';
-    toggleBtn.className = u.online
-      ? 'px-3 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold'
-      : 'px-3 py-1.5 rounded-full bg-gray-600 text-white text-[11px] font-extrabold';
+    toggleBtn.textContent = isOnline ? '● En Línea' : '○ Desconectado';
+    toggleBtn.className = isOnline
+      ? 'px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold'
+      : 'px-2.5 py-1.5 rounded-full bg-gray-600 text-white text-[11px] font-extrabold';
 
     document.getElementById('drv-stat-trips').textContent = u.tripsCount || 0;
     document.getElementById('drv-stat-earned').textContent = `$${Number(u.earnedUsd || 0).toFixed(2)}`;
@@ -1790,57 +2279,102 @@
     const pctEl = document.getElementById('drv-comm-pct-label');
     if (pctEl) pctEl.textContent = appState.commissionPct || 10;
 
-    const activeTrip = appState.trips.find(t => t.driverId === u.id && t.status === 'accepted');
+    const activeStatuses = ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'];
+    const activeTrip = appState.trips.find(t => t.driverId === u.id && activeStatuses.includes(t.status));
+    const activeWrapper = document.getElementById('drv-active-trip-wrapper');
     const activeBox = document.getElementById('drv-active-trip-box');
     const reqList = document.getElementById('drv-requests-list');
 
     if (activeTrip) {
-      const gmapsDestUrl = `https://www.google.com/maps/dir/?api=1&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
-      const gmapsPickUrl = activeTrip.originCoords
-        ? `https://www.google.com/maps/dir/?api=1&destination=${activeTrip.originCoords[0]},${activeTrip.originCoords[1]}&travelmode=driving`
-        : gmapsDestUrl;
-      const wazeUrl = `https://waze.com/ul?ll=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&navigate=yes`;
+      activeWrapper.classList.remove('hidden');
+      updateDriverLiveMap(u, activeTrip);
 
-      activeBox.classList.remove('hidden');
+      const cleanPhone = (activeTrip.passengerPhone || '').replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '58' + cleanPhone.slice(1) : cleanPhone;
+
+      let primaryActionBtn = '';
+      let statusBanner = '';
+
+      if (activeTrip.status === 'accepted') {
+        statusBanner = 'Carrera Aceptada · Toca "Voy Saliendo" para iniciar rumbo al pasajero';
+        primaryActionBtn = `
+          <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'heading_pickup')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
+            🚀 Voy Saliendo (Ir a buscar)
+          </button>
+        `;
+      } else if (activeTrip.status === 'heading_pickup') {
+        statusBanner = 'En camino al punto de recogida del pasajero';
+        primaryActionBtn = `
+          <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'arrived_pickup')" class="w-full py-3.5 rounded-2xl bg-amber-500 text-[#11131a] text-xs font-black shadow-lg active:scale-95 transition">
+            📍 He Llegado (Avisar al pasajero)
+          </button>
+        `;
+      } else if (activeTrip.status === 'arrived_pickup') {
+        statusBanner = 'Esperando que el pasajero aborde el vehículo';
+        primaryActionBtn = `
+          <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'in_progress')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
+            ▶️ Comenzar Viaje (Hacia destino final)
+          </button>
+        `;
+      } else if (activeTrip.status === 'in_progress') {
+        statusBanner = 'Viaje en curso hacia el destino final';
+        primaryActionBtn = `
+          <button type="button" onclick="completeTripDriver('${activeTrip.id}')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
+            ✓ Finalizar Viaje ($${activeTrip.priceUsd.toFixed(2)})
+          </button>
+        `;
+      }
+
       activeBox.innerHTML = `
         <div class="bg-[#11131a] text-white rounded-3xl p-4 space-y-3 shadow-xl">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-extrabold uppercase text-[#00b14f]">Carrera en Curso</span>
-            <span class="text-sm font-black">$${activeTrip.priceUsd.toFixed(2)} (${activeTrip.paymentMethod})</span>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[10px] font-extrabold uppercase text-[#00b14f]">${statusBanner}</span>
+            <span class="text-sm font-black shrink-0">$${activeTrip.priceUsd.toFixed(2)}</span>
           </div>
-          <div class="text-xs space-y-1">
-            <p><b>Pasajero:</b> ${activeTrip.passengerName} (${activeTrip.passengerPhone})</p>
-            <p><b>Recoger en:</b> ${activeTrip.originText}</p>
-            <p><b>Llevar a:</b> ${activeTrip.destinationText}</p>
+
+          <div class="p-3 rounded-2xl bg-white/10 text-xs space-y-1">
+            <div class="flex items-center justify-between">
+              <p><b>Pasajero:</b> ${activeTrip.passengerName}</p>
+              <div class="flex gap-1.5">
+                <a href="tel:${activeTrip.passengerPhone}" class="px-2.5 py-1 rounded-lg bg-white/15 text-[10px] font-bold">📞 Llamar</a>
+                <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-[#00b14f] text-[10px] font-bold">💬 WA</a>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-300">🟢 <b>Recoger:</b> ${activeTrip.originText}</p>
+            <p class="text-[11px] text-gray-300">🔴 <b>Destino:</b> ${activeTrip.destinationText}</p>
+            <p class="text-[11px] text-amber-400 font-bold">💵 Pago: ${activeTrip.paymentMethod}</p>
           </div>
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button type="button" onclick="openExternalGoogleMaps('${gmapsPickUrl}')" class="py-2.5 rounded-2xl bg-white/15 text-white text-[11px] font-extrabold text-center">
-              📍 Maps: Ir a Buscar
+
+          ${primaryActionBtn}
+
+          ${activeTrip.status !== 'in_progress' ? `
+            <button type="button" onclick="driverCancelTrip('${activeTrip.id}')" class="w-full py-2.5 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-extrabold">
+              ✕ Cancelar Carrera
             </button>
-            <button type="button" onclick="openExternalGoogleMaps('${gmapsDestUrl}')" class="py-2.5 rounded-2xl bg-[#4285F4] text-white text-[11px] font-extrabold text-center">
-              🗺️ Maps: Ir a Destino
-            </button>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" onclick="openExternalGoogleMaps('${wazeUrl}')" class="py-3 rounded-2xl bg-[#33ccff] text-[#11131a] text-xs font-black text-center">
-              🧭 Waze
-            </button>
-            <button type="button" onclick="completeTripDriver('${activeTrip.id}')" class="py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
-              ✓ Finalizar Viaje
-            </button>
-          </div>
+          ` : ''}
         </div>
       `;
     } else {
-      activeBox.classList.add('hidden');
+      activeWrapper.classList.add('hidden');
+      drvLastDrawnRouteKey = '';
     }
 
-    const pendingReqs = u.online ? appState.trips.filter(t => t.status === 'searching') : [];
-    if (pendingReqs.length === 0) {
-      reqList.innerHTML = `<div class="p-6 text-center bg-white rounded-3xl border border-gray-200 text-xs text-gray-400 font-bold">Sin solicitudes nuevas en este momento</div>`;
+    // Filtrar solicitudes según el vehículo activo (Moto -> Moto Go / Envío Express | Carro -> Carro Go / Envío Express)
+    const allowedServices = activeVeh.type === 'Carro'
+      ? ['Carro Go', 'Envío Express']
+      : ['Moto Go', 'Envío Express'];
+
+    const pendingReqs = isOnline
+      ? appState.trips.filter(t => t.status === 'searching' && allowedServices.includes(t.service))
+      : [];
+
+    if (!isOnline) {
+      reqList.innerHTML = `<div class="p-6 text-center bg-amber-50 rounded-3xl border border-amber-300 text-xs text-amber-800 font-extrabold">Estás Desconectado. Toca el botón gris arriba para ponerte ● En Línea y recibir carreras.</div>`;
+    } else if (pendingReqs.length === 0) {
+      reqList.innerHTML = `<div class="p-6 text-center bg-white rounded-3xl border border-gray-200 text-xs text-gray-400 font-bold">Sin solicitudes nuevas para ${activeVeh.type} en este momento</div>`;
     } else {
       reqList.innerHTML = pendingReqs.map(t => `
-        <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 space-y-2.5">
+        <div class="bg-white rounded-3xl p-4 shadow-sm border-2 border-[#00b14f] space-y-2.5">
           <div class="flex justify-between items-center">
             <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/10 text-[#00b14f] text-[10px] font-extrabold">${t.service} · ${t.distanceKm} km</span>
             <span class="text-sm font-black">$${t.priceUsd.toFixed(2)} <span class="text-[10px] text-gray-400">(Bs. ${t.priceBs})</span></span>
@@ -1849,7 +2383,7 @@
           <p class="text-[11px] text-gray-500">🟢 ${t.originText}</p>
           <p class="text-[11px] text-gray-500">🔴 ${t.destinationText}</p>
           <button type="button" onclick="acceptTripDriver('${t.id}')" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
-            Aceptar Carrera
+            Aceptar Carrera (${activeVeh.type})
           </button>
         </div>
       `).join('');
@@ -1860,19 +2394,51 @@
     const u = getActiveUser();
     const trip = appState.trips.find(t => t.id === tripId && t.status === 'searching');
     if (!u || !trip) return;
+    const activeVeh = getDriverActiveVehicle(u);
+
     trip.status = 'accepted';
     trip.driverId = u.id;
+    trip.driverVehicleModel = activeVeh.model;
+    trip.driverPlate = activeVeh.plate;
     trip.driverLat = u.lat;
     trip.driverLng = u.lng;
+    drvLastDrawnRouteKey = '';
+
     await cloudPatch(`trips/${trip.id}`, {
       status: 'accepted',
       driverId: u.id,
+      driverVehicleModel: activeVeh.model,
+      driverPlate: activeVeh.plate,
       driverLat: u.lat,
       driverLng: u.lng
     });
     saveLocalOnly();
     renderDriverDashboard();
-    showToast('Carrera aceptada. GPS en vivo activado');
+    showToast('Carrera aceptada');
+  }
+
+  async function changeDriverTripStatus(tripId, newStatus) {
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (!trip) return;
+    trip.status = newStatus;
+    drvLastDrawnRouteKey = '';
+    await cloudPatch(`trips/${tripId}`, { status: newStatus });
+    saveLocalOnly();
+    renderDriverDashboard();
+
+    if (newStatus === 'heading_pickup') showToast('🚀 Voy saliendo · Ruta de recogida activa');
+    if (newStatus === 'arrived_pickup') showToast('📍 Aviso enviado: Has llegado al punto');
+    if (newStatus === 'in_progress') showToast('▶️ Viaje comenzado hacia el destino final');
+  }
+
+  async function driverCancelTrip(tripId) {
+    if (!confirm('¿Seguro que deseas cancelar esta carrera?')) return;
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (trip) trip.status = 'cancelled';
+    await cloudPatch(`trips/${tripId}`, { status: 'cancelled' });
+    saveLocalOnly();
+    renderDriverDashboard();
+    showToast('Carrera cancelada');
   }
 
   async function completeTripDriver(tripId) {
@@ -1894,7 +2460,7 @@
 
     saveLocalOnly();
     renderDriverDashboard();
-    showToast('Viaje finalizado');
+    showToast('✓ Viaje finalizado con éxito');
   }
 
   function openDriverCommissionModal() {
