@@ -19,18 +19,17 @@
 <body class="bg-gray-100 text-[#11131a] select-none">
 
 <!-- =========================================================
-     PANTALLA 1: ACCESO / REGISTRO POR ROLES (DUEÑO CALETA: 5 TOQUES AL LOGO)
+     PANTALLA 1: ACCESO / REGISTRO (DUEÑO CALETA: 5 TOQUES AL LOGO)
      ========================================================= -->
 <div id="screen-auth" class="fixed inset-0 z-50 bg-[#11131a] text-white flex flex-col justify-between p-6 overflow-y-auto">
   <div class="pt-4 text-center space-y-2">
     <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-xs font-extrabold tracking-wide">
       <span class="w-2.5 h-2.5 rounded-full bg-[#00b14f]"></span> TAXIGO VENEZUELA
     </div>
-    <!-- TOQUE SECRETO: 5 toques rápidos aquí abren el acceso de Dueño -->
     <h1 id="secret-owner-trigger" onclick="handleSecretOwnerTap()" class="text-3xl font-black tracking-tight cursor-pointer">
       Taxi<span class="text-[#00b14f]">Go</span>
     </h1>
-    <p class="text-xs text-gray-400">Traslados rápidos y envíos seguros en Ciudad Ojeda</p>
+    <p id="auth-city-subtitle" class="text-xs text-gray-400">Traslados rápidos y envíos seguros en Ciudad Ojeda</p>
   </div>
 
   <div class="my-auto py-6 max-w-md w-full mx-auto space-y-4">
@@ -109,6 +108,11 @@
         </div>
       </div>
 
+      <label class="flex items-center gap-2 text-[11px] text-gray-300 pt-1">
+        <input type="checkbox" required checked class="accent-[#00b14f]" />
+        <span>Acepto los <button type="button" onclick="openTermsPublicModal()" class="underline text-[#00b14f] font-bold">Términos y Condiciones</button></span>
+      </label>
+
       <button type="submit" id="btn-submit-register" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-sm font-extrabold shadow-lg active:scale-95 transition">
         Registrarme
       </button>
@@ -116,12 +120,14 @@
   </div>
 
   <div class="pb-2 text-center">
-    <p class="text-[10px] text-gray-500 font-semibold">Ciudad Ojeda · Zulia · Venezuela</p>
+    <button type="button" onclick="openTermsPublicModal()" class="text-[10px] text-gray-400 font-semibold underline">
+      Ciudad Ojeda · Zulia · Términos y Condiciones
+    </button>
   </div>
 </div>
 
 <!-- =========================================================
-     PANTALLA DE ESPERA DE APROBACIÓN (NUEVOS INTEGRANTES)
+     PANTALLA DE ESPERA DE APROBACIÓN
      ========================================================= -->
 <div id="screen-pending" class="hidden fixed inset-0 z-50 bg-[#11131a] text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
   <div class="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl">⏳</div>
@@ -140,7 +146,7 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 2: PASAJERO (MAPA EN VIVO + PIN CENTRAL + VIAJE)
+     PANTALLA 2: PASAJERO
      ========================================================= -->
 <div id="screen-passenger" class="hidden fixed inset-0 flex flex-col bg-gray-100">
   <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
@@ -155,9 +161,15 @@
     </button>
   </div>
 
-  <button type="button" onclick="syncPassengerGps(true)" class="absolute right-3 top-16 z-20 w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación GPS">
-    🎯
-  </button>
+  <!-- Botones Flotantes Derecha: GPS y Abrir Google Maps -->
+  <div class="absolute right-3 top-16 z-20 flex flex-col gap-2">
+    <button type="button" onclick="syncPassengerGps(true)" class="w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación GPS">
+      🎯
+    </button>
+    <button type="button" onclick="openPassengerGoogleMaps()" class="w-11 h-11 rounded-full bg-[#4285F4] text-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Abrir Google Maps en segundo plano">
+      🗺️
+    </button>
+  </div>
 
   <div id="map-passenger" class="w-full h-full"></div>
 
@@ -191,7 +203,6 @@
   <div id="pass-step-destination" class="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-3xl p-5 shadow-2xl border-t border-gray-200 space-y-3">
     <div class="flex items-center justify-between">
       <h2 class="text-base font-black">¿A dónde vamos hoy?</h2>
-      <span id="pass-route-badge" class="hidden text-[11px] font-extrabold text-[#00b14f] bg-[#00b14f]/10 px-2.5 py-1 rounded-full"></span>
     </div>
 
     <div class="space-y-2">
@@ -210,9 +221,14 @@
       </div>
     </div>
 
-    <button type="button" onclick="openPinPicker()" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md active:scale-95 transition">
-      🗺️ Buscar en el mapa (Mover Pin)
-    </button>
+    <div class="grid grid-cols-3 gap-2">
+      <button type="button" onclick="openPinPicker()" class="col-span-2 py-3.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md active:scale-95 transition">
+        📍 Pin en el mapa
+      </button>
+      <button type="button" onclick="openPassengerGoogleMaps()" class="py-3.5 rounded-2xl bg-[#4285F4] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition">
+        🗺️ Maps
+      </button>
+    </div>
   </div>
 
   <!-- Panel Inferior Pasajero: Paso 2 Selección de Vehículo -->
@@ -222,7 +238,10 @@
         <h3 class="text-sm font-black">Elige tu servicio</h3>
         <p id="trip-summary-metrics" class="text-[11px] font-bold text-gray-500">0.0 km · 0 min</p>
       </div>
-      <button type="button" onclick="backToDestinationStep()" class="px-3 py-1.5 rounded-xl bg-gray-100 text-xs font-extrabold">Cambiar</button>
+      <div class="flex items-center gap-1.5">
+        <button type="button" onclick="openPassengerGoogleMaps()" class="px-3 py-1.5 rounded-xl bg-[#4285F4]/15 text-[#4285F4] text-xs font-extrabold">🗺️ Maps</button>
+        <button type="button" onclick="backToDestinationStep()" class="px-3 py-1.5 rounded-xl bg-gray-100 text-xs font-extrabold">Cambiar</button>
+      </div>
     </div>
 
     <div id="vehicle-options-list" class="space-y-2 max-h-52 overflow-y-auto no-scrollbar"></div>
@@ -253,11 +272,14 @@
       <p class="text-[10px] uppercase font-extrabold text-[#00b14f]">Panel Conductor</p>
       <h2 id="drv-header-name" class="text-sm font-black">Conductor</h2>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5">
+      <button type="button" onclick="openDriverGoogleMapsGeneral()" class="px-2.5 py-1.5 rounded-full bg-[#4285F4] text-white text-[11px] font-extrabold">
+        🗺️ Maps
+      </button>
       <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="px-3 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
         ● En Línea
       </button>
-      <button type="button" onclick="logoutApp()" class="px-3 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
+      <button type="button" onclick="logoutApp()" class="px-2.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
         🚪 Salir
       </button>
     </div>
@@ -274,13 +296,13 @@
         <p id="drv-stat-earned" class="text-base font-black text-[#00b14f]">$0.00</p>
       </div>
       <div>
-        <p class="text-[10px] font-bold text-gray-400">Comisión 10%</p>
+        <p class="text-[10px] font-bold text-gray-400">Comisión <span id="drv-comm-pct-label">10</span>%</p>
         <p id="drv-stat-debt" class="text-base font-black text-red-500">$0.00</p>
       </div>
     </div>
 
     <button type="button" onclick="openDriverCommissionModal()" class="w-full py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow">
-      📲 Pagar Comisión 10% al Dueño
+      📲 Pagar Comisión al Dueño
     </button>
 
     <div id="drv-active-trip-box" class="hidden"></div>
@@ -293,52 +315,96 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 4: DUEÑO
+     PANTALLA 4: PANEL DE DUEÑO
      ========================================================= -->
-<div id="screen-owner" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
-  <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20">
+<div id="screen-owner" class="hidden fixed inset-0 flex flex-col justify-between bg-white overflow-y-auto">
+  <div class="bg-[#11131a] text-white px-4 py-3.5 flex items-center justify-between sticky top-0 z-20 shadow">
     <div>
-      <p class="text-[10px] uppercase font-extrabold text-[#00b14f]">Administración Central</p>
+      <p class="text-[9px] uppercase font-extrabold text-[#00b14f] tracking-wider">Administración Central</p>
       <h2 class="text-sm font-black">Panel de Dueño</h2>
     </div>
-    <div class="flex items-center gap-2">
-      <button type="button" onclick="forceCloudPull()" class="px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
+    <div class="flex items-center gap-1.5">
+      <button type="button" onclick="forceCloudPull()" class="px-3 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold active:scale-95 transition">
         🔄 Actualizar
       </button>
-      <button type="button" onclick="openOwnerPagoMovilModal()" class="px-2.5 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold">
+      <button type="button" onclick="openOwnerPagoMovilModal()" class="px-3 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold active:scale-95 transition">
         📲 Pago Móvil
       </button>
-      <button type="button" onclick="logoutApp()" class="px-2.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
+      <button type="button" onclick="logoutApp()" class="px-3 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold active:scale-95 transition">
         🚪 Salir
       </button>
     </div>
   </div>
 
-  <div class="p-4 space-y-4 max-w-lg w-full mx-auto">
-    <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 flex items-center justify-between">
-      <div>
-        <p class="text-[11px] font-extrabold text-gray-400">Tasa de Cambio (Bs / $)</p>
-        <p id="owner-bcv-display" class="text-lg font-black">Bs. 45.00</p>
-      </div>
-      <button type="button" onclick="updateBcvRateOwner()" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold">
-        Editar Tasa
+  <!-- Centro: Botonera Tipo Píldora -->
+  <div class="my-auto p-5 max-w-md w-full mx-auto space-y-3.5">
+    <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('ganancia')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
+        Mi ganancia <span id="badge-comm-pending" class="hidden px-1.5 py-0.5 rounded-full bg-[#00b14f] text-[10px]">0</span>
+      </button>
+      <button type="button" onclick="openOwnerModal('bcv')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Tasa BCV
       </button>
     </div>
 
-    <div class="space-y-2">
-      <h3 class="text-xs font-extrabold uppercase text-amber-600">⏳ Nuevos Integrantes por Autorizar</h3>
-      <div id="owner-pending-users-list" class="space-y-2.5"></div>
+    <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('pending_users')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
+        Usuarios por aprobación <span id="badge-pending-pass" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-[#11131a] text-[10px] font-black">0</span>
+      </button>
+      <button type="button" onclick="openOwnerModal('pending_drivers')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
+        Conductores por aprobación <span id="badge-pending-drv" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-[#11131a] text-[10px] font-black">0</span>
+      </button>
+      <button type="button" onclick="openOwnerModal('comision')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        % de comisión
+      </button>
     </div>
 
-    <div class="space-y-2">
-      <h3 class="text-xs font-extrabold uppercase text-[#00b14f]">💵 Pagos de Comisión Reportados</h3>
-      <div id="owner-commissions-list" class="space-y-2.5"></div>
+    <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('pasajeros')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Pasajeros
+      </button>
+      <button type="button" onclick="openOwnerModal('conductores')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Conductores
+      </button>
+      <button type="button" onclick="openOwnerModal('mapa_vivo')" class="px-4 py-2.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        📍 Mapa en vivo
+      </button>
     </div>
 
-    <div class="space-y-2">
-      <h3 class="text-xs font-extrabold uppercase text-gray-500">👥 Integrantes Activos</h3>
-      <div id="owner-approved-users-list" class="space-y-2"></div>
+    <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('datos_app')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Datos de la app
+      </button>
+      <button type="button" onclick="openOwnerModal('tarifas')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Tarifas
+      </button>
+      <button type="button" onclick="openOwnerModal('realizados')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Servicios realizados
+      </button>
     </div>
+
+    <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('cancelados')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Servicios cancelados
+      </button>
+    </div>
+  </div>
+
+  <div class="pb-5 pt-2 text-center">
+    <button type="button" onclick="openOwnerModal('terminos')" class="px-5 py-2 rounded-full bg-[#11131a] text-white text-[11px] font-extrabold shadow active:scale-95 transition">
+      Términos y condiciones
+    </button>
+  </div>
+</div>
+
+<!-- Modal Dinámico para cada Botón del Panel de Dueño -->
+<div id="owner-submodal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="px-5 py-4 bg-[#11131a] text-white flex items-center justify-between">
+      <h3 id="owner-submodal-title" class="text-sm font-black">Sección</h3>
+      <button type="button" onclick="closeOwnerModal()" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
+    </div>
+    <div id="owner-submodal-body" class="p-5 overflow-y-auto space-y-3 text-xs"></div>
   </div>
 </div>
 
@@ -347,14 +413,30 @@
 
 <script>
   // =========================================================
-  // MOTOR DE SINCRONIZACIÓN DIRECTA REST + TIEMPO REAL (TAXIGO-OJEDA)
+  // MOTOR DE SINCRONIZACIÓN DIRECTA REST (TAXIGO-OJEDA)
   // =========================================================
   const DB_BASE_URL = "https://taxigo-ojeda-default-rtdb.firebaseio.com";
   const OWNER_PIN = '2026';
-  const STORAGE_KEY = 'taxigo_ojeda_v3';
+  const STORAGE_KEY = 'taxigo_ojeda_v5';
 
   let appState = {
     bcvRate: 45.00,
+    commissionPct: 10,
+    tariffs: {
+      motoMin: 1.10,
+      motoKm: 0.75,
+      carroMin: 1.80,
+      carroKm: 1.15,
+      envioMin: 1.10,
+      envioKm: 0.75
+    },
+    appMeta: {
+      name: 'TaxiGo',
+      city: 'Ciudad Ojeda, Zulia, Venezuela',
+      supportWhatsapp: '0412-0000000',
+      emergencyPhone: '911',
+      terms: '1. Todos los conductores y pasajeros deben validar su identidad real.\n2. Las tarifas se calculan automáticamente por distancia recorrida en GPS.\n3. El conductor se compromete a liquidar la comisión acordada a la administración de TaxiGo.\n4. Queda prohibido el transporte de sustancias o artículos ilícitos.'
+    },
     ownerPayment: {
       bank: 'Banco de Venezuela (0102)',
       phone: '0412-0000000',
@@ -367,7 +449,49 @@
     activeUserId: null
   };
 
-  // Funciones REST directas (funcionan en cualquier red móvil y dentro de Telegram sin bloquearse)
+  let currentOpenOwnerTab = null;
+
+  // Abre Google Maps en ventana externa / app nativa dejando TaxiGo en segundo plano
+  function openExternalGoogleMaps(url) {
+    if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
+      window.Telegram.WebApp.openLink(url);
+    } else {
+      window.open(url, '_blank', 'noopener');
+    }
+    showToast('Abriendo Google Maps (TaxiGo sigue activo)');
+  }
+
+  function openPassengerGoogleMaps() {
+    const u = getActiveUser();
+    const activeTrip = u ? appState.trips.find(t => t.passengerId === u.id && ['searching', 'accepted'].includes(t.status)) : null;
+
+    if (activeTrip && activeTrip.originCoords && activeTrip.destCoords) {
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${activeTrip.originCoords[0]},${activeTrip.originCoords[1]}&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
+      openExternalGoogleMaps(url);
+    } else if (originCoords && destCoords) {
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${originCoords[0]},${originCoords[1]}&destination=${destCoords[0]},${destCoords[1]}&travelmode=driving`;
+      openExternalGoogleMaps(url);
+    } else if (originCoords) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${originCoords[0]},${originCoords[1]}`;
+      openExternalGoogleMaps(url);
+    } else {
+      openExternalGoogleMaps('https://www.google.com/maps');
+    }
+  }
+
+  function openDriverGoogleMapsGeneral() {
+    const u = getActiveUser();
+    const activeTrip = u ? appState.trips.find(t => t.driverId === u.id && t.status === 'accepted') : null;
+    if (activeTrip && activeTrip.destCoords) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
+      openExternalGoogleMaps(url);
+    } else if (u && u.lat && u.lng) {
+      openExternalGoogleMaps(`https://www.google.com/maps/search/?api=1&query=${u.lat},${u.lng}`);
+    } else {
+      openExternalGoogleMaps('https://www.google.com/maps/search/?api=1&query=Ciudad+Ojeda+Zulia');
+    }
+  }
+
   async function cloudPut(path, data) {
     try {
       const res = await fetch(`${DB_BASE_URL}/${path}.json`, {
@@ -376,9 +500,7 @@
         body: JSON.stringify(data)
       });
       return res.ok;
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   }
 
   async function cloudPatch(path, data) {
@@ -389,15 +511,11 @@
         body: JSON.stringify(data)
       });
       return res.ok;
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   }
 
   async function cloudDelete(path) {
-    try {
-      await fetch(`${DB_BASE_URL}/${path}.json`, { method: 'DELETE' });
-    } catch (e) {}
+    try { await fetch(`${DB_BASE_URL}/${path}.json`, { method: 'DELETE' }); } catch (e) {}
   }
 
   async function cloudGet(path) {
@@ -405,9 +523,7 @@
       const res = await fetch(`${DB_BASE_URL}/${path}.json?t=${Date.now()}`);
       if (!res.ok) return null;
       return await res.json();
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
   function loadLocalSession() {
@@ -417,11 +533,8 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed.bcvRate) appState.bcvRate = parsed.bcvRate;
-        if (parsed.ownerPayment) appState.ownerPayment = parsed.ownerPayment;
-        if (Array.isArray(parsed.users)) appState.users = parsed.users;
-        if (Array.isArray(parsed.trips)) appState.trips = parsed.trips;
-        if (Array.isArray(parsed.commissionReports)) appState.commissionReports = parsed.commissionReports;
+        appState = Object.assign(appState, parsed);
+        appState.activeUserId = savedId || null;
       }
     } catch (e) {}
   }
@@ -433,23 +546,21 @@
       } else {
         localStorage.removeItem(STORAGE_KEY + '_activeId');
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        bcvRate: appState.bcvRate,
-        ownerPayment: appState.ownerPayment,
-        users: appState.users,
-        trips: appState.trips,
-        commissionReports: appState.commissionReports
-      }));
+      const copy = Object.assign({}, appState);
+      delete copy.activeUserId;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
     } catch (e) {}
   }
 
-  // Descarga toda la nube de Firebase cada 3.5 segundos y actualiza pantallas
   async function syncFromCloud() {
     const cloudData = await cloudGet('');
     if (!cloudData || typeof cloudData !== 'object') return;
 
     if (cloudData.config) {
       if (cloudData.config.bcvRate) appState.bcvRate = cloudData.config.bcvRate;
+      if (cloudData.config.commissionPct !== undefined) appState.commissionPct = cloudData.config.commissionPct;
+      if (cloudData.config.tariffs) appState.tariffs = Object.assign(appState.tariffs, cloudData.config.tariffs);
+      if (cloudData.config.appMeta) appState.appMeta = Object.assign(appState.appMeta, cloudData.config.appMeta);
       if (cloudData.config.ownerPayment) appState.ownerPayment = cloudData.config.ownerPayment;
     }
 
@@ -483,7 +594,10 @@
     const u = getActiveUser();
     if (!u) return;
     if (u.role === 'owner') {
-      renderOwnerDashboard();
+      updateOwnerBadges();
+      if (currentOpenOwnerTab && currentOpenOwnerTab !== 'mapa_vivo') {
+        renderOwnerModalContent(currentOpenOwnerTab);
+      }
     } else if (!u.approved) {
       document.getElementById('pending-user-msg').textContent =
         `Hola ${u.name}, tu registro como ${u.role === 'driver' ? 'Conductor' : 'Pasajero'} fue recibido. El dueño de TaxiGo debe autorizar tu cuenta para poder ingresar.`;
@@ -684,7 +798,8 @@
       earnedUsd: 0,
       debtUsd: 0,
       lat: null,
-      lng: null
+      lng: null,
+      createdAt: new Date().toLocaleString()
     };
 
     const ok = await cloudPut(`users/${newUser.id}`, newUser);
@@ -733,6 +848,7 @@
 
   function logoutApp() {
     appState.activeUserId = null;
+    closeOwnerModal();
     localStorage.removeItem(STORAGE_KEY + '_activeId');
     ['screen-pending', 'screen-passenger', 'screen-driver', 'screen-owner'].forEach(id => {
       document.getElementById(id).classList.add('hidden');
@@ -776,8 +892,14 @@
 
     if (user.role === 'owner') {
       document.getElementById('screen-owner').classList.remove('hidden');
-      renderOwnerDashboard();
+      updateOwnerBadges();
       syncFromCloud();
+      return;
+    }
+
+    if (user.blocked) {
+      showToast('Cuenta suspendida por administración');
+      logoutApp();
       return;
     }
 
@@ -800,6 +922,443 @@
       startDriverGpsBroadcast();
       renderDriverDashboard();
     }
+  }
+
+  // =========================================================
+  // PANEL DE DUEÑO
+  // =========================================================
+  function updateOwnerBadges() {
+    const pendingPass = appState.users.filter(u => !u.approved && u.role === 'passenger').length;
+    const pendingDrv = appState.users.filter(u => !u.approved && u.role === 'driver').length;
+    const pendingComm = appState.commissionReports.filter(r => r.status === 'pending').length;
+
+    const bPass = document.getElementById('badge-pending-pass');
+    const bDrv = document.getElementById('badge-pending-drv');
+    const bComm = document.getElementById('badge-comm-pending');
+
+    if (bPass) { bPass.textContent = pendingPass; bPass.classList.toggle('hidden', pendingPass === 0); }
+    if (bDrv) { bDrv.textContent = pendingDrv; bDrv.classList.toggle('hidden', pendingDrv === 0); }
+    if (bComm) { bComm.textContent = pendingComm; bComm.classList.toggle('hidden', pendingComm === 0); }
+  }
+
+  function openOwnerModal(tab) {
+    currentOpenOwnerTab = tab;
+    document.getElementById('owner-submodal').classList.remove('hidden');
+    renderOwnerModalContent(tab);
+  }
+
+  function closeOwnerModal() {
+    currentOpenOwnerTab = null;
+    document.getElementById('owner-submodal').classList.add('hidden');
+  }
+
+  function renderOwnerModalContent(tab) {
+    const titleEl = document.getElementById('owner-submodal-title');
+    const bodyEl = document.getElementById('owner-submodal-body');
+
+    if (tab === 'ganancia') {
+      titleEl.textContent = '💰 Mi Ganancia y Comisiones';
+      const approvedComms = appState.commissionReports.filter(r => r.status === 'approved');
+      const pendingComms = appState.commissionReports.filter(r => r.status === 'pending');
+      const totalCobrado = approvedComms.reduce((acc, r) => acc + Number(r.amountUsd || 0), 0);
+      const totalPorCobrar = appState.users
+        .filter(u => u.role === 'driver')
+        .reduce((acc, u) => acc + Number(u.debtUsd || 0), 0);
+      const totalBrutoApp = appState.trips
+        .filter(t => t.status === 'completed')
+        .reduce((acc, t) => acc + Number(t.priceUsd || 0), 0);
+
+      bodyEl.innerHTML = `
+        <div class="grid grid-cols-2 gap-2.5 text-center">
+          <div class="p-3.5 rounded-2xl bg-[#00b14f]/10 border border-[#00b14f]/30">
+            <p class="text-[10px] font-bold text-gray-500">Cobrado en Cuenta</p>
+            <p class="text-lg font-black text-[#00b14f]">$${totalCobrado.toFixed(2)}</p>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+            <p class="text-[10px] font-bold text-gray-500">Por Cobrar en Calle</p>
+            <p class="text-lg font-black text-amber-600">$${totalPorCobrar.toFixed(2)}</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-gray-100 flex justify-between items-center">
+          <span class="font-bold text-gray-600">Facturación total generada:</span>
+          <span class="font-black">$${totalBrutoApp.toFixed(2)}</span>
+        </div>
+        <h4 class="font-black text-xs uppercase text-[#00b14f] pt-2">Reportes de Pago Pendientes (${pendingComms.length})</h4>
+        ${pendingComms.length === 0
+          ? `<p class="p-3 rounded-xl bg-gray-50 text-gray-400 font-bold text-center">No hay pagos pendientes por validar</p>`
+          : pendingComms.map(r => `
+            <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-2">
+              <div>
+                <p class="font-black">${r.driverName} · $${Number(r.amountUsd).toFixed(2)}</p>
+                <p class="text-[11px] text-gray-500">Ref: <b>${r.reference}</b> · ${r.date}</p>
+              </div>
+              <button type="button" onclick="ownerApproveCommission('${r.id}')" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white font-extrabold">Aprobar</button>
+            </div>
+          `).join('')
+        }
+      `;
+    } else if (tab === 'bcv') {
+      titleEl.textContent = '💱 Tasa BCV (Bs / $)';
+      bodyEl.innerHTML = `
+        <div class="p-4 rounded-2xl bg-gray-100 text-center space-y-1">
+          <p class="text-[11px] font-bold text-gray-500">Tasa Actual Activa</p>
+          <p class="text-2xl font-black text-[#11131a]">Bs. ${Number(appState.bcvRate).toFixed(2)}</p>
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Nueva Tasa en Bolívares</label>
+          <input type="number" step="0.01" id="input-owner-bcv" value="${appState.bcvRate}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-gray-300 font-black text-sm" />
+        </div>
+        <button type="button" onclick="saveBcvFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Guardar Tasa (PIN 2026)
+        </button>
+      `;
+    } else if (tab === 'pending_users') {
+      titleEl.textContent = '⏳ Usuarios por Aprobación';
+      const list = appState.users.filter(u => !u.approved && u.role === 'passenger');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center font-bold text-[#00b14f]">✓ No hay pasajeros pendientes por aprobar</p>`
+        : list.map(u => renderPendingCardHtml(u)).join('');
+    } else if (tab === 'pending_drivers') {
+      titleEl.textContent = '🚖 Conductores por Aprobación';
+      const list = appState.users.filter(u => !u.approved && u.role === 'driver');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center font-bold text-[#00b14f]">✓ No hay conductores pendientes por aprobar</p>`
+        : list.map(u => renderPendingCardHtml(u)).join('');
+    } else if (tab === 'comision') {
+      titleEl.textContent = '📊 Porcentaje de Comisión';
+      bodyEl.innerHTML = `
+        <div class="p-4 rounded-2xl bg-gray-100 text-center space-y-1">
+          <p class="text-[11px] font-bold text-gray-500">Comisión Actual por Viaje Completado</p>
+          <p class="text-2xl font-black text-[#00b14f]">${appState.commissionPct}%</p>
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Nuevo Porcentaje (%)</label>
+          <input type="number" min="1" max="50" id="input-owner-comm" value="${appState.commissionPct}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-gray-300 font-black text-sm" />
+        </div>
+        <button type="button" onclick="saveCommissionFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Actualizar Comisión (PIN 2026)
+        </button>
+      `;
+    } else if (tab === 'pasajeros') {
+      titleEl.textContent = '🧍 Pasajeros Registrados';
+      const list = appState.users.filter(u => u.approved && u.role === 'passenger');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">Aún no hay pasajeros aprobados</p>`
+        : list.map(u => renderActiveUserCardHtml(u)).join('');
+    } else if (tab === 'conductores') {
+      titleEl.textContent = '🚖 Flota de Conductores';
+      const list = appState.users.filter(u => u.approved && u.role === 'driver');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">Aún no hay conductores aprobados</p>`
+        : list.map(u => renderActiveUserCardHtml(u)).join('');
+    } else if (tab === 'mapa_vivo') {
+      titleEl.textContent = '📍 Conductores en Vivo';
+      const onlineDrivers = appState.users.filter(u => u.approved && u.role === 'driver');
+      bodyEl.innerHTML = `
+        <div id="owner-live-map" class="w-full h-64 rounded-2xl border border-gray-200"></div>
+        <p class="text-[11px] text-gray-500 font-bold">Mostrando ${onlineDrivers.length} conductor(es) registrado(s) en la flota.</p>
+      `;
+      setTimeout(() => {
+        const m = L.map('owner-live-map').setView([10.2016, -71.3148], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(m);
+        onlineDrivers.forEach(d => {
+          if (d.lat && d.lng) {
+            L.marker([d.lat, d.lng]).addTo(m).bindPopup(`<b>${d.name}</b><br>${d.vehicleType} · ${d.plate}`);
+          }
+        });
+      }, 150);
+    } else if (tab === 'datos_app') {
+      titleEl.textContent = '⚙️ Datos de la App';
+      const m = appState.appMeta;
+      bodyEl.innerHTML = `
+        <div class="space-y-2.5">
+          <div>
+            <label class="font-bold text-gray-600">Ciudad / Zona de Operación</label>
+            <input type="text" id="meta-city" value="${m.city}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+          </div>
+          <div>
+            <label class="font-bold text-gray-600">WhatsApp de Soporte</label>
+            <input type="text" id="meta-wa" value="${m.supportWhatsapp}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+          </div>
+          <div>
+            <label class="font-bold text-gray-600">Teléfono de Emergencia</label>
+            <input type="text" id="meta-emerg" value="${m.emergencyPhone}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+          </div>
+          <button type="button" onclick="saveAppMetaFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+            💾 Guardar Datos (PIN 2026)
+          </button>
+        </div>
+      `;
+    } else if (tab === 'tarifas') {
+      titleEl.textContent = '💵 Configuración de Tarifas';
+      const t = appState.tariffs;
+      bodyEl.innerHTML = `
+        <div class="space-y-3">
+          <div class="p-3 rounded-2xl bg-gray-100 space-y-2">
+            <p class="font-black text-[#11131a]">🏍️ Moto Go</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="text-[10px] font-bold">Mínima ($)</label><input type="number" step="0.05" id="t-moto-min" value="${t.motoMin}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+              <div><label class="text-[10px] font-bold">Por Km ($)</label><input type="number" step="0.05" id="t-moto-km" value="${t.motoKm}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+            </div>
+          </div>
+          <div class="p-3 rounded-2xl bg-gray-100 space-y-2">
+            <p class="font-black text-[#11131a]">🚗 Carro Go</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="text-[10px] font-bold">Mínima ($)</label><input type="number" step="0.05" id="t-carro-min" value="${t.carroMin}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+              <div><label class="text-[10px] font-bold">Por Km ($)</label><input type="number" step="0.05" id="t-carro-km" value="${t.carroKm}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+            </div>
+          </div>
+          <button type="button" onclick="saveTariffsFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+            💾 Guardar Tarifas (PIN 2026)
+          </button>
+        </div>
+      `;
+    } else if (tab === 'realizados') {
+      titleEl.textContent = '✅ Servicios Realizados';
+      const list = appState.trips.filter(t => t.status === 'completed');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">Aún hay 0 servicios completados</p>`
+        : list.map(t => `
+          <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 space-y-1">
+            <div class="flex justify-between font-black">
+              <span>${t.service} · ${t.distanceKm} km</span>
+              <span class="text-[#00b14f]">$${Number(t.priceUsd).toFixed(2)}</span>
+            </div>
+            <p class="text-[11px] text-gray-600">Pasajero: <b>${t.passengerName}</b></p>
+            <p class="text-[11px] text-gray-600">Destino: ${t.destinationText}</p>
+            <p class="text-[10px] text-gray-400">${t.createdAt}</p>
+          </div>
+        `).join('');
+    } else if (tab === 'cancelados') {
+      titleEl.textContent = '❌ Servicios Cancelados';
+      const list = appState.trips.filter(t => t.status === 'cancelled');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">No hay servicios cancelados</p>`
+        : list.map(t => `
+          <div class="p-3.5 rounded-2xl bg-red-50/60 border border-red-200 space-y-1">
+            <div class="flex justify-between font-black text-red-700">
+              <span>${t.service} · $${Number(t.priceUsd).toFixed(2)}</span>
+              <span>Cancelado</span>
+            </div>
+            <p class="text-[11px] text-gray-700">Pasajero: <b>${t.passengerName}</b> (${t.passengerPhone})</p>
+            <p class="text-[11px] text-gray-500">Destino: ${t.destinationText}</p>
+            <p class="text-[10px] text-gray-400">${t.createdAt}</p>
+          </div>
+        `).join('');
+    } else if (tab === 'terminos') {
+      titleEl.textContent = '📜 Términos y Condiciones';
+      bodyEl.innerHTML = `
+        <textarea id="input-owner-terms" rows="8" class="w-full p-3.5 rounded-2xl border border-gray-300 text-xs leading-relaxed">${appState.appMeta.terms}</textarea>
+        <button type="button" onclick="saveTermsFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Actualizar Términos (PIN 2026)
+        </button>
+      `;
+    }
+  }
+
+  function renderPendingCardHtml(u) {
+    return `
+      <div class="p-4 rounded-3xl bg-gray-50 border-2 border-amber-400 space-y-2.5">
+        <div>
+          <p class="text-xs font-black">${u.name}</p>
+          <p class="text-[11px] font-bold text-gray-700">🪪 Cédula: ${u.cedula || '---'} · 📞 ${u.phone}</p>
+          ${u.role === 'driver' ? `
+            <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: <b>${u.plate}</b></p>
+            <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 5 Docs: C.I., Carnet, Licencia, Carta Médica y RCV</p>
+          ` : ''}
+        </div>
+        ${(u.cedulaImg || u.selfieImg) ? `
+          <div class="grid grid-cols-2 gap-2">
+            ${u.cedulaImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Cédula</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border" /></div>` : ''}
+            ${u.selfieImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Selfie</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border" /></div>` : ''}
+          </div>
+        ` : ''}
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white font-extrabold">✓ Aprobar</button>
+          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 font-extrabold">Rechazar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderActiveUserCardHtml(u) {
+    return `
+      <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-black">${u.name} ${u.blocked ? '<span class="text-red-600">(SUSPENDIDO)</span>' : ''}</p>
+            <p class="text-[10px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
+            ${u.role === 'driver' ? `<p class="text-[10px] font-bold text-gray-700">🚘 ${u.vehicleModel} (${u.plate}) · Deuda: <span class="text-red-600">$${Number(u.debtUsd || 0).toFixed(2)}</span></p>` : ''}
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="ownerToggleBlockUser('${u.id}')" class="flex-1 py-2 rounded-xl ${u.blocked ? 'bg-[#00b14f] text-white' : 'bg-amber-500/20 text-amber-700'} font-extrabold">
+            ${u.blocked ? 'Reactivar' : 'Suspender'}
+          </button>
+          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2 rounded-xl bg-red-500/15 text-red-600 font-extrabold">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function saveBcvFromModal() {
+    if (!requirePin('actualizar la tasa BCV')) return;
+    const num = parseFloat(document.getElementById('input-owner-bcv').value);
+    if (isNaN(num) || num <= 0) return;
+    appState.bcvRate = num;
+    await cloudPatch('config', { bcvRate: num });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast(`Tasa actualizada a Bs. ${num.toFixed(2)}`);
+  }
+
+  async function saveCommissionFromModal() {
+    if (!requirePin('cambiar el % de comisión')) return;
+    const num = parseFloat(document.getElementById('input-owner-comm').value);
+    if (isNaN(num) || num < 0 || num > 100) return;
+    appState.commissionPct = num;
+    await cloudPatch('config', { commissionPct: num });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast(`Comisión actualizada al ${num}%`);
+  }
+
+  async function saveAppMetaFromModal() {
+    if (!requirePin('guardar datos de la app')) return;
+    appState.appMeta.city = document.getElementById('meta-city').value.trim();
+    appState.appMeta.supportWhatsapp = document.getElementById('meta-wa').value.trim();
+    appState.appMeta.emergencyPhone = document.getElementById('meta-emerg').value.trim();
+    await cloudPatch('config', { appMeta: appState.appMeta });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Datos guardados');
+  }
+
+  async function saveTariffsFromModal() {
+    if (!requirePin('actualizar las tarifas')) return;
+    appState.tariffs.motoMin = parseFloat(document.getElementById('t-moto-min').value) || 1.10;
+    appState.tariffs.motoKm = parseFloat(document.getElementById('t-moto-km').value) || 0.75;
+    appState.tariffs.carroMin = parseFloat(document.getElementById('t-carro-min').value) || 1.80;
+    appState.tariffs.carroKm = parseFloat(document.getElementById('t-carro-km').value) || 1.15;
+    appState.tariffs.envioMin = appState.tariffs.motoMin;
+    appState.tariffs.envioKm = appState.tariffs.motoKm;
+    await cloudPatch('config', { tariffs: appState.tariffs });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Tarifas actualizadas');
+  }
+
+  async function saveTermsFromModal() {
+    if (!requirePin('actualizar los términos y condiciones')) return;
+    appState.appMeta.terms = document.getElementById('input-owner-terms').value.trim();
+    await cloudPatch('config', { appMeta: appState.appMeta });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Términos guardados');
+  }
+
+  function openTermsPublicModal() {
+    document.getElementById('modal-public-terms')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-public-terms" class="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-white text-[#11131a] rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">📜 Términos y Condiciones</h3>
+            <button type="button" onclick="document.getElementById('modal-public-terms').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-xs text-gray-600 whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">${appState.appMeta.terms}</p>
+        </div>
+      </div>
+    `);
+  }
+
+  async function ownerApproveUser(userId) {
+    if (!requirePin('autorizar el ingreso de este integrante')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (u) u.approved = true;
+    await cloudPatch(`users/${userId}`, { approved: true });
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Integrante autorizado');
+  }
+
+  async function ownerToggleBlockUser(userId) {
+    if (!requirePin('cambiar el estado de esta cuenta')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    u.blocked = !u.blocked;
+    await cloudPatch(`users/${userId}`, { blocked: u.blocked });
+    saveLocalOnly();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast(u.blocked ? 'Cuenta suspendida' : 'Cuenta reactivada');
+  }
+
+  async function ownerDeleteUser(userId) {
+    if (!requirePin('eliminar este registro')) return;
+    appState.users = appState.users.filter(x => x.id !== userId);
+    await cloudDelete(`users/${userId}`);
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Registro eliminado');
+  }
+
+  async function ownerApproveCommission(repId) {
+    if (!requirePin('aprobar este pago de comisión')) return;
+    const rep = appState.commissionReports.find(r => r.id === repId);
+    if (rep) {
+      rep.status = 'approved';
+      await cloudPatch(`commissionReports/${repId}`, { status: 'approved' });
+      const drv = appState.users.find(u => u.id === rep.driverId);
+      if (drv) {
+        drv.debtUsd = 0;
+        await cloudPatch(`users/${drv.id}`, { debtUsd: 0 });
+      }
+    }
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Pago aprobado y deuda saldada');
+  }
+
+  function openOwnerPagoMovilModal() {
+    const pay = appState.ownerPayment;
+    document.getElementById('modal-owner-pm')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-owner-pm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">📲 Mi Pago Móvil</h3>
+            <button type="button" onclick="document.getElementById('modal-owner-pm').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-[11px] text-gray-500">Solo los conductores verán estos datos al reportar su comisión.</p>
+          <input type="text" id="pm-bank" value="${pay.bank}" placeholder="Banco" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <input type="tel" id="pm-phone" value="${pay.phone}" placeholder="Teléfono Pago Móvil" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <input type="text" id="pm-ci" value="${pay.ci}" placeholder="Cédula o RIF" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <input type="text" id="pm-name" value="${pay.name}" placeholder="Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <button type="button" onclick="saveOwnerPagoMovil()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+            💾 Guardar (PIN 2026)
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function saveOwnerPagoMovil() {
+    if (!requirePin('guardar tu Pago Móvil')) return;
+    appState.ownerPayment = {
+      bank: document.getElementById('pm-bank').value.trim(),
+      phone: document.getElementById('pm-phone').value.trim(),
+      ci: document.getElementById('pm-ci').value.trim(),
+      name: document.getElementById('pm-name').value.trim()
+    };
+    await cloudPatch('config', { ownerPayment: appState.ownerPayment });
+    saveLocalOnly();
+    document.getElementById('modal-owner-pm').remove();
+    showToast('Pago Móvil guardado');
   }
 
   // =========================================================
@@ -930,7 +1489,7 @@
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'es' } });
         const list = await res.json();
         if (!Array.isArray(list) || list.length === 0) {
-          drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Sin resultados. Usa "Buscar en el mapa".</p>`;
+          drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Sin resultados. Usa "Pin en el mapa".</p>`;
           return;
         }
         drop.innerHTML = list.map(it => {
@@ -1005,12 +1564,12 @@
     document.getElementById('pass-step-destination').classList.remove('hidden');
   }
 
-  // TARIFA OCULTA EN EL SISTEMA: Mínima $1.10 | Kilómetro $0.75
   function getCalculatedServices() {
     const rate = appState.bcvRate || 45;
-    const motoUsd = Math.max(1.10, Number((currentDistKm * 0.75).toFixed(2)));
-    const carroUsd = Math.max(1.80, Number((currentDistKm * 1.15).toFixed(2)));
-    const envioUsd = Math.max(1.10, Number((currentDistKm * 0.75).toFixed(2)));
+    const t = appState.tariffs;
+    const motoUsd = Math.max(t.motoMin, Number((currentDistKm * t.motoKm).toFixed(2)));
+    const carroUsd = Math.max(t.carroMin, Number((currentDistKm * t.carroKm).toFixed(2)));
+    const envioUsd = Math.max(t.envioMin, Number((currentDistKm * t.envioKm).toFixed(2)));
 
     return [
       { name: 'Moto Go', desc: '1 pasajero · Ágil', icon: '🏍️', usd: motoUsd, bs: (motoUsd * rate).toFixed(2) },
@@ -1105,13 +1664,18 @@
 
     if (activeTrip.status === 'searching') {
       content.innerHTML = `
-        <div class="text-center space-y-2 py-2">
+        <div class="text-center space-y-2.5 py-2">
           <div class="w-10 h-10 mx-auto rounded-full bg-[#00b14f]/15 text-[#00b14f] flex items-center justify-center text-xl animate-pulse">📡</div>
           <h3 class="text-sm font-black">Buscando conductor disponible...</h3>
           <p class="text-xs text-gray-500">${activeTrip.service} · $${activeTrip.priceUsd.toFixed(2)} (Bs. ${activeTrip.priceBs})</p>
-          <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="mt-2 px-5 py-2.5 rounded-2xl bg-red-500/15 text-red-600 text-xs font-extrabold">
-            Cancelar Solicitud
-          </button>
+          <div class="flex justify-center gap-2 pt-1">
+            <button type="button" onclick="openPassengerGoogleMaps()" class="px-4 py-2.5 rounded-2xl bg-[#4285F4] text-white text-xs font-extrabold">
+              🗺️ Ver en Google Maps
+            </button>
+            <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="px-4 py-2.5 rounded-2xl bg-red-500/15 text-red-600 text-xs font-extrabold">
+              Cancelar
+            </button>
+          </div>
         </div>
       `;
     } else if (activeTrip.status === 'accepted') {
@@ -1151,14 +1715,18 @@
               <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold text-center">💬 WhatsApp</a>
             </div>
           </div>
+          <button type="button" onclick="openPassengerGoogleMaps()" class="w-full py-3 rounded-2xl bg-[#4285F4] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow">
+            🗺️ Seguir ruta en Google Maps (2do plano)
+          </button>
         </div>
       `;
     }
   }
 
   async function cancelActiveTrip(tripId) {
-    await cloudDelete(`trips/${tripId}`);
-    appState.trips = appState.trips.filter(t => t.id !== tripId);
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (trip) trip.status = 'cancelled';
+    await cloudPatch(`trips/${tripId}`, { status: 'cancelled' });
     saveLocalOnly();
     syncPassengerTripUI();
     document.getElementById('pass-step-destination').classList.remove('hidden');
@@ -1166,7 +1734,7 @@
   }
 
   // =========================================================
-  // CONDUCTOR: GPS EN VIVO, WAZE Y PAGO DE COMISIÓN AL DUEÑO
+  // CONDUCTOR: GPS EN VIVO, GOOGLE MAPS, WAZE Y COMISIÓN
   // =========================================================
   let lastGpsPush = 0;
   function startDriverGpsBroadcast() {
@@ -1219,13 +1787,20 @@
     document.getElementById('drv-stat-trips').textContent = u.tripsCount || 0;
     document.getElementById('drv-stat-earned').textContent = `$${Number(u.earnedUsd || 0).toFixed(2)}`;
     document.getElementById('drv-stat-debt').textContent = `$${Number(u.debtUsd || 0).toFixed(2)}`;
+    const pctEl = document.getElementById('drv-comm-pct-label');
+    if (pctEl) pctEl.textContent = appState.commissionPct || 10;
 
     const activeTrip = appState.trips.find(t => t.driverId === u.id && t.status === 'accepted');
     const activeBox = document.getElementById('drv-active-trip-box');
     const reqList = document.getElementById('drv-requests-list');
 
     if (activeTrip) {
+      const gmapsDestUrl = `https://www.google.com/maps/dir/?api=1&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
+      const gmapsPickUrl = activeTrip.originCoords
+        ? `https://www.google.com/maps/dir/?api=1&destination=${activeTrip.originCoords[0]},${activeTrip.originCoords[1]}&travelmode=driving`
+        : gmapsDestUrl;
       const wazeUrl = `https://waze.com/ul?ll=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&navigate=yes`;
+
       activeBox.classList.remove('hidden');
       activeBox.innerHTML = `
         <div class="bg-[#11131a] text-white rounded-3xl p-4 space-y-3 shadow-xl">
@@ -1235,13 +1810,21 @@
           </div>
           <div class="text-xs space-y-1">
             <p><b>Pasajero:</b> ${activeTrip.passengerName} (${activeTrip.passengerPhone})</p>
-            <p><b>Origen:</b> ${activeTrip.originText}</p>
-            <p><b>Destino:</b> ${activeTrip.destinationText}</p>
+            <p><b>Recoger en:</b> ${activeTrip.originText}</p>
+            <p><b>Llevar a:</b> ${activeTrip.destinationText}</p>
           </div>
           <div class="grid grid-cols-2 gap-2 pt-1">
-            <a href="${wazeUrl}" target="_blank" rel="noopener" class="py-3 rounded-2xl bg-[#33ccff] text-[#11131a] text-xs font-black text-center">
-              🧭 Navegar en Waze
-            </a>
+            <button type="button" onclick="openExternalGoogleMaps('${gmapsPickUrl}')" class="py-2.5 rounded-2xl bg-white/15 text-white text-[11px] font-extrabold text-center">
+              📍 Maps: Ir a Buscar
+            </button>
+            <button type="button" onclick="openExternalGoogleMaps('${gmapsDestUrl}')" class="py-2.5 rounded-2xl bg-[#4285F4] text-white text-[11px] font-extrabold text-center">
+              🗺️ Maps: Ir a Destino
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="openExternalGoogleMaps('${wazeUrl}')" class="py-3 rounded-2xl bg-[#33ccff] text-[#11131a] text-xs font-black text-center">
+              🧭 Waze
+            </button>
             <button type="button" onclick="completeTripDriver('${activeTrip.id}')" class="py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
               ✓ Finalizar Viaje
             </button>
@@ -1296,10 +1879,11 @@
     const u = getActiveUser();
     const trip = appState.trips.find(t => t.id === tripId);
     if (!u || !trip) return;
+    const pct = (appState.commissionPct || 10) / 100;
     trip.status = 'completed';
     u.tripsCount = (u.tripsCount || 0) + 1;
     u.earnedUsd = Number(((u.earnedUsd || 0) + trip.priceUsd).toFixed(2));
-    u.debtUsd = Number(((u.debtUsd || 0) + (trip.priceUsd * 0.10)).toFixed(2));
+    u.debtUsd = Number(((u.debtUsd || 0) + (trip.priceUsd * pct)).toFixed(2));
 
     await cloudPatch(`trips/${trip.id}`, { status: 'completed' });
     await cloudPatch(`users/${u.id}`, {
@@ -1322,7 +1906,7 @@
       <div id="modal-drv-comm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-black">Pagar Comisión 10%</h3>
+            <h3 class="text-sm font-black">Pagar Comisión ${appState.commissionPct}%</h3>
             <button type="button" onclick="document.getElementById('modal-drv-comm').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
           </div>
           <div class="p-3.5 rounded-2xl bg-gray-100 space-y-1 text-xs">
@@ -1362,161 +1946,6 @@
     showToast('Reporte enviado al Dueño');
   }
 
-  // =========================================================
-  // PANEL DE DUEÑO (AUTORIZACIONES + DOCUMENTOS + PIN 2026)
-  // =========================================================
-  function renderOwnerDashboard() {
-    document.getElementById('owner-bcv-display').textContent = `Bs. ${Number(appState.bcvRate).toFixed(2)}`;
-
-    const pendingUsers = appState.users.filter(u => !u.approved);
-    const pendingList = document.getElementById('owner-pending-users-list');
-
-    if (pendingUsers.length === 0) {
-      pendingList.innerHTML = `<div class="p-4 rounded-2xl bg-white border border-gray-200 text-xs font-bold text-[#00b14f]">✓ Sin solicitudes pendientes</div>`;
-    } else {
-      pendingList.innerHTML = pendingUsers.map(u => `
-        <div class="p-4 rounded-3xl bg-white border-2 border-amber-400 space-y-2.5 shadow-sm">
-          <div>
-            <p class="text-xs font-black">${u.name} (${u.role === 'driver' ? 'Conductor' : 'Pasajero'})</p>
-            <p class="text-[11px] font-bold text-gray-700">🪪 Cédula: ${u.cedula || 'No indicada'} · 📞 ${u.phone}</p>
-            ${u.role === 'driver' ? `
-              <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: ${u.plate}</p>
-              <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 Docs: C.I., Carnet, Licencia, Carta Médica y RCV cargados</p>
-            ` : ''}
-          </div>
-          ${(u.cedulaImg || u.selfieImg) ? `
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              ${u.cedulaImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Foto Cédula</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
-              ${u.selfieImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Selfie</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border border-gray-200" /></div>` : ''}
-            </div>
-          ` : ''}
-          <div class="flex gap-2 pt-1">
-            <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold">✓ Autorizar Ingreso</button>
-            <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 text-xs font-extrabold">Rechazar</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    const pendingComms = appState.commissionReports.filter(r => r.status === 'pending');
-    const commList = document.getElementById('owner-commissions-list');
-    if (pendingComms.length === 0) {
-      commList.innerHTML = `<div class="p-4 rounded-2xl bg-white border border-gray-200 text-xs text-gray-400 font-bold">Sin reportes de pago pendientes</div>`;
-    } else {
-      commList.innerHTML = pendingComms.map(r => `
-        <div class="p-4 rounded-3xl bg-white border border-gray-200 flex items-center justify-between gap-2">
-          <div>
-            <p class="text-xs font-black">${r.driverName} · $${Number(r.amountUsd).toFixed(2)}</p>
-            <p class="text-[11px] text-gray-500">Ref: <b>${r.reference}</b> · ${r.date}</p>
-          </div>
-          <button type="button" onclick="ownerApproveCommission('${r.id}')" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold">Aprobar</button>
-        </div>
-      `).join('');
-    }
-
-    const approvedUsers = appState.users.filter(u => u.approved);
-    const appList = document.getElementById('owner-approved-users-list');
-    if (approvedUsers.length === 0) {
-      appList.innerHTML = `<div class="p-4 rounded-2xl bg-white border border-gray-200 text-xs text-gray-400 font-bold">Aún no hay integrantes aprobados</div>`;
-    } else {
-      appList.innerHTML = approvedUsers.map(u => `
-        <div class="p-3.5 rounded-2xl bg-white border border-gray-200 flex items-center justify-between">
-          <div>
-            <p class="text-xs font-black">${u.name} (${u.role === 'driver' ? 'Conductor' : 'Pasajero'})</p>
-            <p class="text-[10px] text-gray-500">📞 ${u.phone} ${u.role === 'driver' ? `· Deuda: $${Number(u.debtUsd || 0).toFixed(2)}` : ''}</p>
-          </div>
-          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3 py-1.5 rounded-xl bg-red-500/15 text-red-600 text-[11px] font-extrabold">Eliminar</button>
-        </div>
-      `).join('');
-    }
-  }
-
-  async function ownerApproveUser(userId) {
-    if (!requirePin('autorizar el ingreso de este integrante')) return;
-    const u = appState.users.find(x => x.id === userId);
-    if (u) u.approved = true;
-    await cloudPatch(`users/${userId}`, { approved: true });
-    saveLocalOnly();
-    renderOwnerDashboard();
-    showToast('Integrante autorizado');
-  }
-
-  async function ownerDeleteUser(userId) {
-    if (!requirePin('eliminar este integrante')) return;
-    appState.users = appState.users.filter(x => x.id !== userId);
-    await cloudDelete(`users/${userId}`);
-    saveLocalOnly();
-    renderOwnerDashboard();
-    showToast('Registro eliminado');
-  }
-
-  async function ownerApproveCommission(repId) {
-    if (!requirePin('aprobar este pago de comisión')) return;
-    const rep = appState.commissionReports.find(r => r.id === repId);
-    if (rep) {
-      rep.status = 'approved';
-      await cloudPatch(`commissionReports/${repId}`, { status: 'approved' });
-      const drv = appState.users.find(u => u.id === rep.driverId);
-      if (drv) {
-        drv.debtUsd = 0;
-        await cloudPatch(`users/${drv.id}`, { debtUsd: 0 });
-      }
-    }
-    saveLocalOnly();
-    renderOwnerDashboard();
-    showToast('Pago aprobado y deuda saldada');
-  }
-
-  async function updateBcvRateOwner() {
-    if (!requirePin('actualizar la tasa BCV')) return;
-    const val = prompt('Ingresa la nueva tasa en Bolívares por 1 USD:', appState.bcvRate);
-    const num = parseFloat(val);
-    if (!isNaN(num) && num > 0) {
-      appState.bcvRate = num;
-      await cloudPatch('config', { bcvRate: num });
-      saveLocalOnly();
-      renderOwnerDashboard();
-      showToast(`Tasa actualizada a Bs. ${num.toFixed(2)}`);
-    }
-  }
-
-  function openOwnerPagoMovilModal() {
-    const pay = appState.ownerPayment;
-    document.getElementById('modal-owner-pm')?.remove();
-    document.body.insertAdjacentHTML('beforeend', `
-      <div id="modal-owner-pm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-black">📲 Mi Pago Móvil</h3>
-            <button type="button" onclick="document.getElementById('modal-owner-pm').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
-          </div>
-          <p class="text-[11px] text-gray-500">Solo los conductores verán estos datos al reportar su comisión del 10%.</p>
-          <input type="text" id="pm-bank" value="${pay.bank}" placeholder="Banco" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <input type="tel" id="pm-phone" value="${pay.phone}" placeholder="Teléfono Pago Móvil" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <input type="text" id="pm-ci" value="${pay.ci}" placeholder="Cédula o RIF" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <input type="text" id="pm-name" value="${pay.name}" placeholder="Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <button type="button" onclick="saveOwnerPagoMovil()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
-            💾 Guardar (PIN 2026)
-          </button>
-        </div>
-      </div>
-    `);
-  }
-
-  async function saveOwnerPagoMovil() {
-    if (!requirePin('guardar tu Pago Móvil')) return;
-    appState.ownerPayment = {
-      bank: document.getElementById('pm-bank').value.trim(),
-      phone: document.getElementById('pm-phone').value.trim(),
-      ci: document.getElementById('pm-ci').value.trim(),
-      name: document.getElementById('pm-name').value.trim()
-    };
-    await cloudPatch('config', { ownerPayment: appState.ownerPayment });
-    saveLocalOnly();
-    document.getElementById('modal-owner-pm').remove();
-    showToast('Pago Móvil guardado');
-  }
-
   function openHistoryModal(role) {
     const u = getActiveUser();
     const myTrips = appState.trips.filter(t => t.status === 'completed' && (t.passengerId === u?.id || t.driverId === u?.id));
@@ -1547,12 +1976,10 @@
     `);
   }
 
-  // Sincronización automática cada 3.5 segundos con la nube
   setInterval(() => {
     if (getActiveUser()) syncFromCloud();
   }, 3500);
 
-  // Arranque inmediato
   window.addEventListener('DOMContentLoaded', async () => {
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
