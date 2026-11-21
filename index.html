@@ -146,12 +146,12 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 2: PASAJERO
+     PANTALLA 2: PASAJERO (CON BOTÓN ⚙️ AJUSTES)
      ========================================================= -->
 <div id="screen-passenger" class="hidden fixed inset-0 flex flex-col bg-gray-100">
   <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
-    <button type="button" onclick="openHistoryModal('passenger')" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1.5">
-      📋 <span id="pass-header-name">Mis Viajes</span>
+    <button type="button" onclick="openUserSettingsModal('passenger')" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition">
+      ⚙️ <span id="pass-header-name">Ajustes</span>
     </button>
     <div class="px-3.5 py-2 rounded-full bg-[#11131a] text-white shadow-lg text-xs font-black">
       Taxi<span class="text-[#00b14f]">Go</span>
@@ -255,7 +255,7 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 3: CONDUCTOR
+     PANTALLA 3: CONDUCTOR (CON BOTÓN ⚙️ AJUSTES)
      ========================================================= -->
 <div id="screen-driver" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
   <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20 gap-1">
@@ -266,6 +266,9 @@
     <div class="flex items-center gap-1 shrink-0">
       <button type="button" onclick="forceCloudPull()" class="px-2 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Actualizar solicitudes">
         🔄
+      </button>
+      <button type="button" onclick="openUserSettingsModal('driver')" class="px-2.5 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Ajustes de conductor">
+        ⚙️
       </button>
       <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
         ● En Línea
@@ -332,9 +335,6 @@
       <button type="button" onclick="forceCloudPull()" class="px-3 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold active:scale-95 transition">
         🔄 Actualizar
       </button>
-      <button type="button" onclick="openOwnerPagoMovilModal()" class="px-3 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold active:scale-95 transition">
-        📲 Pago Móvil
-      </button>
       <button type="button" onclick="logoutApp()" class="px-3 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold active:scale-95 transition">
         🚪 Salir
       </button>
@@ -344,31 +344,7 @@
   <div class="my-auto p-5 max-w-md w-full mx-auto space-y-3.5">
     <div class="flex flex-wrap gap-2.5">
       <button type="button" onclick="openOwnerModal('ganancia')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
-        Mi ganancia <span id="badge-comm-pending" class="hidden px-1.5 py-0.5 rounded-full bg-[#00b14f] text-[10px]">0</span>
-      </button>
-      <button type="button" onclick="openOwnerModal('bcv')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Tasa BCV
-      </button>
-    </div>
-
-    <div class="flex flex-wrap gap-2.5">
-      <button type="button" onclick="openOwnerModal('pending_users')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
-        Usuarios por aprobación <span id="badge-pending-pass" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-[#11131a] text-[10px] font-black">0</span>
-      </button>
-      <button type="button" onclick="openOwnerModal('pending_drivers')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
-        Conductores por aprobación <span id="badge-pending-drv" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-[#11131a] text-[10px] font-black">0</span>
-      </button>
-      <button type="button" onclick="openOwnerModal('comision')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        % de comisión
-      </button>
-    </div>
-
-    <div class="flex flex-wrap gap-2.5">
-      <button type="button" onclick="openOwnerModal('pasajeros')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Pasajeros
-      </button>
-      <button type="button" onclick="openOwnerModal('conductores')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Conductores
+        💰 Mi ganancia <span id="badge-comm-pending" class="hidden px-1.5 py-0.5 rounded-full bg-[#00b14f] text-[10px]">0</span>
       </button>
       <button type="button" onclick="openOwnerModal('mapa_vivo')" class="px-4 py-2.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow active:scale-95 transition">
         📍 Mapa en vivo
@@ -376,28 +352,56 @@
     </div>
 
     <div class="flex flex-wrap gap-2.5">
-      <button type="button" onclick="openOwnerModal('datos_app')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Datos de la app
+      <button type="button" onclick="openOwnerModal('pending_users')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
+        ⏳ Usuarios por aprobación <span id="badge-pending-pass" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-[#11131a] text-[10px] font-black">0</span>
       </button>
-      <button type="button" onclick="openOwnerModal('tarifas')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Tarifas
-      </button>
-      <button type="button" onclick="openOwnerModal('realizados')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Servicios realizados
+      <button type="button" onclick="openOwnerModal('pending_drivers')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
+        🚖 Conductores por aprobación <span id="badge-pending-drv" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-[#11131a] text-[10px] font-black">0</span>
       </button>
     </div>
 
     <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('pasajeros')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        🧍 Pasajeros
+      </button>
+      <button type="button" onclick="openOwnerModal('conductores')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        🚖 Conductores
+      </button>
+    </div>
+
+    <div class="flex flex-wrap gap-2.5">
+      <button type="button" onclick="openOwnerModal('realizados')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        ✅ Servicios realizados
+      </button>
       <button type="button" onclick="openOwnerModal('cancelados')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition">
-        Servicios cancelados
+        ❌ Servicios cancelados
+      </button>
+    </div>
+
+    <div class="pt-2">
+      <button type="button" onclick="openOwnerModal('ajustes')" class="w-full py-3.5 rounded-2xl bg-[#11131a] text-white text-sm font-black shadow-lg flex items-center justify-center gap-2 border-2 border-[#00b14f] active:scale-95 transition">
+        ⚙️ Ajustes de la Plataforma
       </button>
     </div>
   </div>
 
   <div class="pb-5 pt-2 text-center">
-    <button type="button" onclick="openOwnerModal('terminos')" class="px-5 py-2 rounded-full bg-[#11131a] text-white text-[11px] font-extrabold shadow active:scale-95 transition">
+    <button type="button" onclick="openOwnerModal('terminos')" class="px-5 py-2 rounded-full bg-gray-200 text-[#11131a] text-[11px] font-extrabold active:scale-95 transition">
       Términos y condiciones
     </button>
+  </div>
+</div>
+
+<!-- =========================================================
+     MODAL DE AJUSTES PARA PASAJEROS Y CONDUCTORES
+     ========================================================= -->
+<div id="user-settings-modal" class="hidden fixed inset-0 z-[65] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="px-5 py-4 bg-[#11131a] text-white flex items-center justify-between">
+      <h3 id="user-settings-title" class="text-sm font-black">⚙️ Ajustes</h3>
+      <button type="button" onclick="closeUserSettingsModal()" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
+    </div>
+    <div id="user-settings-body" class="p-5 overflow-y-auto space-y-3 text-xs"></div>
   </div>
 </div>
 
@@ -431,7 +435,10 @@
 <div id="owner-submodal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-end sm:items-center justify-center p-0 sm:p-4">
   <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
     <div class="px-5 py-4 bg-[#11131a] text-white flex items-center justify-between">
-      <h3 id="owner-submodal-title" class="text-sm font-black">Sección</h3>
+      <div class="flex items-center gap-2">
+        <button type="button" id="owner-submodal-back" onclick="openOwnerModal('ajustes')" class="hidden px-2.5 py-1 rounded-lg bg-white/15 text-[11px] font-extrabold">← Ajustes</button>
+        <h3 id="owner-submodal-title" class="text-sm font-black">Sección</h3>
+      </div>
       <button type="button" onclick="closeOwnerModal()" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
     </div>
     <div id="owner-submodal-body" class="p-5 overflow-y-auto space-y-3 text-xs"></div>
@@ -669,7 +676,7 @@
 
     if (u.role === 'owner') {
       updateOwnerBadges();
-      const editableTabs = ['bcv', 'comision', 'datos_app', 'tarifas', 'terminos', 'edit_user'];
+      const editableTabs = ['bcv', 'comision', 'datos_app', 'tarifas', 'terminos', 'pago_movil', 'edit_user', 'ajustes'];
       if (currentOpenOwnerTab && !editableTabs.includes(currentOpenOwnerTab) && currentOpenOwnerTab !== 'mapa_vivo' && !isUserTyping()) {
         renderOwnerModalContent(currentOpenOwnerTab);
       }
@@ -710,6 +717,181 @@
       return { id: 'OWNER', name: 'Dueño TaxiGo', role: 'owner', approved: true };
     }
     return appState.users.find(u => u.id === appState.activeUserId) || null;
+  }
+
+  // =========================================================
+  // AJUSTES PARA PASAJEROS Y CONDUCTORES
+  // =========================================================
+  function openUserSettingsModal(role) {
+    const u = getActiveUser();
+    if (!u) return;
+
+    const modal = document.getElementById('user-settings-modal');
+    const title = document.getElementById('user-settings-title');
+    const body = document.getElementById('user-settings-body');
+    modal.classList.remove('hidden');
+
+    const cleanSupport = (appState.appMeta.supportWhatsapp || '').replace(/[^0-9]/g, '');
+    const waSupport = cleanSupport.startsWith('0') ? '58' + cleanSupport.slice(1) : cleanSupport;
+
+    if (role === 'passenger') {
+      title.textContent = `⚙️ Ajustes de Pasajero`;
+      const completedCount = appState.trips.filter(t => t.passengerId === u.id && t.status === 'completed').length;
+
+      body.innerHTML = `
+        <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between">
+          <div>
+            <p class="font-black text-sm">🧍 ${u.name}</p>
+            <p class="text-[11px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold">${completedCount} viajes</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <button type="button" onclick="openUserProfileEditForm()" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">✏️</p>
+            <p class="text-xs font-black">Mis Datos</p>
+            <p class="text-[10px] text-gray-300">Nombre, clave, teléfono</p>
+          </button>
+
+          <button type="button" onclick="closeUserSettingsModal();openHistoryModal('passenger');" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">📋</p>
+            <p class="text-xs font-black">Mis Viajes</p>
+            <p class="text-[10px] text-gray-300">Historial completo</p>
+          </button>
+
+          <a href="https://wa.me/${waSupport}" target="_blank" rel="noopener" class="p-3.5 rounded-2xl bg-[#00b14f] text-white text-left space-y-1 shadow active:scale-95 transition block">
+            <p class="text-base">💬</p>
+            <p class="text-xs font-black">Soporte TaxiGo</p>
+            <p class="text-[10px] text-white/90">Ayuda por WhatsApp</p>
+          </a>
+
+          <a href="tel:${appState.appMeta.emergencyPhone || '911'}" class="p-3.5 rounded-2xl bg-red-600 text-white text-left space-y-1 shadow active:scale-95 transition block">
+            <p class="text-base">🆘</p>
+            <p class="text-xs font-black">Emergencia</p>
+            <p class="text-[10px] text-white/90">Llamar al ${appState.appMeta.emergencyPhone || '911'}</p>
+          </a>
+        </div>
+
+        <button type="button" onclick="openTermsPublicModal()" class="w-full py-3 rounded-2xl bg-gray-100 text-[#11131a] font-extrabold">
+          📜 Términos y Condiciones
+        </button>
+      `;
+    } else if (role === 'driver') {
+      title.textContent = `⚙️ Ajustes de Conductor`;
+      const vehs = getDriverVehiclesList(u);
+      const hasBothReg = vehs.some(v => v.type === 'Moto') && vehs.some(v => v.type === 'Carro');
+      const activeVeh = getDriverActiveVehicle(u);
+      const missingType = activeVeh.type === 'Moto' ? 'Carro' : 'Moto';
+
+      body.innerHTML = `
+        <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between">
+          <div>
+            <p class="font-black text-sm">🧑🏻‍✈️ ${u.name}</p>
+            <p class="text-[11px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold">${u.tripsCount || 0} viajes</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <button type="button" onclick="openUserProfileEditForm()" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">✏️</p>
+            <p class="text-xs font-black">Mis Datos</p>
+            <p class="text-[10px] text-gray-300">Nombre, clave, teléfono</p>
+          </button>
+
+          <button type="button" onclick="closeUserSettingsModal();openHistoryModal('driver');" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">📋</p>
+            <p class="text-xs font-black">Mis Viajes</p>
+            <p class="text-[10px] text-gray-300">Historial y ganancias</p>
+          </button>
+
+          <button type="button" onclick="closeUserSettingsModal();openDriverCommissionModal();" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">📲</p>
+            <p class="text-xs font-black">Pagar Comisión</p>
+            <p class="text-[10px] text-amber-400 font-bold">Deuda: $${Number(u.debtUsd || 0).toFixed(2)}</p>
+          </button>
+
+          ${!hasBothReg ? `
+            <button type="button" onclick="closeUserSettingsModal();openAddSecondVehicleModal('${missingType}');" class="p-3.5 rounded-2xl bg-[#00b14f] text-white text-left space-y-1 shadow active:scale-95 transition">
+              <p class="text-base">🚘</p>
+              <p class="text-xs font-black">+ Agregar ${missingType}</p>
+              <p class="text-[10px] text-white/90">Trabajar ambos modos</p>
+            </button>
+          ` : `
+            <div class="p-3.5 rounded-2xl bg-[#00b14f]/15 text-[#00b14f] text-left space-y-1 border border-[#00b14f]/30">
+              <p class="text-base">✅</p>
+              <p class="text-xs font-black">Multi-Vehículo</p>
+              <p class="text-[10px] font-bold">Moto y Carro activos</p>
+            </div>
+          `}
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <a href="https://wa.me/${waSupport}" target="_blank" rel="noopener" class="py-3 rounded-2xl bg-gray-100 text-[#11131a] font-extrabold text-center block">
+            💬 Soporte Admin
+          </a>
+          <button type="button" onclick="openTermsPublicModal()" class="py-3 rounded-2xl bg-gray-100 text-[#11131a] font-extrabold">
+            📜 Términos
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  function closeUserSettingsModal() {
+    document.getElementById('user-settings-modal').classList.add('hidden');
+  }
+
+  function openUserProfileEditForm() {
+    const u = getActiveUser();
+    if (!u) return;
+    document.getElementById('user-settings-title').textContent = '✏️ Editar Mis Datos';
+    document.getElementById('user-settings-body').innerHTML = `
+      <div class="space-y-2.5">
+        <div>
+          <label class="font-bold text-gray-600">Nombre y Apellido</label>
+          <input type="text" id="self-edit-name" value="${u.name || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Teléfono</label>
+          <input type="tel" id="self-edit-phone" value="${u.phone || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Contraseña</label>
+          <input type="text" id="self-edit-pass" value="${u.pass || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="openUserSettingsModal('${u.role}')" class="px-4 py-3 rounded-2xl bg-gray-100 font-extrabold">Volver</button>
+          <button type="button" onclick="saveSelfProfileChanges()" class="flex-1 py-3 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+            💾 Guardar Cambios
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function saveSelfProfileChanges() {
+    const u = getActiveUser();
+    if (!u) return;
+    const name = document.getElementById('self-edit-name').value.trim();
+    const phone = document.getElementById('self-edit-phone').value.trim();
+    const pass = document.getElementById('self-edit-pass').value.trim();
+
+    if (!name || !phone || !pass) {
+      showToast('Completa todos los campos');
+      return;
+    }
+
+    u.name = name;
+    u.phone = phone;
+    u.pass = pass;
+
+    await cloudPatch(`users/${u.id}`, { name, phone, pass });
+    saveLocalOnly();
+    closeUserSettingsModal();
+    routeUserScreen();
+    showToast('Perfil actualizado ✓');
   }
 
   // =========================================================
@@ -1093,6 +1275,7 @@
     appState.activeUserId = null;
     driverManualOffline = false;
     closeOwnerModal();
+    closeUserSettingsModal();
     closeTripChatModal();
     localStorage.removeItem(STORAGE_KEY + '_activeId');
     ['screen-pending', 'screen-passenger', 'screen-driver', 'screen-owner'].forEach(id => {
@@ -1367,6 +1550,9 @@
   function openOwnerModal(tab) {
     currentOpenOwnerTab = tab;
     document.getElementById('owner-submodal').classList.remove('hidden');
+    const settingsSubTabs = ['bcv', 'comision', 'tarifas', 'datos_app', 'pago_movil', 'terminos'];
+    const backBtn = document.getElementById('owner-submodal-back');
+    if (backBtn) backBtn.classList.toggle('hidden', !settingsSubTabs.includes(tab));
     renderOwnerModalContent(tab);
   }
 
@@ -1379,7 +1565,62 @@
     const titleEl = document.getElementById('owner-submodal-title');
     const bodyEl = document.getElementById('owner-submodal-body');
 
-    if (tab === 'ganancia') {
+    if (tab === 'ajustes') {
+      titleEl.textContent = '⚙️ Ajustes de la Plataforma';
+      bodyEl.innerHTML = `
+        <p class="text-[11px] text-gray-500 font-bold">Selecciona qué parámetro deseas configurar:</p>
+        <div class="grid grid-cols-2 gap-2.5 pt-1">
+          <button type="button" onclick="openOwnerModal('bcv')" class="p-4 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">💱</p>
+            <p class="text-xs font-black">Tasa BCV</p>
+            <p class="text-[10px] text-[#00b14f] font-bold">Bs. ${Number(appState.bcvRate).toFixed(2)}</p>
+          </button>
+
+          <button type="button" onclick="openOwnerModal('comision')" class="p-4 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">📊</p>
+            <p class="text-xs font-black">% de comisión</p>
+            <p class="text-[10px] text-[#00b14f] font-bold">${appState.commissionPct}% por viaje</p>
+          </button>
+
+          <button type="button" onclick="openOwnerModal('tarifas')" class="p-4 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">💵</p>
+            <p class="text-xs font-black">Tarifas</p>
+            <p class="text-[10px] text-gray-300 font-bold">Moto $${Number(appState.tariffs.motoMin).toFixed(2)} · Carro $${Number(appState.tariffs.carroMin).toFixed(2)}</p>
+          </button>
+
+          <button type="button" onclick="openOwnerModal('pago_movil')" class="p-4 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">📲</p>
+            <p class="text-xs font-black">Pago Móvil</p>
+            <p class="text-[10px] text-gray-300 font-bold truncate">${appState.ownerPayment.phone}</p>
+          </button>
+
+          <button type="button" onclick="openOwnerModal('datos_app')" class="p-4 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">🏢</p>
+            <p class="text-xs font-black">Datos de la app</p>
+            <p class="text-[10px] text-gray-300 font-bold truncate">${appState.appMeta.city}</p>
+          </button>
+
+          <button type="button" onclick="openOwnerModal('terminos')" class="p-4 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
+            <p class="text-base">📜</p>
+            <p class="text-xs font-black">Términos y condiciones</p>
+            <p class="text-[10px] text-gray-300 font-bold">Reglas legales</p>
+          </button>
+        </div>
+      `;
+    } else if (tab === 'pago_movil') {
+      const pay = appState.ownerPayment;
+      titleEl.textContent = '📲 Mi Pago Móvil';
+      bodyEl.innerHTML = `
+        <p class="text-[11px] text-gray-500">Solo los conductores verán estos datos al reportar su comisión.</p>
+        <input type="text" id="pm-bank" value="${pay.bank}" placeholder="Banco" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+        <input type="tel" id="pm-phone" value="${pay.phone}" placeholder="Teléfono Pago Móvil" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+        <input type="text" id="pm-ci" value="${pay.ci}" placeholder="Cédula o RIF" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+        <input type="text" id="pm-name" value="${pay.name}" placeholder="Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+        <button type="button" onclick="saveOwnerPagoMovil()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+          💾 Guardar Pago Móvil (PIN 2026)
+        </button>
+      `;
+    } else if (tab === 'ganancia') {
       titleEl.textContent = '💰 Mi Ganancia y Comisiones';
       const approvedComms = appState.commissionReports.filter(r => r.status === 'approved');
       const pendingComms = appState.commissionReports.filter(r => r.status === 'pending');
@@ -1514,7 +1755,7 @@
         });
       }, 150);
     } else if (tab === 'datos_app') {
-      titleEl.textContent = '⚙️ Datos de la App';
+      titleEl.textContent = '🏢 Datos de la App';
       const m = appState.appMeta;
       bodyEl.innerHTML = `
         <div class="space-y-2.5">
@@ -1685,6 +1926,7 @@
     const u = appState.users.find(x => x.id === userId);
     if (!u) return;
     currentOpenOwnerTab = 'edit_user';
+    document.getElementById('owner-submodal-back')?.classList.add('hidden');
     document.getElementById('owner-submodal-title').textContent = `✏️ Editar: ${u.name}`;
     document.getElementById('owner-submodal-body').innerHTML = `
       <div class="space-y-2.5">
@@ -1754,7 +1996,7 @@
     appState.bcvRate = num;
     await cloudPatch('config', { bcvRate: num });
     saveLocalOnly();
-    closeOwnerModal();
+    openOwnerModal('ajustes');
     showToast(`Tasa actualizada a Bs. ${num.toFixed(2)}`);
   }
 
@@ -1765,7 +2007,7 @@
     appState.commissionPct = num;
     await cloudPatch('config', { commissionPct: num });
     saveLocalOnly();
-    closeOwnerModal();
+    openOwnerModal('ajustes');
     showToast(`Comisión actualizada al ${num}%`);
   }
 
@@ -1776,7 +2018,7 @@
     appState.appMeta.emergencyPhone = document.getElementById('meta-emerg').value.trim();
     await cloudPatch('config', { appMeta: appState.appMeta });
     saveLocalOnly();
-    closeOwnerModal();
+    openOwnerModal('ajustes');
     showToast('Datos guardados');
   }
 
@@ -1790,7 +2032,7 @@
     appState.tariffs.envioKm = appState.tariffs.motoKm;
     await cloudPatch('config', { tariffs: appState.tariffs });
     saveLocalOnly();
-    closeOwnerModal();
+    openOwnerModal('ajustes');
     showToast('Tarifas actualizadas');
   }
 
@@ -1799,14 +2041,14 @@
     appState.appMeta.terms = document.getElementById('input-owner-terms').value.trim();
     await cloudPatch('config', { appMeta: appState.appMeta });
     saveLocalOnly();
-    closeOwnerModal();
+    openOwnerModal('ajustes');
     showToast('Términos guardados');
   }
 
   function openTermsPublicModal() {
     document.getElementById('modal-public-terms')?.remove();
     document.body.insertAdjacentHTML('beforeend', `
-      <div id="modal-public-terms" class="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+      <div id="modal-public-terms" class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center p-4">
         <div class="bg-white text-[#11131a] rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-black">📜 Términos y Condiciones</h3>
@@ -1877,29 +2119,6 @@
     showToast('Pago aprobado y deuda saldada');
   }
 
-  function openOwnerPagoMovilModal() {
-    const pay = appState.ownerPayment;
-    document.getElementById('modal-owner-pm')?.remove();
-    document.body.insertAdjacentHTML('beforeend', `
-      <div id="modal-owner-pm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-black">📲 Mi Pago Móvil</h3>
-            <button type="button" onclick="document.getElementById('modal-owner-pm').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
-          </div>
-          <p class="text-[11px] text-gray-500">Solo los conductores verán estos datos al reportar su comisión.</p>
-          <input type="text" id="pm-bank" value="${pay.bank}" placeholder="Banco" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <input type="tel" id="pm-phone" value="${pay.phone}" placeholder="Teléfono Pago Móvil" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <input type="text" id="pm-ci" value="${pay.ci}" placeholder="Cédula o RIF" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <input type="text" id="pm-name" value="${pay.name}" placeholder="Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
-          <button type="button" onclick="saveOwnerPagoMovil()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
-            💾 Guardar (PIN 2026)
-          </button>
-        </div>
-      </div>
-    `);
-  }
-
   async function saveOwnerPagoMovil() {
     if (!requirePin('guardar tu Pago Móvil')) return;
     appState.ownerPayment = {
@@ -1910,7 +2129,7 @@
     };
     await cloudPatch('config', { ownerPayment: appState.ownerPayment });
     saveLocalOnly();
-    document.getElementById('modal-owner-pm').remove();
+    openOwnerModal('ajustes');
     showToast('Pago Móvil guardado');
   }
 
