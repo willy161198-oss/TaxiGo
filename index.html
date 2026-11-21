@@ -146,21 +146,23 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 2: PASAJERO (CON BOTÓN ⚙️ AJUSTES)
+     PANTALLA 2: PASAJERO (MAPA COMPLETO + MENÚ TU CUENTA)
      ========================================================= -->
 <div id="screen-passenger" class="hidden fixed inset-0 flex flex-col bg-gray-100">
+  <!-- Barra Superior Limpia -->
   <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
-    <button type="button" onclick="openUserSettingsModal('passenger')" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition">
-      ⚙️ <span id="pass-header-name">Ajustes</span>
+    <button type="button" onclick="openAccountDrawer()" class="w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg font-black active:scale-90 transition" title="Tu Cuenta">
+      ☰
     </button>
-    <div class="px-3.5 py-2 rounded-full bg-[#11131a] text-white shadow-lg text-xs font-black">
+    <div class="px-4 py-2 rounded-full bg-[#11131a] text-white shadow-lg text-xs font-black">
       Taxi<span class="text-[#00b14f]">Go</span>
     </div>
-    <button type="button" onclick="logoutApp()" class="px-3.5 py-2 rounded-full bg-red-600 text-white shadow-lg text-xs font-extrabold">
-      🚪 Salir
+    <button type="button" onclick="openSupportWhatsapp()" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1 active:scale-95 transition">
+      🎧 Soporte
     </button>
   </div>
 
+  <!-- Botones Flotantes Derecha -->
   <div class="absolute right-3 top-16 z-20 flex flex-col gap-2">
     <button type="button" onclick="syncPassengerGps(true)" class="w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación GPS">
       🎯
@@ -255,69 +257,53 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 3: CONDUCTOR (CON BOTÓN ⚙️ AJUSTES)
+     PANTALLA 3: CONDUCTOR (MAPA FULL SCREEN COMO TU FOTO 2)
      ========================================================= -->
-<div id="screen-driver" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
-  <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20 gap-1">
-    <div class="min-w-0">
-      <p class="text-[10px] uppercase font-extrabold text-[#00b14f]">Panel Conductor</p>
-      <h2 id="drv-header-name" class="text-sm font-black truncate">Conductor</h2>
-    </div>
-    <div class="flex items-center gap-1 shrink-0">
-      <button type="button" onclick="forceCloudPull()" class="px-2 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Actualizar solicitudes">
+<div id="screen-driver" class="hidden fixed inset-0 flex flex-col bg-gray-100">
+  <!-- Controles Flotantes Superiores -->
+  <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
+    <button type="button" onclick="openAccountDrawer()" class="w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg font-black active:scale-90 transition" title="Tu Cuenta">
+      ☰
+    </button>
+
+    <button type="button" onclick="openSupportWhatsapp()" class="px-4 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold text-gray-700 flex items-center gap-1.5 active:scale-95 transition">
+      🎧 Soporte
+    </button>
+
+    <div class="flex items-center gap-1.5">
+      <button type="button" onclick="forceCloudPull()" class="w-10 h-10 rounded-full bg-white shadow-xl flex items-center justify-center text-sm active:scale-90 transition" title="Actualizar">
         🔄
       </button>
-      <button type="button" onclick="openUserSettingsModal('driver')" class="px-2.5 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Ajustes de conductor">
-        ⚙️
-      </button>
-      <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
-        ● En Línea
-      </button>
-      <button type="button" onclick="logoutApp()" class="px-2.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
-        🚪 Salir
+      <button type="button" onclick="openDriverOptionalGoogleMaps()" class="w-10 h-10 rounded-full bg-[#4285F4] text-white shadow-xl flex items-center justify-center text-sm active:scale-90 transition" title="Abrir Google Maps">
+        🗺️
       </button>
     </div>
   </div>
 
-  <div class="p-4 space-y-4 max-w-lg w-full mx-auto">
-    <div id="drv-vehicle-switcher-box" class="bg-white rounded-3xl p-3.5 shadow-sm border border-gray-200"></div>
+  <!-- Botón Flotante GPS Conductor -->
+  <button type="button" onclick="centerDriverOwnMap()" class="absolute right-3 top-16 z-20 w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación">
+    🎯
+  </button>
 
-    <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 grid grid-cols-3 gap-2 text-center">
-      <div>
-        <p class="text-[10px] font-bold text-gray-400">Viajes</p>
-        <p id="drv-stat-trips" class="text-base font-black">0</p>
-      </div>
-      <div>
-        <p class="text-[10px] font-bold text-gray-400">Ganado</p>
-        <p id="drv-stat-earned" class="text-base font-black text-[#00b14f]">$0.00</p>
-      </div>
-      <div>
-        <p class="text-[10px] font-bold text-gray-400">Comisión <span id="drv-comm-pct-label">10</span>%</p>
-        <p id="drv-stat-debt" class="text-base font-black text-red-500">$0.00</p>
-      </div>
-    </div>
+  <!-- Mapa Principal a Pantalla Completa -->
+  <div id="map-driver" class="w-full h-full"></div>
 
-    <button type="button" onclick="openDriverCommissionModal()" class="w-full py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow">
-      📲 Pagar Comisión al Dueño
-    </button>
+  <!-- Panel Inferior Flotante del Conductor (Botón Conectarme/Desconectarme + Solicitudes + Carrera Activa) -->
+  <div id="drv-bottom-sheet" class="fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-3xl p-4 shadow-2xl border-t border-gray-200 max-h-[68vh] overflow-y-auto space-y-3">
+    <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto"></div>
 
-    <div id="drv-active-trip-wrapper" class="hidden space-y-3">
-      <div class="relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#11131a]">
-        <div id="map-driver" class="w-full h-64 bg-gray-200"></div>
-        <button type="button" onclick="openDriverOptionalGoogleMaps()" class="absolute top-2.5 right-2.5 z-20 px-3 py-1.5 rounded-full bg-[#4285F4] text-white text-[11px] font-extrabold shadow-lg flex items-center gap-1 active:scale-95 transition">
-          🗺️ Maps
-        </button>
-        <div id="drv-map-route-badge" class="absolute bottom-2.5 left-2.5 right-2.5 z-20 px-3 py-1.5 rounded-xl bg-[#11131a]/90 text-white text-[11px] font-bold truncate">
-          Calculando ruta en mapa...
-        </div>
-      </div>
+    <!-- Ruta en curso badge (visible en viaje) -->
+    <div id="drv-map-route-badge" class="hidden px-3 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-bold truncate text-center"></div>
 
-      <div id="drv-active-trip-box"></div>
-    </div>
+    <!-- Carrera Activa -->
+    <div id="drv-active-trip-box" class="hidden"></div>
 
-    <div class="space-y-2">
-      <h3 class="text-xs font-extrabold uppercase text-gray-500">Solicitudes de Pasajeros</h3>
-      <div id="drv-requests-list" class="space-y-2.5"></div>
+    <!-- Botón Principal Conectarme / Desconectarme (cuando no hay viaje activo) -->
+    <div id="drv-standby-box" class="space-y-2.5">
+      <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="w-full py-4 rounded-2xl bg-[#11131a] text-white text-sm font-black flex items-center justify-center gap-2 shadow-lg active:scale-95 transition">
+        🏍️ Desconectarme
+      </button>
+      <div id="drv-requests-list" class="space-y-2"></div>
     </div>
   </div>
 </div>
@@ -393,15 +379,28 @@
 </div>
 
 <!-- =========================================================
-     MODAL DE AJUSTES PARA PASAJEROS Y CONDUCTORES
+     PANTALLA "TU CUENTA" (COMO TUS FOTOS 3 Y 4: PERFIL, ACTIVIDAD, CAMBIAR MODO)
      ========================================================= -->
-<div id="user-settings-modal" class="hidden fixed inset-0 z-[65] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4">
-  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+<div id="account-drawer-modal" class="hidden fixed inset-0 z-[65] bg-white flex flex-col overflow-y-auto">
+  <div class="px-4 py-3.5 flex items-center justify-between border-b border-gray-100 sticky top-0 bg-white z-10">
+    <button type="button" onclick="closeAccountDrawer()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-black">
+      ‹
+    </button>
+    <h3 class="text-sm font-black">Tu cuenta</h3>
+    <div class="w-9"></div>
+  </div>
+
+  <div id="account-drawer-body" class="p-5 max-w-md w-full mx-auto space-y-5 pb-10"></div>
+</div>
+
+<!-- Submodal dentro de Tu Cuenta (Perfil / Vehículos / Pagos / Historial) -->
+<div id="account-submodal" class="hidden fixed inset-0 z-[75] bg-black/75 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
     <div class="px-5 py-4 bg-[#11131a] text-white flex items-center justify-between">
-      <h3 id="user-settings-title" class="text-sm font-black">⚙️ Ajustes</h3>
-      <button type="button" onclick="closeUserSettingsModal()" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
+      <h3 id="account-submodal-title" class="text-sm font-black">Detalle</h3>
+      <button type="button" onclick="document.getElementById('account-submodal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
     </div>
-    <div id="user-settings-body" class="p-5 overflow-y-auto space-y-3 text-xs"></div>
+    <div id="account-submodal-body" class="p-5 overflow-y-auto space-y-3 text-xs"></div>
   </div>
 </div>
 
@@ -480,7 +479,8 @@
     users: [],
     trips: [],
     commissionReports: [],
-    activeUserId: null
+    activeUserId: null,
+    viewModeOverride: null // Permite a un conductor alternar a 'passenger' y viceversa
   };
 
   let currentOpenOwnerTab = null;
@@ -497,8 +497,17 @@
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   }
 
+  function getEffectiveRole(u) {
+    if (!u) return null;
+    if (u.role === 'owner') return 'owner';
+    if (appState.viewModeOverride === 'passenger' || appState.viewModeOverride === 'driver') {
+      return appState.viewModeOverride;
+    }
+    return u.role;
+  }
+
   function getDriverVehiclesList(u) {
-    if (!u || u.role !== 'driver') return [];
+    if (!u || (u.role !== 'driver' && !u.plate && !Array.isArray(u.vehicles))) return [];
     if (Array.isArray(u.vehicles) && u.vehicles.length > 0) return u.vehicles;
     if (u.vehicleType && u.plate) {
       return [{
@@ -529,13 +538,19 @@
     return list[0];
   }
 
+  function openSupportWhatsapp() {
+    const clean = (appState.appMeta.supportWhatsapp || '').replace(/[^0-9]/g, '');
+    const wa = clean.startsWith('0') ? '58' + clean.slice(1) : clean;
+    const url = `https://wa.me/${wa}?text=${encodeURIComponent('Hola Soporte TaxiGo, necesito ayuda.')}`;
+    openExternalGoogleMaps(url);
+  }
+
   function openExternalGoogleMaps(url) {
     if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openLink === 'function') {
       window.Telegram.WebApp.openLink(url);
     } else {
       window.open(url, '_blank', 'noopener');
     }
-    showToast('Abriendo Google Maps (TaxiGo sigue activo)');
   }
 
   function openPassengerGoogleMaps() {
@@ -543,14 +558,11 @@
     const activeTrip = u ? appState.trips.find(t => t.passengerId === u.id && ['searching', 'accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)) : null;
 
     if (activeTrip && activeTrip.originCoords && activeTrip.destCoords) {
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${activeTrip.originCoords[0]},${activeTrip.originCoords[1]}&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`;
-      openExternalGoogleMaps(url);
+      openExternalGoogleMaps(`https://www.google.com/maps/dir/?api=1&origin=${activeTrip.originCoords[0]},${activeTrip.originCoords[1]}&destination=${activeTrip.destCoords[0]},${activeTrip.destCoords[1]}&travelmode=driving`);
     } else if (originCoords && destCoords) {
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${originCoords[0]},${originCoords[1]}&destination=${destCoords[0]},${destCoords[1]}&travelmode=driving`;
-      openExternalGoogleMaps(url);
+      openExternalGoogleMaps(`https://www.google.com/maps/dir/?api=1&origin=${originCoords[0]},${originCoords[1]}&destination=${destCoords[0]},${destCoords[1]}&travelmode=driving`);
     } else if (originCoords) {
-      const url = `https://www.google.com/maps/search/?api=1&query=${originCoords[0]},${originCoords[1]}`;
-      openExternalGoogleMaps(url);
+      openExternalGoogleMaps(`https://www.google.com/maps/search/?api=1&query=${originCoords[0]},${originCoords[1]}`);
     } else {
       openExternalGoogleMaps('https://www.google.com/maps');
     }
@@ -564,8 +576,7 @@
       return;
     }
     const targetCoords = (activeTrip.status === 'in_progress') ? activeTrip.destCoords : activeTrip.originCoords;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${targetCoords[0]},${targetCoords[1]}&travelmode=driving`;
-    openExternalGoogleMaps(url);
+    openExternalGoogleMaps(`https://www.google.com/maps/dir/?api=1&destination=${targetCoords[0]},${targetCoords[1]}&travelmode=driving`);
   }
 
   async function cloudPut(path, data) {
@@ -605,12 +616,15 @@
   function loadLocalSession() {
     try {
       const savedId = localStorage.getItem(STORAGE_KEY + '_activeId');
+      const savedMode = localStorage.getItem(STORAGE_KEY + '_viewMode');
       if (savedId) appState.activeUserId = savedId;
+      if (savedMode) appState.viewModeOverride = savedMode;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         appState = Object.assign(appState, parsed);
         appState.activeUserId = savedId || null;
+        appState.viewModeOverride = savedMode || null;
       }
     } catch (e) {}
   }
@@ -622,8 +636,14 @@
       } else {
         localStorage.removeItem(STORAGE_KEY + '_activeId');
       }
+      if (appState.viewModeOverride) {
+        localStorage.setItem(STORAGE_KEY + '_viewMode', appState.viewModeOverride);
+      } else {
+        localStorage.removeItem(STORAGE_KEY + '_viewMode');
+      }
       const copy = Object.assign({}, appState);
       delete copy.activeUserId;
+      delete copy.viewModeOverride;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
     } catch (e) {}
   }
@@ -674,7 +694,9 @@
       renderTripChatMessages(activeChatTripId);
     }
 
-    if (u.role === 'owner') {
+    const effRole = getEffectiveRole(u);
+
+    if (effRole === 'owner') {
       updateOwnerBadges();
       const editableTabs = ['bcv', 'comision', 'datos_app', 'tarifas', 'terminos', 'pago_movil', 'edit_user', 'ajustes'];
       if (currentOpenOwnerTab && !editableTabs.includes(currentOpenOwnerTab) && currentOpenOwnerTab !== 'mapa_vivo' && !isUserTyping()) {
@@ -686,9 +708,9 @@
     } else if (u.approved && !document.getElementById('screen-pending').classList.contains('hidden')) {
       showToast('¡Cuenta autorizada!');
       routeUserScreen();
-    } else if (u.role === 'driver') {
+    } else if (effRole === 'driver') {
       renderDriverDashboard();
-    } else if (u.role === 'passenger') {
+    } else if (effRole === 'passenger') {
       syncPassengerTripUI();
     }
   }
@@ -720,178 +742,229 @@
   }
 
   // =========================================================
-  // AJUSTES PARA PASAJEROS Y CONDUCTORES
+  // MENÚ "TU CUENTA" (COMO TUS FOTOS 3 Y 4 + CAMBIAR PASAJERO / CONDUCTOR)
   // =========================================================
-  function openUserSettingsModal(role) {
+  function openAccountDrawer() {
     const u = getActiveUser();
     if (!u) return;
+    const effRole = getEffectiveRole(u);
+    const body = document.getElementById('account-drawer-body');
+    const isDriverAccount = u.role === 'driver';
+    const tripsCount = isDriverAccount
+      ? (u.tripsCount || 0)
+      : appState.trips.filter(t => t.passengerId === u.id && t.status === 'completed').length;
 
-    const modal = document.getElementById('user-settings-modal');
-    const title = document.getElementById('user-settings-title');
-    const body = document.getElementById('user-settings-body');
-    modal.classList.remove('hidden');
+    const avatarHtml = u.selfieImg
+      ? `<img src="${u.selfieImg}" class="w-20 h-20 rounded-full object-cover border-2 border-[#00b14f] mx-auto shadow" />`
+      : `<div class="w-20 h-20 rounded-full bg-[#11131a] text-white text-2xl font-black flex items-center justify-center mx-auto shadow">${(u.name || 'U')[0]}</div>`;
 
-    const cleanSupport = (appState.appMeta.supportWhatsapp || '').replace(/[^0-9]/g, '');
-    const waSupport = cleanSupport.startsWith('0') ? '58' + cleanSupport.slice(1) : cleanSupport;
-
-    if (role === 'passenger') {
-      title.textContent = `⚙️ Ajustes de Pasajero`;
-      const completedCount = appState.trips.filter(t => t.passengerId === u.id && t.status === 'completed').length;
-
-      body.innerHTML = `
-        <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between">
-          <div>
-            <p class="font-black text-sm">🧍 ${u.name}</p>
-            <p class="text-[11px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
+    // Botón de cambio de rol (Cambiar a pasajero / Cambiar a conductor)
+    let switchModeBtnHtml = '';
+    if (effRole === 'driver') {
+      switchModeBtnHtml = `
+        <button type="button" onclick="switchUserViewMode('passenger')" class="w-full p-4 rounded-2xl bg-[#11131a] text-white flex items-center justify-between shadow-lg active:scale-95 transition">
+          <div class="flex items-center gap-3">
+            <span class="text-xl text-[#00b14f]">🧍</span>
+            <div class="text-left">
+              <p class="text-sm font-black">Cambiar a pasajero</p>
+              <p class="text-[11px] text-gray-400">Solicita viajes como pasajero</p>
+            </div>
           </div>
-          <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold">${completedCount} viajes</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <button type="button" onclick="openUserProfileEditForm()" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
-            <p class="text-base">✏️</p>
-            <p class="text-xs font-black">Mis Datos</p>
-            <p class="text-[10px] text-gray-300">Nombre, clave, teléfono</p>
-          </button>
-
-          <button type="button" onclick="closeUserSettingsModal();openHistoryModal('passenger');" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
-            <p class="text-base">📋</p>
-            <p class="text-xs font-black">Mis Viajes</p>
-            <p class="text-[10px] text-gray-300">Historial completo</p>
-          </button>
-
-          <a href="https://wa.me/${waSupport}" target="_blank" rel="noopener" class="p-3.5 rounded-2xl bg-[#00b14f] text-white text-left space-y-1 shadow active:scale-95 transition block">
-            <p class="text-base">💬</p>
-            <p class="text-xs font-black">Soporte TaxiGo</p>
-            <p class="text-[10px] text-white/90">Ayuda por WhatsApp</p>
-          </a>
-
-          <a href="tel:${appState.appMeta.emergencyPhone || '911'}" class="p-3.5 rounded-2xl bg-red-600 text-white text-left space-y-1 shadow active:scale-95 transition block">
-            <p class="text-base">🆘</p>
-            <p class="text-xs font-black">Emergencia</p>
-            <p class="text-[10px] text-white/90">Llamar al ${appState.appMeta.emergencyPhone || '911'}</p>
-          </a>
-        </div>
-
-        <button type="button" onclick="openTermsPublicModal()" class="w-full py-3 rounded-2xl bg-gray-100 text-[#11131a] font-extrabold">
-          📜 Términos y Condiciones
+          <span class="text-gray-400 font-bold">›</span>
         </button>
       `;
-    } else if (role === 'driver') {
-      title.textContent = `⚙️ Ajustes de Conductor`;
-      const vehs = getDriverVehiclesList(u);
-      const hasBothReg = vehs.some(v => v.type === 'Moto') && vehs.some(v => v.type === 'Carro');
-      const activeVeh = getDriverActiveVehicle(u);
-      const missingType = activeVeh.type === 'Moto' ? 'Carro' : 'Moto';
-
-      body.innerHTML = `
-        <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center justify-between">
-          <div>
-            <p class="font-black text-sm">🧑🏻‍✈️ ${u.name}</p>
-            <p class="text-[11px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
-          </div>
-          <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold">${u.tripsCount || 0} viajes</span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <button type="button" onclick="openUserProfileEditForm()" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
-            <p class="text-base">✏️</p>
-            <p class="text-xs font-black">Mis Datos</p>
-            <p class="text-[10px] text-gray-300">Nombre, clave, teléfono</p>
-          </button>
-
-          <button type="button" onclick="closeUserSettingsModal();openHistoryModal('driver');" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
-            <p class="text-base">📋</p>
-            <p class="text-xs font-black">Mis Viajes</p>
-            <p class="text-[10px] text-gray-300">Historial y ganancias</p>
-          </button>
-
-          <button type="button" onclick="closeUserSettingsModal();openDriverCommissionModal();" class="p-3.5 rounded-2xl bg-[#11131a] text-white text-left space-y-1 shadow active:scale-95 transition">
-            <p class="text-base">📲</p>
-            <p class="text-xs font-black">Pagar Comisión</p>
-            <p class="text-[10px] text-amber-400 font-bold">Deuda: $${Number(u.debtUsd || 0).toFixed(2)}</p>
-          </button>
-
-          ${!hasBothReg ? `
-            <button type="button" onclick="closeUserSettingsModal();openAddSecondVehicleModal('${missingType}');" class="p-3.5 rounded-2xl bg-[#00b14f] text-white text-left space-y-1 shadow active:scale-95 transition">
-              <p class="text-base">🚘</p>
-              <p class="text-xs font-black">+ Agregar ${missingType}</p>
-              <p class="text-[10px] text-white/90">Trabajar ambos modos</p>
-            </button>
-          ` : `
-            <div class="p-3.5 rounded-2xl bg-[#00b14f]/15 text-[#00b14f] text-left space-y-1 border border-[#00b14f]/30">
-              <p class="text-base">✅</p>
-              <p class="text-xs font-black">Multi-Vehículo</p>
-              <p class="text-[10px] font-bold">Moto y Carro activos</p>
+    } else if (effRole === 'passenger' && isDriverAccount) {
+      switchModeBtnHtml = `
+        <button type="button" onclick="switchUserViewMode('driver')" class="w-full p-4 rounded-2xl bg-[#11131a] text-white flex items-center justify-between shadow-lg active:scale-95 transition">
+          <div class="flex items-center gap-3">
+            <span class="text-xl text-[#00b14f]">🚖</span>
+            <div class="text-left">
+              <p class="text-sm font-black">Cambiar a conductor</p>
+              <p class="text-[11px] text-gray-400">Volver a recibir carreras</p>
             </div>
-          `}
-        </div>
-
-        <div class="grid grid-cols-2 gap-2.5">
-          <a href="https://wa.me/${waSupport}" target="_blank" rel="noopener" class="py-3 rounded-2xl bg-gray-100 text-[#11131a] font-extrabold text-center block">
-            💬 Soporte Admin
-          </a>
-          <button type="button" onclick="openTermsPublicModal()" class="py-3 rounded-2xl bg-gray-100 text-[#11131a] font-extrabold">
-            📜 Términos
-          </button>
-        </div>
+          </div>
+          <span class="text-gray-400 font-bold">›</span>
+        </button>
       `;
     }
-  }
 
-  function closeUserSettingsModal() {
-    document.getElementById('user-settings-modal').classList.add('hidden');
-  }
+    body.innerHTML = `
+      <!-- Cabecera de Perfil -->
+      <div class="text-center space-y-1.5">
+        ${avatarHtml}
+        <div class="pt-1">
+          <h4 class="text-base font-black">${u.name} <span class="text-[11px] font-bold text-gray-400">(${effRole === 'driver' ? 'Conductor' : 'Pasajero'})</span></h4>
+          <p class="text-xs text-gray-500 font-semibold">${u.phone}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 pt-3 pb-1 border-b border-gray-100">
+          <div>
+            <p class="text-base font-black">5.0 ⭐</p>
+            <p class="text-[10px] text-gray-400 font-bold">Calificación</p>
+          </div>
+          <div>
+            <p class="text-base font-black">${tripsCount}</p>
+            <p class="text-[10px] text-gray-400 font-bold">Viajes completados</p>
+          </div>
+        </div>
+      </div>
 
-  function openUserProfileEditForm() {
-    const u = getActiveUser();
-    if (!u) return;
-    document.getElementById('user-settings-title').textContent = '✏️ Editar Mis Datos';
-    document.getElementById('user-settings-body').innerHTML = `
-      <div class="space-y-2.5">
-        <div>
-          <label class="font-bold text-gray-600">Nombre y Apellido</label>
-          <input type="text" id="self-edit-name" value="${u.name || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
-        </div>
-        <div>
-          <label class="font-bold text-gray-600">Teléfono</label>
-          <input type="tel" id="self-edit-phone" value="${u.phone || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
-        </div>
-        <div>
-          <label class="font-bold text-gray-600">Contraseña</label>
-          <input type="text" id="self-edit-pass" value="${u.pass || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
-        </div>
-        <div class="flex gap-2 pt-1">
-          <button type="button" onclick="openUserSettingsModal('${u.role}')" class="px-4 py-3 rounded-2xl bg-gray-100 font-extrabold">Volver</button>
-          <button type="button" onclick="saveSelfProfileChanges()" class="flex-1 py-3 rounded-2xl bg-[#00b14f] text-white font-extrabold">
-            💾 Guardar Cambios
+      <!-- Sección TU ACTIVIDAD -->
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider px-1">Tu actividad</p>
+        <div class="divide-y divide-gray-100 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+          ${isDriverAccount ? `
+            <button type="button" onclick="openAccountSubView('vehiculos')" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-100">
+              <div class="flex items-center gap-3">
+                <span class="text-base">🚘</span>
+                <span class="text-xs font-extrabold">Mis vehículos</span>
+              </div>
+              <span class="text-gray-400 font-bold">›</span>
+            </button>
+            <button type="button" onclick="closeAccountDrawer();openDriverCommissionModal();" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-100">
+              <div class="flex items-center gap-3">
+                <span class="text-base">💳</span>
+                <div>
+                  <p class="text-xs font-extrabold">Pagos y Comisión (${appState.commissionPct}%)</p>
+                  <p class="text-[10px] text-red-500 font-bold">Pendiente: $${Number(u.debtUsd || 0).toFixed(2)}</p>
+                </div>
+              </div>
+              <span class="text-gray-400 font-bold">›</span>
+            </button>
+          ` : ''}
+          <button type="button" onclick="closeAccountDrawer();openHistoryModal('${effRole}');" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-100">
+            <div class="flex items-center gap-3">
+              <span class="text-base">🕒</span>
+              <div>
+                <p class="text-xs font-extrabold">Historial de viajes</p>
+                <p class="text-[10px] text-gray-400 font-bold">${tripsCount} viajes</p>
+              </div>
+            </div>
+            <span class="text-gray-400 font-bold">›</span>
           </button>
         </div>
       </div>
+
+      <!-- Sección TU CUENTA -->
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider px-1">Tu cuenta</p>
+        <div class="divide-y divide-gray-100 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+          <button type="button" onclick="openAccountSubView('perfil_datos')" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-100">
+            <div class="flex items-center gap-3">
+              <span class="text-base">🪪</span>
+              <div>
+                <p class="text-xs font-extrabold">Perfil y datos personales</p>
+                <p class="text-[10px] text-gray-400 font-bold">Cédula, teléfono y documentos</p>
+              </div>
+            </div>
+            <span class="text-gray-400 font-bold">›</span>
+          </button>
+          <button type="button" onclick="openSupportWhatsapp()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-100">
+            <div class="flex items-center gap-3">
+              <span class="text-base">🎧</span>
+              <div>
+                <p class="text-xs font-extrabold">Soporte técnico</p>
+                <p class="text-[10px] text-gray-400 font-bold">Resuelve un problema</p>
+              </div>
+            </div>
+            <span class="text-gray-400 font-bold">›</span>
+          </button>
+          <button type="button" onclick="openTermsPublicModal()" class="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-gray-100">
+            <div class="flex items-center gap-3">
+              <span class="text-base">📄</span>
+              <span class="text-xs font-extrabold">Términos y condiciones</span>
+            </div>
+            <span class="text-gray-400 font-bold">›</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Botón Cambiar a pasajero / conductor -->
+      ${switchModeBtnHtml}
+
+      <!-- Cerrar sesión -->
+      <button type="button" onclick="logoutApp()" class="w-full py-3.5 rounded-2xl bg-red-50 text-red-600 text-xs font-extrabold flex items-center justify-center gap-2 border border-red-200 active:scale-95 transition">
+        🚪 Cerrar sesión
+      </button>
     `;
+
+    document.getElementById('account-drawer-modal').classList.remove('hidden');
   }
 
-  async function saveSelfProfileChanges() {
+  function closeAccountDrawer() {
+    document.getElementById('account-drawer-modal').classList.add('hidden');
+  }
+
+  function switchUserViewMode(targetMode) {
+    appState.viewModeOverride = targetMode;
+    saveLocalOnly();
+    closeAccountDrawer();
+    routeUserScreen();
+    showToast(targetMode === 'passenger' ? '🧍 Modo Pasajero activado' : '🚖 Modo Conductor activado');
+  }
+
+  function openAccountSubView(sub) {
     const u = getActiveUser();
     if (!u) return;
-    const name = document.getElementById('self-edit-name').value.trim();
-    const phone = document.getElementById('self-edit-phone').value.trim();
-    const pass = document.getElementById('self-edit-pass').value.trim();
+    const modal = document.getElementById('account-submodal');
+    const title = document.getElementById('account-submodal-title');
+    const body = document.getElementById('account-submodal-body');
+    modal.classList.remove('hidden');
 
-    if (!name || !phone || !pass) {
-      showToast('Completa todos los campos');
-      return;
+    if (sub === 'perfil_datos') {
+      title.textContent = '🪪 Perfil y Datos Registrados';
+      body.innerHTML = `
+        <div class="space-y-2.5">
+          <div class="p-3.5 rounded-2xl bg-gray-100 space-y-1.5">
+            <p><span class="text-gray-500 font-bold">Nombre completo:</span> <b>${u.name}</b></p>
+            <p><span class="text-gray-500 font-bold">Cédula de Identidad:</span> <b>${u.cedula || 'Verificada'}</b></p>
+            <p><span class="text-gray-500 font-bold">Teléfono:</span> <b>${u.phone}</b></p>
+            <p><span class="text-gray-500 font-bold">Estado de cuenta:</span> <span class="text-[#00b14f] font-extrabold">✓ Autorizada</span></p>
+            <p><span class="text-gray-500 font-bold">Fecha de registro:</span> ${u.createdAt || 'Activo'}</p>
+          </div>
+          ${(u.cedulaImg || u.selfieImg) ? `
+            <div class="grid grid-cols-2 gap-2">
+              ${u.cedulaImg ? `<div><p class="text-[10px] font-bold text-gray-400 mb-1">Cédula Registrada</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border" /></div>` : ''}
+              ${u.selfieImg ? `<div><p class="text-[10px] font-bold text-gray-400 mb-1">Selfie Verificada</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border" /></div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    } else if (sub === 'vehiculos') {
+      title.textContent = '🚘 Mis Vehículos';
+      const allVehicles = getDriverVehiclesList(u);
+      const approvedVehicles = allVehicles.filter(v => v.approved);
+      const activeVeh = getDriverActiveVehicle(u);
+      const hasBothApproved = approvedVehicles.some(v => v.type === 'Moto') && approvedVehicles.some(v => v.type === 'Carro');
+      const hasBothRegistered = allVehicles.some(v => v.type === 'Moto') && allVehicles.some(v => v.type === 'Carro');
+      const missingType = activeVeh.type === 'Moto' ? 'Carro' : 'Moto';
+
+      body.innerHTML = `
+        <div class="space-y-2.5">
+          ${allVehicles.map(v => {
+            const isCurrent = activeVeh.plate === v.plate && v.approved;
+            return `
+              <div class="p-3.5 rounded-2xl border-2 ${isCurrent ? 'border-[#00b14f] bg-[#00b14f]/5' : 'border-gray-200 bg-gray-50'} flex items-center justify-between">
+                <div>
+                  <p class="font-black text-xs">${v.type === 'Moto' ? '🏍️' : '🚗'} ${v.model}</p>
+                  <p class="text-[11px] text-gray-600">Placa: <b>${v.plate}</b> · ${v.approved ? '<span class="text-[#00b14f] font-bold">Aprobado</span>' : '<span class="text-amber-600 font-bold">Pendiente</span>'}</p>
+                </div>
+                ${hasBothApproved && v.approved && !isCurrent ? `
+                  <button type="button" onclick="switchDriverVehicleType('${v.type}');document.getElementById('account-submodal').classList.add('hidden');closeAccountDrawer();" class="px-3 py-1.5 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold">
+                    Usar este
+                  </button>
+                ` : (isCurrent ? `<span class="px-2.5 py-1 rounded-full bg-[#00b14f] text-white text-[10px] font-extrabold">Activo</span>` : '')}
+              </div>
+            `;
+          }).join('')}
+
+          ${!hasBothRegistered ? `
+            <button type="button" onclick="document.getElementById('account-submodal').classList.add('hidden');closeAccountDrawer();openAddSecondVehicleModal('${missingType}');" class="w-full py-3 rounded-2xl bg-[#11131a] text-white font-extrabold">
+              + Registrar ${missingType} (Segundo Vehículo)
+            </button>
+          ` : ''}
+        </div>
+      `;
     }
-
-    u.name = name;
-    u.phone = phone;
-    u.pass = pass;
-
-    await cloudPatch(`users/${u.id}`, { name, phone, pass });
-    saveLocalOnly();
-    closeUserSettingsModal();
-    routeUserScreen();
-    showToast('Perfil actualizado ✓');
   }
 
   // =========================================================
@@ -944,14 +1017,15 @@
     activeChatTripId = tripId;
     lastRenderedChatCount = -1;
 
+    const effRole = getEffectiveRole(u);
     const drv = appState.users.find(x => x.id === trip.driverId) || {};
-    const partnerName = u.role === 'passenger'
+    const partnerName = effRole === 'passenger'
       ? `🚖 ${drv.name || 'Conductor'}`
       : `🧍 ${trip.passengerName || 'Pasajero'}`;
 
     document.getElementById('chat-partner-title').textContent = partnerName;
 
-    const quickReplies = u.role === 'driver'
+    const quickReplies = effRole === 'driver'
       ? ['Voy saliendo', 'Estoy afuera', 'Donde estas exactamente', 'Ya llegue, te espero']
       : ['Ya voy bajando', 'Estoy afuera esperando', 'Ok, perfecto', 'Por donde vienes'];
 
@@ -969,8 +1043,8 @@
     document.getElementById('trip-chat-modal').classList.remove('hidden');
     renderTripChatMessages(tripId);
 
-    if (u.role === 'driver') renderDriverDashboard();
-    if (u.role === 'passenger') syncPassengerTripUI();
+    if (effRole === 'driver') renderDriverDashboard();
+    if (effRole === 'passenger') syncPassengerTripUI();
   }
 
   function closeTripChatModal() {
@@ -1064,6 +1138,7 @@
       secretTapCount = 0;
       if (!requirePin('entrar al Panel de Dueño')) return;
       appState.activeUserId = 'OWNER';
+      appState.viewModeOverride = null;
       saveLocalOnly();
       routeUserScreen();
     }
@@ -1236,6 +1311,7 @@
 
     appState.users.push(newUser);
     appState.activeUserId = newUser.id;
+    appState.viewModeOverride = null;
     saveLocalOnly();
 
     btn.disabled = false;
@@ -1267,17 +1343,20 @@
 
     driverManualOffline = false;
     appState.activeUserId = user.id;
+    appState.viewModeOverride = null;
     saveLocalOnly();
     routeUserScreen();
   }
 
   function logoutApp() {
     appState.activeUserId = null;
+    appState.viewModeOverride = null;
     driverManualOffline = false;
     closeOwnerModal();
-    closeUserSettingsModal();
+    closeAccountDrawer();
     closeTripChatModal();
     localStorage.removeItem(STORAGE_KEY + '_activeId');
+    localStorage.removeItem(STORAGE_KEY + '_viewMode');
     ['screen-pending', 'screen-passenger', 'screen-driver', 'screen-owner'].forEach(id => {
       document.getElementById(id).classList.add('hidden');
     });
@@ -1318,7 +1397,9 @@
       return;
     }
 
-    if (user.role === 'owner') {
+    const effRole = getEffectiveRole(user);
+
+    if (effRole === 'owner') {
       document.getElementById('screen-owner').classList.remove('hidden');
       updateOwnerBadges();
       syncFromCloud();
@@ -1339,20 +1420,18 @@
       return;
     }
 
-    if (user.role === 'passenger') {
-      document.getElementById('pass-header-name').textContent = user.name.split(' ')[0];
+    if (effRole === 'passenger') {
       document.getElementById('screen-passenger').classList.remove('hidden');
       initPassengerMap();
       syncPassengerTripUI();
-    } else if (user.role === 'driver') {
+    } else if (effRole === 'driver') {
       if (!driverManualOffline && user.online !== true) {
         user.online = true;
         cloudPatch(`users/${user.id}`, { online: true });
         saveLocalOnly();
       }
-      const activeVeh = getDriverActiveVehicle(user);
-      document.getElementById('drv-header-name').textContent = `${user.name} · ${activeVeh.plate}`;
       document.getElementById('screen-driver').classList.remove('hidden');
+      initDriverOwnMap();
       startDriverGpsBroadcast();
       renderDriverDashboard();
     }
@@ -1361,63 +1440,9 @@
   // =========================================================
   // MULTI-VEHÍCULO PARA CONDUCTOR
   // =========================================================
-  function renderDriverVehicleSwitcher(u) {
-    const box = document.getElementById('drv-vehicle-switcher-box');
-    if (!box) return;
-
-    const allVehicles = getDriverVehiclesList(u);
-    const approvedVehicles = allVehicles.filter(v => v.approved);
-    const pendingVehicles = allVehicles.filter(v => !v.approved);
-    const activeVeh = getDriverActiveVehicle(u);
-
-    const hasMoto = approvedVehicles.some(v => v.type === 'Moto');
-    const hasCarro = approvedVehicles.some(v => v.type === 'Carro');
-    const hasBothApproved = hasMoto && hasCarro;
-    const hasBothRegistered = allVehicles.some(v => v.type === 'Moto') && allVehicles.some(v => v.type === 'Carro');
-
-    let switcherHtml = '';
-
-    if (hasBothApproved) {
-      switcherHtml = `
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Modo de Trabajo Activo</p>
-            <span class="text-[10px] font-bold text-gray-500">Placa: <b>${activeVeh.plate}</b></span>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" onclick="switchDriverVehicleType('Moto')" class="py-2.5 rounded-2xl text-xs font-extrabold border-2 transition ${activeVeh.type === 'Moto' ? 'bg-[#00b14f] text-white border-[#00b14f] shadow' : 'bg-gray-100 text-gray-600 border-gray-200'}">
-              🏍️ Trabajar en Moto
-            </button>
-            <button type="button" onclick="switchDriverVehicleType('Carro')" class="py-2.5 rounded-2xl text-xs font-extrabold border-2 transition ${activeVeh.type === 'Carro' ? 'bg-[#00b14f] text-white border-[#00b14f] shadow' : 'bg-gray-100 text-gray-600 border-gray-200'}">
-              🚗 Trabajar en Carro
-            </button>
-          </div>
-        </div>
-      `;
-    } else {
-      const missingType = activeVeh.type === 'Moto' ? 'Carro' : 'Moto';
-      switcherHtml = `
-        <div class="flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <p class="text-[10px] font-extrabold uppercase text-gray-400">Vehículo Activo</p>
-            <p class="text-xs font-black truncate">${activeVeh.type === 'Moto' ? '🏍️' : '🚗'} ${activeVeh.model} · <b>${activeVeh.plate}</b></p>
-            ${pendingVehicles.length > 0 ? `<p class="text-[10px] font-bold text-amber-600 mt-0.5">⏳ Segundo vehículo (${pendingVehicles[0].type}) esperando aprobación del dueño</p>` : ''}
-          </div>
-          ${!hasBothRegistered ? `
-            <button type="button" onclick="openAddSecondVehicleModal('${missingType}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold active:scale-95 transition">
-              + Registrar ${missingType}
-            </button>
-          ` : ''}
-        </div>
-      `;
-    }
-
-    box.innerHTML = switcherHtml;
-  }
-
   async function switchDriverVehicleType(targetType) {
     const u = getActiveUser();
-    if (!u || u.role !== 'driver') return;
+    if (!u) return;
     const list = getDriverVehiclesList(u).filter(v => v.approved);
     const chosen = list.find(v => v.type === targetType);
     if (!chosen) return;
@@ -1434,7 +1459,6 @@
       plate: chosen.plate
     });
     saveLocalOnly();
-    document.getElementById('drv-header-name').textContent = `${u.name} · ${chosen.plate}`;
     renderDriverDashboard();
     showToast(`Modo cambiado a ${chosen.type === 'Moto' ? '🏍️ Moto' : '🚗 Carro'} (${chosen.plate})`);
   }
@@ -1442,7 +1466,7 @@
   function openAddSecondVehicleModal(suggestedType) {
     document.getElementById('modal-add-vehicle')?.remove();
     document.body.insertAdjacentHTML('beforeend', `
-      <div id="modal-add-vehicle" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div id="modal-add-vehicle" class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center p-4">
         <form onsubmit="submitSecondVehicle(event)" class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl max-h-[88vh] overflow-y-auto">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-black">+ Registrar Segundo Vehículo</h3>
@@ -1485,7 +1509,7 @@
   async function submitSecondVehicle(e) {
     e.preventDefault();
     const u = getActiveUser();
-    if (!u || u.role !== 'driver') return;
+    if (!u) return;
 
     const type = document.getElementById('sec-veh-type').value;
     const plate = document.getElementById('sec-veh-plate').value.trim().toUpperCase();
@@ -2418,7 +2442,7 @@
 
   async function syncPassengerTripUI() {
     const user = getActiveUser();
-    if (!user || user.role !== 'passenger') return;
+    if (!user || getEffectiveRole(user) !== 'passenger') return;
 
     const activeStatuses = ['searching', 'accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'];
     const activeTrip = appState.trips.find(t =>
@@ -2554,7 +2578,7 @@
   }
 
   // =========================================================
-  // CONDUCTOR: MAPA EN VIVO + FLUJO + CHAT INTERNO
+  // CONDUCTOR: MAPA COMPLETO EN VIVO + FLUJO + CHAT INTERNO
   // =========================================================
   let drvMap = null;
   let drvSelfMarker = null;
@@ -2563,13 +2587,56 @@
   let drvLastDrawnRouteKey = '';
   let lastGpsPush = 0;
 
+  function initDriverOwnMap() {
+    const u = getActiveUser();
+    const startLat = (u && u.lat) ? u.lat : 10.2016;
+    const startLng = (u && u.lng) ? u.lng : -71.3148;
+
+    if (!drvMap) {
+      drvMap = L.map('map-driver', { zoomControl: false }).setView([startLat, startLng], 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(drvMap);
+    }
+    setTimeout(() => drvMap.invalidateSize(), 200);
+    centerDriverOwnMap();
+  }
+
+  function centerDriverOwnMap() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const u = getActiveUser();
+        if (u) {
+          u.lat = pos.coords.latitude;
+          u.lng = pos.coords.longitude;
+        }
+        if (drvMap) {
+          drvMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+          if (!drvSelfMarker) {
+            const icon = L.divIcon({
+              html: `<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">🚖</div>`,
+              className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+            });
+            drvSelfMarker = L.marker([pos.coords.latitude, pos.coords.longitude], { icon }).addTo(drvMap);
+          } else {
+            drvSelfMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+          }
+        }
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
   function startDriverGpsBroadcast() {
     if (!navigator.geolocation || window._drvGpsActive) return;
     window._drvGpsActive = true;
     navigator.geolocation.watchPosition(
       pos => {
         const u = getActiveUser();
-        if (!u || u.role !== 'driver') return;
+        if (!u || getEffectiveRole(u) !== 'driver') return;
         u.lat = pos.coords.latitude;
         u.lng = pos.coords.longitude;
 
@@ -2594,39 +2661,28 @@
 
   async function toggleDriverOnline() {
     const u = getActiveUser();
-    if (!u || u.role !== 'driver') return;
+    if (!u) return;
     const nextState = !(u.online === true);
     u.online = nextState;
     driverManualOffline = !nextState;
     await cloudPatch(`users/${u.id}`, { online: nextState });
     saveLocalOnly();
     renderDriverDashboard();
-    showToast(nextState ? '● Ahora estás En Línea' : '○ Te has desconectado');
+    showToast(nextState ? '● Conectado y buscando viajes' : '○ Te has desconectado');
   }
 
   async function updateDriverLiveMap(u, activeTrip) {
-    const mapContainer = document.getElementById('map-driver');
-    if (!mapContainer) return;
-
+    initDriverOwnMap();
     const dLat = u.lat || activeTrip.driverLat || (activeTrip.originCoords ? activeTrip.originCoords[0] : 10.2016);
     const dLng = u.lng || activeTrip.driverLng || (activeTrip.originCoords ? activeTrip.originCoords[1] : -71.3148);
 
-    if (!drvMap) {
-      drvMap = L.map('map-driver', { zoomControl: false }).setView([dLat, dLng], 15);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(drvMap);
-    }
-    setTimeout(() => drvMap.invalidateSize(), 150);
-
-    if (!drvSelfMarker) {
+    if (!drvSelfMarker && drvMap) {
       const icon = L.divIcon({
         html: `<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">🚖</div>`,
         className: '', iconSize: [30, 30], iconAnchor: [15, 15]
       });
       drvSelfMarker = L.marker([dLat, dLng], { icon }).addTo(drvMap);
-    } else {
+    } else if (drvSelfMarker) {
       drvSelfMarker.setLatLng([dLat, dLng]);
     }
 
@@ -2642,7 +2698,7 @@
       badgePrefix = '🔴 Ruta hacia destino final';
     }
 
-    if (routeEnd && routeEnd.length === 2) {
+    if (routeEnd && routeEnd.length === 2 && drvMap) {
       if (drvTargetMarker) drvMap.removeLayer(drvTargetMarker);
       drvTargetMarker = L.circleMarker(routeEnd, {
         radius: 9,
@@ -2658,42 +2714,43 @@
         const res = await drawOsrmRouteOnMap(drvMap, routeStart, routeEnd, routeColor, drvRouteLine);
         drvRouteLine = res.poly;
         const badgeEl = document.getElementById('drv-map-route-badge');
-        if (badgeEl) badgeEl.textContent = `${badgePrefix} · ${res.distKm} km (~${res.durMin} min)`;
-        drvMap.fitBounds(drvRouteLine.getBounds(), { padding: [35, 35] });
+        if (badgeEl) {
+          badgeEl.classList.remove('hidden');
+          badgeEl.textContent = `${badgePrefix} · ${res.distKm} km (~${res.durMin} min)`;
+        }
+        drvMap.fitBounds(drvRouteLine.getBounds(), { padding: [45, 45] });
       }
     }
   }
 
   function renderDriverDashboard() {
     const u = getActiveUser();
-    if (!u || u.role !== 'driver') return;
+    if (!u || getEffectiveRole(u) !== 'driver') return;
 
-    renderDriverVehicleSwitcher(u);
     const activeVeh = getDriverActiveVehicle(u);
-    document.getElementById('drv-header-name').textContent = `${u.name} · ${activeVeh.plate}`;
-
     const isOnline = u.online !== false && !driverManualOffline;
-    const toggleBtn = document.getElementById('drv-online-toggle');
-    toggleBtn.textContent = isOnline ? '● En Línea' : '○ Desconectado';
-    toggleBtn.className = isOnline
-      ? 'px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold'
-      : 'px-2.5 py-1.5 rounded-full bg-gray-600 text-white text-[11px] font-extrabold';
 
-    document.getElementById('drv-stat-trips').textContent = u.tripsCount || 0;
-    document.getElementById('drv-stat-earned').textContent = `$${Number(u.earnedUsd || 0).toFixed(2)}`;
-    document.getElementById('drv-stat-debt').textContent = `$${Number(u.debtUsd || 0).toFixed(2)}`;
-    const pctEl = document.getElementById('drv-comm-pct-label');
-    if (pctEl) pctEl.textContent = appState.commissionPct || 10;
+    const toggleBtn = document.getElementById('drv-online-toggle');
+    if (toggleBtn) {
+      toggleBtn.innerHTML = isOnline
+        ? `${activeVeh.type === 'Moto' ? '🏍️' : '🚗'} Desconectarme`
+        : `⚡ Conectarme (${activeVeh.type})`;
+      toggleBtn.className = isOnline
+        ? 'w-full py-4 rounded-2xl bg-[#11131a] text-white text-sm font-black flex items-center justify-center gap-2 shadow-lg active:scale-95 transition'
+        : 'w-full py-4 rounded-2xl bg-[#00b14f] text-white text-sm font-black flex items-center justify-center gap-2 shadow-lg active:scale-95 transition';
+    }
 
     const activeStatuses = ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'];
     const activeTrip = appState.trips.find(t => t.driverId === u.id && activeStatuses.includes(t.status));
-    const activeWrapper = document.getElementById('drv-active-trip-wrapper');
     const activeBox = document.getElementById('drv-active-trip-box');
+    const standbyBox = document.getElementById('drv-standby-box');
+    const badgeEl = document.getElementById('drv-map-route-badge');
     const reqList = document.getElementById('drv-requests-list');
 
     if (activeTrip) {
       checkNewChatNotification(activeTrip);
-      activeWrapper.classList.remove('hidden');
+      standbyBox.classList.add('hidden');
+      activeBox.classList.remove('hidden');
       updateDriverLiveMap(u, activeTrip);
 
       const cleanPhone = (activeTrip.passengerPhone || '').replace(/[^0-9]/g, '');
@@ -2704,21 +2761,21 @@
       let statusBanner = '';
 
       if (activeTrip.status === 'accepted') {
-        statusBanner = 'Carrera Aceptada · Toca "Voy Saliendo" para iniciar rumbo al pasajero';
+        statusBanner = 'Carrera Aceptada · Toca "Voy Saliendo" para ir al pasajero';
         primaryActionBtn = `
           <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'heading_pickup')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
             🚀 Voy Saliendo (Ir a buscar)
           </button>
         `;
       } else if (activeTrip.status === 'heading_pickup') {
-        statusBanner = 'En camino al punto de recogida del pasajero';
+        statusBanner = 'En camino al punto de recogida';
         primaryActionBtn = `
           <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'arrived_pickup')" class="w-full py-3.5 rounded-2xl bg-amber-500 text-[#11131a] text-xs font-black shadow-lg active:scale-95 transition">
             📍 He Llegado (Avisar al pasajero)
           </button>
         `;
       } else if (activeTrip.status === 'arrived_pickup') {
-        statusBanner = 'Esperando que el pasajero aborde el vehículo';
+        statusBanner = 'Esperando que el pasajero aborde';
         primaryActionBtn = `
           <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'in_progress')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
             ▶️ Comenzar Viaje (Hacia destino final)
@@ -2734,70 +2791,74 @@
       }
 
       activeBox.innerHTML = `
-        <div class="bg-[#11131a] text-white rounded-3xl p-4 space-y-3 shadow-xl">
+        <div class="space-y-2.5">
           <div class="flex items-center justify-between gap-2">
             <span class="text-[10px] font-extrabold uppercase text-[#00b14f]">${statusBanner}</span>
             <span class="text-sm font-black shrink-0">$${activeTrip.priceUsd.toFixed(2)}</span>
           </div>
 
-          <div class="p-3 rounded-2xl bg-white/10 text-xs space-y-1.5">
+          <div class="p-3 rounded-2xl bg-gray-100 text-xs space-y-1.5">
             <div class="flex items-center justify-between gap-2">
               <p class="truncate"><b>Pasajero:</b> ${activeTrip.passengerName}</p>
               <div class="flex gap-1.5 shrink-0">
                 <button type="button" onclick="openTripChatModal('${activeTrip.id}')" class="px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold flex items-center gap-1 shadow">
                   💬 Chat ${unreadChat > 0 ? `<span class="px-1.5 rounded-full bg-white text-[#11131a] text-[10px] font-black">${unreadChat}</span>` : ''}
                 </button>
-                <a href="tel:${activeTrip.passengerPhone}" class="px-2.5 py-1.5 rounded-xl bg-white/15 text-[11px] font-bold">📞</a>
-                <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 text-[11px] font-bold">WA</a>
+                <a href="tel:${activeTrip.passengerPhone}" class="px-2.5 py-1.5 rounded-xl bg-[#11131a] text-white text-[11px] font-bold">📞</a>
+                <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 text-white text-[11px] font-bold">WA</a>
               </div>
             </div>
-            <p class="text-[11px] text-gray-300">🟢 <b>Recoger:</b> ${activeTrip.originText}</p>
-            <p class="text-[11px] text-gray-300">🔴 <b>Destino:</b> ${activeTrip.destinationText}</p>
-            <p class="text-[11px] text-amber-400 font-bold">💵 Pago: ${activeTrip.paymentMethod}</p>
+            <p class="text-[11px] text-gray-600">🟢 <b>Recoger:</b> ${activeTrip.originText}</p>
+            <p class="text-[11px] text-gray-600">🔴 <b>Destino:</b> ${activeTrip.destinationText}</p>
+            <p class="text-[11px] text-amber-700 font-bold">💵 Pago: ${activeTrip.paymentMethod}</p>
           </div>
 
           ${primaryActionBtn}
 
           ${activeTrip.status !== 'in_progress' ? `
-            <button type="button" onclick="driverCancelTrip('${activeTrip.id}')" class="w-full py-2.5 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-extrabold">
+            <button type="button" onclick="driverCancelTrip('${activeTrip.id}')" class="w-full py-2.5 rounded-2xl bg-red-500/15 text-red-600 text-xs font-extrabold">
               ✕ Cancelar Carrera
             </button>
           ` : ''}
         </div>
       `;
     } else {
-      activeWrapper.classList.add('hidden');
+      activeBox.classList.add('hidden');
+      if (badgeEl) badgeEl.classList.add('hidden');
+      standbyBox.classList.remove('hidden');
+      if (drvRouteLine && drvMap) { drvMap.removeLayer(drvRouteLine); drvRouteLine = null; }
+      if (drvTargetMarker && drvMap) { drvMap.removeLayer(drvTargetMarker); drvTargetMarker = null; }
       drvLastDrawnRouteKey = '';
       if (activeChatTripId) closeTripChatModal();
-    }
 
-    const allowedServices = activeVeh.type === 'Carro'
-      ? ['Carro Go', 'Envío Express']
-      : ['Moto Go', 'Envío Express'];
+      const allowedServices = activeVeh.type === 'Carro'
+        ? ['Carro Go', 'Envío Express']
+        : ['Moto Go', 'Envío Express'];
 
-    const pendingReqs = isOnline
-      ? appState.trips.filter(t => t.status === 'searching' && allowedServices.includes(t.service))
-      : [];
+      const pendingReqs = isOnline
+        ? appState.trips.filter(t => t.status === 'searching' && allowedServices.includes(t.service))
+        : [];
 
-    if (!isOnline) {
-      reqList.innerHTML = `<div class="p-6 text-center bg-amber-50 rounded-3xl border border-amber-300 text-xs text-amber-800 font-extrabold">Estás Desconectado. Toca el botón gris arriba para ponerte ● En Línea y recibir carreras.</div>`;
-    } else if (pendingReqs.length === 0) {
-      reqList.innerHTML = `<div class="p-6 text-center bg-white rounded-3xl border border-gray-200 text-xs text-gray-400 font-bold">Sin solicitudes nuevas para ${activeVeh.type} en este momento</div>`;
-    } else {
-      reqList.innerHTML = pendingReqs.map(t => `
-        <div class="bg-white rounded-3xl p-4 shadow-sm border-2 border-[#00b14f] space-y-2.5">
-          <div class="flex justify-between items-center">
-            <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/10 text-[#00b14f] text-[10px] font-extrabold">${t.service} · ${t.distanceKm} km</span>
-            <span class="text-sm font-black">$${t.priceUsd.toFixed(2)} <span class="text-[10px] text-gray-400">(Bs. ${t.priceBs})</span></span>
+      if (!isOnline) {
+        reqList.innerHTML = `<p class="text-center text-xs text-gray-400 font-bold py-1">Estás desconectado</p>`;
+      } else if (pendingReqs.length === 0) {
+        reqList.innerHTML = `<p class="text-center text-xs text-gray-400 font-bold py-1">Esperando solicitudes (${activeVeh.type} · ${activeVeh.plate})...</p>`;
+      } else {
+        reqList.innerHTML = pendingReqs.map(t => `
+          <div class="p-3.5 rounded-2xl bg-gray-50 border-2 border-[#00b14f] space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="px-2.5 py-0.5 rounded-full bg-[#00b14f]/15 text-[#00b14f] text-[10px] font-extrabold">${t.service} · ${t.distanceKm} km</span>
+              <span class="text-sm font-black">$${t.priceUsd.toFixed(2)} <span class="text-[10px] text-gray-400">(Bs. ${t.priceBs})</span></span>
+            </div>
+            <p class="text-xs font-bold">🧑🏻‍💼 ${t.passengerName}</p>
+            <p class="text-[11px] text-gray-600 truncate">🟢 ${t.originText}</p>
+            <p class="text-[11px] text-gray-600 truncate">🔴 ${t.destinationText}</p>
+            <button type="button" onclick="acceptTripDriver('${t.id}')" class="w-full py-3 rounded-xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
+              ✓ Aceptar Carrera
+            </button>
           </div>
-          <p class="text-xs font-bold">🧑🏻‍💼 ${t.passengerName}</p>
-          <p class="text-[11px] text-gray-500">🟢 ${t.originText}</p>
-          <p class="text-[11px] text-gray-500">🔴 ${t.destinationText}</p>
-          <button type="button" onclick="acceptTripDriver('${t.id}')" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
-            Aceptar Carrera (${activeVeh.type})
-          </button>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
   }
 
@@ -2880,7 +2941,7 @@
     document.getElementById('modal-drv-comm')?.remove();
 
     document.body.insertAdjacentHTML('beforeend', `
-      <div id="modal-drv-comm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+      <div id="modal-drv-comm" class="fixed inset-0 z-[80] bg-black/75 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-black">Pagar Comisión ${appState.commissionPct}%</h3>
@@ -2928,7 +2989,7 @@
     const myTrips = appState.trips.filter(t => t.status === 'completed' && (t.passengerId === u?.id || t.driverId === u?.id));
     document.getElementById('modal-history')?.remove();
     document.body.insertAdjacentHTML('beforeend', `
-      <div id="modal-history" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+      <div id="modal-history" class="fixed inset-0 z-[80] bg-black/75 flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-black">Historial de Viajes (${myTrips.length})</h3>
