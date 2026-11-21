@@ -146,12 +146,12 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 2: PASAJERO (CON BOTÓN ⚙️ AJUSTES)
+     PANTALLA 2: PASAJERO
      ========================================================= -->
 <div id="screen-passenger" class="hidden fixed inset-0 flex flex-col bg-gray-100">
   <div class="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
-    <button type="button" onclick="openUserSettingsModal('passenger')" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition">
-      ⚙️ <span id="pass-header-name">Ajustes</span>
+    <button type="button" onclick="openHistoryModal('passenger')" class="px-3.5 py-2 rounded-full bg-white shadow-lg text-xs font-extrabold flex items-center gap-1.5">
+      📋 <span id="pass-header-name">Mis Viajes</span>
     </button>
     <div class="px-3.5 py-2 rounded-full bg-[#11131a] text-white shadow-lg text-xs font-black">
       Taxi<span class="text-[#00b14f]">Go</span>
@@ -161,7 +161,6 @@
     </button>
   </div>
 
-  <!-- Botones Flotantes Derecha: GPS y Google Maps (Opcional) -->
   <div class="absolute right-3 top-16 z-20 flex flex-col gap-2">
     <button type="button" onclick="syncPassengerGps(true)" class="w-11 h-11 rounded-full bg-white shadow-xl flex items-center justify-center text-lg active:scale-90 transition" title="Mi ubicación GPS">
       🎯
@@ -256,32 +255,30 @@
 </div>
 
 <!-- =========================================================
-     PANTALLA 3: CONDUCTOR (CON BOTÓN ⚙️ AJUSTES + MAPA EN VIVO)
+     PANTALLA 3: CONDUCTOR
      ========================================================= -->
 <div id="screen-driver" class="hidden fixed inset-0 flex flex-col bg-gray-100 overflow-y-auto pb-20">
-  <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20 gap-1.5">
+  <div class="bg-[#11131a] text-white p-4 flex items-center justify-between sticky top-0 z-20 gap-1">
     <div class="min-w-0">
       <p class="text-[10px] uppercase font-extrabold text-[#00b14f]">Panel Conductor</p>
       <h2 id="drv-header-name" class="text-sm font-black truncate">Conductor</h2>
     </div>
-    <div class="flex items-center gap-1.5 shrink-0">
-      <button type="button" onclick="forceCloudPull()" class="px-2.5 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Actualizar solicitudes">
+    <div class="flex items-center gap-1 shrink-0">
+      <button type="button" onclick="forceCloudPull()" class="px-2 py-1.5 rounded-full bg-white/15 text-white text-[11px] font-extrabold" title="Actualizar solicitudes">
         🔄
       </button>
       <button type="button" id="drv-online-toggle" onclick="toggleDriverOnline()" class="px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold">
         ● En Línea
       </button>
-      <button type="button" onclick="openUserSettingsModal('driver')" class="px-3 py-1.5 rounded-full bg-white text-[#11131a] text-[11px] font-extrabold active:scale-95 transition">
-        ⚙️ Ajustes
-      </button>
       <button type="button" onclick="logoutApp()" class="px-2.5 py-1.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">
-        🚪
+        🚪 Salir
       </button>
     </div>
   </div>
 
   <div class="p-4 space-y-4 max-w-lg w-full mx-auto">
-    <!-- Estadísticas -->
+    <div id="drv-vehicle-switcher-box" class="bg-white rounded-3xl p-3.5 shadow-sm border border-gray-200"></div>
+
     <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-200 grid grid-cols-3 gap-2 text-center">
       <div>
         <p class="text-[10px] font-bold text-gray-400">Viajes</p>
@@ -297,7 +294,10 @@
       </div>
     </div>
 
-    <!-- MAPA EN VIVO INTEGRADO PARA EL CONDUCTOR + BOTONES DE ESTADO -->
+    <button type="button" onclick="openDriverCommissionModal()" class="w-full py-3 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow">
+      📲 Pagar Comisión al Dueño
+    </button>
+
     <div id="drv-active-trip-wrapper" class="hidden space-y-3">
       <div class="relative rounded-3xl overflow-hidden shadow-xl border-2 border-[#11131a]">
         <div id="map-driver" class="w-full h-64 bg-gray-200"></div>
@@ -312,7 +312,6 @@
       <div id="drv-active-trip-box"></div>
     </div>
 
-    <!-- Solicitudes de Pasajeros -->
     <div class="space-y-2">
       <h3 class="text-xs font-extrabold uppercase text-gray-500">Solicitudes de Pasajeros</h3>
       <div id="drv-requests-list" class="space-y-2.5"></div>
@@ -342,7 +341,6 @@
     </div>
   </div>
 
-  <!-- Centro: Botonera Tipo Píldora -->
   <div class="my-auto p-5 max-w-md w-full mx-auto space-y-3.5">
     <div class="flex flex-wrap gap-2.5">
       <button type="button" onclick="openOwnerModal('ganancia')" class="px-4 py-2.5 rounded-2xl bg-[#11131a] text-white text-xs font-extrabold shadow active:scale-95 transition flex items-center gap-1.5">
@@ -403,6 +401,32 @@
   </div>
 </div>
 
+<!-- =========================================================
+     MODAL DE CHAT INTERNO EN VIVO (PASAJERO <-> CONDUCTOR)
+     ========================================================= -->
+<div id="trip-chat-modal" class="hidden fixed inset-0 z-[70] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md h-[82vh] sm:h-[75vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="px-4 py-3.5 bg-[#11131a] text-white flex items-center justify-between">
+      <div>
+        <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Chat Interno del Viaje</p>
+        <h3 id="chat-partner-title" class="text-sm font-black">Conversación</h3>
+      </div>
+      <button type="button" onclick="closeTripChatModal()" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
+    </div>
+
+    <div id="trip-chat-messages" class="flex-1 p-4 overflow-y-auto space-y-2.5 bg-gray-100"></div>
+
+    <div id="trip-chat-quick-replies" class="px-3 py-2 bg-white border-t border-gray-200 flex gap-1.5 overflow-x-auto no-scrollbar"></div>
+
+    <form onsubmit="sendTripChatMessage(event)" class="p-3 bg-white border-t border-gray-200 flex items-center gap-2">
+      <input type="text" id="trip-chat-input" autocomplete="off" placeholder="Escribe un mensaje..." class="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-gray-300 text-xs font-semibold focus:outline-none focus:border-[#00b14f]" />
+      <button type="submit" class="px-4 py-2.5 rounded-full bg-[#00b14f] text-white text-xs font-extrabold shadow active:scale-95 transition">
+        Enviar
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- Modal Dinámico para cada Botón del Panel de Dueño -->
 <div id="owner-submodal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-end sm:items-center justify-center p-0 sm:p-4">
   <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
@@ -414,30 +438,13 @@
   </div>
 </div>
 
-<!-- Modal Unificado de ⚙️ AJUSTES (Pasajero y Conductor) -->
-<div id="user-settings-modal" class="hidden fixed inset-0 z-50 bg-black/75 flex items-end sm:items-center justify-center p-0 sm:p-4">
-  <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
-    <div class="px-5 py-4 bg-[#11131a] text-white flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <button type="button" id="settings-back-btn" onclick="renderSettingsHome()" class="hidden px-2.5 py-1 rounded-lg bg-white/15 text-xs font-extrabold">← Atrás</button>
-        <h3 id="user-settings-title" class="text-sm font-black">⚙️ Ajustes</h3>
-      </div>
-      <button type="button" onclick="closeUserSettingsModal()" class="w-8 h-8 rounded-full bg-white/15 text-xs font-bold">✕</button>
-    </div>
-    <div id="user-settings-body" class="p-5 overflow-y-auto space-y-3 text-xs"></div>
-  </div>
-</div>
-
 <!-- Toast Global -->
 <div id="global-toast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2.5 rounded-full bg-[#11131a] text-white text-xs font-extrabold shadow-2xl border border-white/15 whitespace-nowrap"></div>
 
 <script>
-  // =========================================================
-  // MOTOR DE SINCRONIZACIÓN DIRECTA REST (TAXIGO-OJEDA)
-  // =========================================================
   const DB_BASE_URL = "https://taxigo-ojeda-default-rtdb.firebaseio.com";
   const OWNER_PIN = '2026';
-  const STORAGE_KEY = 'taxigo_ojeda_v9';
+  const STORAGE_KEY = 'taxigo_ojeda_v8';
 
   let appState = {
     bcvRate: 45.00,
@@ -472,8 +479,9 @@
   let currentOpenOwnerTab = null;
   let driverManualOffline = false;
   let lastNotifiedTripStatus = {};
-  let activeViewMode = null; // Permite alternar entre 'passenger' y 'driver' sin perder la cuenta
-  let currentSettingsMode = 'passenger';
+  let activeChatTripId = null;
+  let seenChatCounts = {};
+  let lastRenderedChatCount = -1;
 
   function isUserTyping() {
     const el = document.activeElement;
@@ -483,7 +491,7 @@
   }
 
   function getDriverVehiclesList(u) {
-    if (!u) return [];
+    if (!u || u.role !== 'driver') return [];
     if (Array.isArray(u.vehicles) && u.vehicles.length > 0) return u.vehicles;
     if (u.vehicleType && u.plate) {
       return [{
@@ -492,7 +500,7 @@
         model: u.vehicleModel || '',
         plate: u.plate,
         docs: u.docs || null,
-        approved: u.driverApproved !== undefined ? u.driverApproved : (u.approved === true)
+        approved: u.approved === true
       }];
     }
     return [];
@@ -590,9 +598,7 @@
   function loadLocalSession() {
     try {
       const savedId = localStorage.getItem(STORAGE_KEY + '_activeId');
-      const savedMode = localStorage.getItem(STORAGE_KEY + '_viewMode');
       if (savedId) appState.activeUserId = savedId;
-      if (savedMode) activeViewMode = savedMode;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -608,11 +614,6 @@
         localStorage.setItem(STORAGE_KEY + '_activeId', appState.activeUserId);
       } else {
         localStorage.removeItem(STORAGE_KEY + '_activeId');
-      }
-      if (activeViewMode) {
-        localStorage.setItem(STORAGE_KEY + '_viewMode', activeViewMode);
-      } else {
-        localStorage.removeItem(STORAGE_KEY + '_viewMode');
       }
       const copy = Object.assign({}, appState);
       delete copy.activeUserId;
@@ -662,6 +663,10 @@
     const u = getActiveUser();
     if (!u) return;
 
+    if (activeChatTripId && !document.getElementById('trip-chat-modal').classList.contains('hidden')) {
+      renderTripChatMessages(activeChatTripId);
+    }
+
     if (u.role === 'owner') {
       updateOwnerBadges();
       const editableTabs = ['bcv', 'comision', 'datos_app', 'tarifas', 'terminos', 'edit_user'];
@@ -674,10 +679,10 @@
     } else if (u.approved && !document.getElementById('screen-pending').classList.contains('hidden')) {
       showToast('¡Cuenta autorizada!');
       routeUserScreen();
-    } else {
-      const mode = activeViewMode || u.role;
-      if (mode === 'driver') renderDriverDashboard();
-      else syncPassengerTripUI();
+    } else if (u.role === 'driver') {
+      renderDriverDashboard();
+    } else if (u.role === 'passenger') {
+      syncPassengerTripUI();
     }
   }
 
@@ -708,6 +713,161 @@
   }
 
   // =========================================================
+  // CHAT INTERNO EN TIEMPO REAL
+  // =========================================================
+  function getTripMessagesArray(trip) {
+    if (!trip || !trip.messages) return [];
+    if (Array.isArray(trip.messages)) return trip.messages.filter(Boolean);
+    if (typeof trip.messages === 'object') {
+      return Object.values(trip.messages).filter(Boolean).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    }
+    return [];
+  }
+
+  function getUnreadChatCount(trip) {
+    const u = getActiveUser();
+    if (!u || !trip) return 0;
+    const msgs = getTripMessagesArray(trip);
+    const othersMsgs = msgs.filter(m => m.senderId !== u.id);
+    const seen = seenChatCounts[trip.id] || 0;
+    return Math.max(0, othersMsgs.length - seen);
+  }
+
+  function checkNewChatNotification(trip) {
+    const u = getActiveUser();
+    if (!u || !trip) return;
+    const msgs = getTripMessagesArray(trip);
+    const othersMsgs = msgs.filter(m => m.senderId !== u.id);
+    const seen = seenChatCounts[trip.id] || 0;
+
+    if (othersMsgs.length > seen) {
+      const isModalClosed = document.getElementById('trip-chat-modal').classList.contains('hidden');
+      if (isModalClosed) {
+        const lastMsg = othersMsgs[othersMsgs.length - 1];
+        if (window._lastAlertedChatTs !== lastMsg.ts) {
+          window._lastAlertedChatTs = lastMsg.ts;
+          showToast(`💬 ${lastMsg.senderName}: ${lastMsg.text}`);
+        }
+      } else {
+        seenChatCounts[trip.id] = othersMsgs.length;
+      }
+    }
+  }
+
+  function openTripChatModal(tripId) {
+    const trip = appState.trips.find(t => t.id === tripId);
+    const u = getActiveUser();
+    if (!trip || !u) return;
+
+    activeChatTripId = tripId;
+    lastRenderedChatCount = -1;
+
+    const drv = appState.users.find(x => x.id === trip.driverId) || {};
+    const partnerName = u.role === 'passenger'
+      ? `🚖 ${drv.name || 'Conductor'}`
+      : `🧍 ${trip.passengerName || 'Pasajero'}`;
+
+    document.getElementById('chat-partner-title').textContent = partnerName;
+
+    const quickReplies = u.role === 'driver'
+      ? ['Voy saliendo', 'Estoy afuera', 'Donde estas exactamente', 'Ya llegue, te espero']
+      : ['Ya voy bajando', 'Estoy afuera esperando', 'Ok, perfecto', 'Por donde vienes'];
+
+    const qrBox = document.getElementById('trip-chat-quick-replies');
+    qrBox.innerHTML = '';
+    quickReplies.forEach(txt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shrink-0 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-[11px] font-bold text-[#11131a]';
+      btn.textContent = txt;
+      btn.onclick = () => sendQuickChatText(txt);
+      qrBox.appendChild(btn);
+    });
+
+    document.getElementById('trip-chat-modal').classList.remove('hidden');
+    renderTripChatMessages(tripId);
+
+    if (u.role === 'driver') renderDriverDashboard();
+    if (u.role === 'passenger') syncPassengerTripUI();
+  }
+
+  function closeTripChatModal() {
+    activeChatTripId = null;
+    document.getElementById('trip-chat-modal').classList.add('hidden');
+  }
+
+  function renderTripChatMessages(tripId) {
+    const trip = appState.trips.find(t => t.id === tripId);
+    const u = getActiveUser();
+    const box = document.getElementById('trip-chat-messages');
+    if (!trip || !u || !box) return;
+
+    const msgs = getTripMessagesArray(trip);
+    const othersCount = msgs.filter(m => m.senderId !== u.id).length;
+    seenChatCounts[tripId] = othersCount;
+
+    if (msgs.length === lastRenderedChatCount) return;
+    lastRenderedChatCount = msgs.length;
+
+    if (msgs.length === 0) {
+      box.innerHTML = `<div class="h-full flex items-center justify-center text-center text-xs text-gray-400 font-bold px-6">Escribe un mensaje o usa una respuesta rápida abajo para comunicarte en vivo.</div>`;
+      return;
+    }
+
+    box.innerHTML = msgs.map(m => {
+      const isMine = m.senderId === u.id;
+      return `
+        <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'}">
+          <div class="max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs ${isMine ? 'bg-[#00b14f] text-white rounded-br-sm font-semibold' : 'bg-white text-[#11131a] border border-gray-200 rounded-bl-sm font-semibold'} shadow-sm">
+            <p>${m.text}</p>
+          </div>
+          <span class="text-[9px] text-gray-400 mt-0.5 px-1">${isMine ? 'Tú' : m.senderName} · ${m.time || ''}</span>
+        </div>
+      `;
+    }).join('');
+
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function sendQuickChatText(text) {
+    if (!activeChatTripId) return;
+    await pushChatMessageToCloud(activeChatTripId, text);
+  }
+
+  async function sendTripChatMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('trip-chat-input');
+    const text = input.value.trim();
+    if (!text || !activeChatTripId) return;
+    input.value = '';
+    await pushChatMessageToCloud(activeChatTripId, text);
+  }
+
+  async function pushChatMessageToCloud(tripId, text) {
+    const trip = appState.trips.find(t => t.id === tripId);
+    const u = getActiveUser();
+    if (!trip || !u) return;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msgObj = {
+      id: 'msg-' + Date.now(),
+      senderId: u.id,
+      senderName: u.name.split(' ')[0],
+      text,
+      time: timeStr,
+      ts: Date.now()
+    };
+
+    if (!trip.messages || typeof trip.messages !== 'object') trip.messages = {};
+    trip.messages[msgObj.id] = msgObj;
+    saveLocalOnly();
+    renderTripChatMessages(tripId);
+
+    await cloudPut(`trips/${tripId}/messages/${msgObj.id}`, msgObj);
+  }
+
+  // =========================================================
   // ACCESO SECRETO DEL DUEÑO (5 TOQUES EN EL LOGO "TAXIGO")
   // =========================================================
   let secretTapCount = 0;
@@ -722,7 +882,6 @@
       secretTapCount = 0;
       if (!requirePin('entrar al Panel de Dueño')) return;
       appState.activeUserId = 'OWNER';
-      activeViewMode = 'owner';
       saveLocalOnly();
       routeUserScreen();
     }
@@ -869,7 +1028,6 @@
       cedulaImg,
       selfieImg,
       approved: false,
-      driverApproved: false,
       blocked: false,
       online: true,
       vehicleType,
@@ -878,7 +1036,6 @@
       activeVehicleType: vehicleType,
       vehicles,
       docs: driverDocs,
-      pagoMovil: null,
       tripsCount: 0,
       earnedUsd: 0,
       debtUsd: 0,
@@ -897,7 +1054,6 @@
 
     appState.users.push(newUser);
     appState.activeUserId = newUser.id;
-    activeViewMode = role;
     saveLocalOnly();
 
     btn.disabled = false;
@@ -929,19 +1085,16 @@
 
     driverManualOffline = false;
     appState.activeUserId = user.id;
-    activeViewMode = user.role;
     saveLocalOnly();
     routeUserScreen();
   }
 
   function logoutApp() {
     appState.activeUserId = null;
-    activeViewMode = null;
     driverManualOffline = false;
     closeOwnerModal();
-    closeUserSettingsModal();
+    closeTripChatModal();
     localStorage.removeItem(STORAGE_KEY + '_activeId');
-    localStorage.removeItem(STORAGE_KEY + '_viewMode');
     ['screen-pending', 'screen-passenger', 'screen-driver', 'screen-owner'].forEach(id => {
       document.getElementById(id).classList.add('hidden');
     });
@@ -1003,9 +1156,12 @@
       return;
     }
 
-    const mode = activeViewMode || user.role;
-
-    if (mode === 'driver' && (user.role === 'driver' || user.driverApproved)) {
+    if (user.role === 'passenger') {
+      document.getElementById('pass-header-name').textContent = user.name.split(' ')[0];
+      document.getElementById('screen-passenger').classList.remove('hidden');
+      initPassengerMap();
+      syncPassengerTripUI();
+    } else if (user.role === 'driver') {
       if (!driverManualOffline && user.online !== true) {
         user.online = true;
         cloudPatch(`users/${user.id}`, { online: true });
@@ -1016,60 +1172,1581 @@
       document.getElementById('screen-driver').classList.remove('hidden');
       startDriverGpsBroadcast();
       renderDriverDashboard();
-    } else {
-      activeViewMode = 'passenger';
-      document.getElementById('pass-header-name').textContent = 'Ajustes';
-      document.getElementById('screen-passenger').classList.remove('hidden');
-      initPassengerMap();
-      syncPassengerTripUI();
     }
   }
 
   // =========================================================
-  // MENÚ UNIFICADO DE ⚙️ AJUSTES (PASAJERO Y CONDUCTOR)
+  // MULTI-VEHÍCULO PARA CONDUCTOR
   // =========================================================
-  function openUserSettingsModal(mode) {
-    currentSettingsMode = mode;
-    document.getElementById('user-settings-modal').classList.remove('hidden');
-    renderSettingsHome();
+  function renderDriverVehicleSwitcher(u) {
+    const box = document.getElementById('drv-vehicle-switcher-box');
+    if (!box) return;
+
+    const allVehicles = getDriverVehiclesList(u);
+    const approvedVehicles = allVehicles.filter(v => v.approved);
+    const pendingVehicles = allVehicles.filter(v => !v.approved);
+    const activeVeh = getDriverActiveVehicle(u);
+
+    const hasMoto = approvedVehicles.some(v => v.type === 'Moto');
+    const hasCarro = approvedVehicles.some(v => v.type === 'Carro');
+    const hasBothApproved = hasMoto && hasCarro;
+    const hasBothRegistered = allVehicles.some(v => v.type === 'Moto') && allVehicles.some(v => v.type === 'Carro');
+
+    let switcherHtml = '';
+
+    if (hasBothApproved) {
+      switcherHtml = `
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Modo de Trabajo Activo</p>
+            <span class="text-[10px] font-bold text-gray-500">Placa: <b>${activeVeh.plate}</b></span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="switchDriverVehicleType('Moto')" class="py-2.5 rounded-2xl text-xs font-extrabold border-2 transition ${activeVeh.type === 'Moto' ? 'bg-[#00b14f] text-white border-[#00b14f] shadow' : 'bg-gray-100 text-gray-600 border-gray-200'}">
+              🏍️ Trabajar en Moto
+            </button>
+            <button type="button" onclick="switchDriverVehicleType('Carro')" class="py-2.5 rounded-2xl text-xs font-extrabold border-2 transition ${activeVeh.type === 'Carro' ? 'bg-[#00b14f] text-white border-[#00b14f] shadow' : 'bg-gray-100 text-gray-600 border-gray-200'}">
+              🚗 Trabajar en Carro
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      const missingType = activeVeh.type === 'Moto' ? 'Carro' : 'Moto';
+      switcherHtml = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[10px] font-extrabold uppercase text-gray-400">Vehículo Activo</p>
+            <p class="text-xs font-black truncate">${activeVeh.type === 'Moto' ? '🏍️' : '🚗'} ${activeVeh.model} · <b>${activeVeh.plate}</b></p>
+            ${pendingVehicles.length > 0 ? `<p class="text-[10px] font-bold text-amber-600 mt-0.5">⏳ Segundo vehículo (${pendingVehicles[0].type}) esperando aprobación del dueño</p>` : ''}
+          </div>
+          ${!hasBothRegistered ? `
+            <button type="button" onclick="openAddSecondVehicleModal('${missingType}')" class="shrink-0 px-3 py-2 rounded-xl bg-[#11131a] text-white text-[11px] font-extrabold active:scale-95 transition">
+              + Registrar ${missingType}
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    box.innerHTML = switcherHtml;
   }
 
-  function closeUserSettingsModal() {
-    document.getElementById('user-settings-modal').classList.add('hidden');
-  }
-
-  function renderSettingsHome() {
+  async function switchDriverVehicleType(targetType) {
     const u = getActiveUser();
-    if (!u) return;
-    document.getElementById('settings-back-btn').classList.add('hidden');
-    document.getElementById('user-settings-title').textContent =
-      currentSettingsMode === 'driver' ? '⚙️ Ajustes de Conductor' : '⚙️ Ajustes de Pasajero';
+    if (!u || u.role !== 'driver') return;
+    const list = getDriverVehiclesList(u).filter(v => v.approved);
+    const chosen = list.find(v => v.type === targetType);
+    if (!chosen) return;
 
-    const body = document.getElementById('user-settings-body');
-    const isDriverMode = currentSettingsMode === 'driver';
-    const activeVeh = isDriverMode ? getDriverActiveVehicle(u) : null;
+    u.activeVehicleType = chosen.type;
+    u.vehicleType = chosen.type;
+    u.vehicleModel = chosen.model;
+    u.plate = chosen.plate;
 
-    body.innerHTML = `
-      <!-- Tarjeta Resumen Usuario -->
-      <div class="p-3.5 rounded-2xl bg-gray-100 flex items-center gap-3">
-        ${u.selfieImg
-          ? `<img src="${u.selfieImg}" class="w-12 h-12 rounded-full object-cover border-2 border-[#00b14f]" />`
-          : `<div class="w-12 h-12 rounded-full bg-[#11131a] text-white flex items-center justify-center text-lg font-black">${u.name.charAt(0)}</div>`
+    await cloudPatch(`users/${u.id}`, {
+      activeVehicleType: chosen.type,
+      vehicleType: chosen.type,
+      vehicleModel: chosen.model,
+      plate: chosen.plate
+    });
+    saveLocalOnly();
+    document.getElementById('drv-header-name').textContent = `${u.name} · ${chosen.plate}`;
+    renderDriverDashboard();
+    showToast(`Modo cambiado a ${chosen.type === 'Moto' ? '🏍️ Moto' : '🚗 Carro'} (${chosen.plate})`);
+  }
+
+  function openAddSecondVehicleModal(suggestedType) {
+    document.getElementById('modal-add-vehicle')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-add-vehicle" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+        <form onsubmit="submitSecondVehicle(event)" class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl max-h-[88vh] overflow-y-auto">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">+ Registrar Segundo Vehículo</h3>
+            <button type="button" onclick="document.getElementById('modal-add-vehicle').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-[11px] text-gray-500">Al registrar ambos vehículos (Moto y Carro) podrás alternar entre ellos cuando el dueño apruebe el nuevo registro.</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-gray-600">Tipo</label>
+              <input type="text" id="sec-veh-type" readonly value="${suggestedType}" class="mt-1 w-full px-3 py-2.5 rounded-xl bg-gray-100 border font-black text-xs" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-600">Placa *</label>
+              <input type="text" id="sec-veh-plate" required placeholder="Ej: AB123CD" class="mt-1 w-full px-3 py-2.5 rounded-xl border border-gray-300 text-xs uppercase" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-gray-600">Marca / Modelo / Color *</label>
+            <input type="text" id="sec-veh-model" required placeholder="Ej: Chevrolet Aveo Gris" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs" />
+          </div>
+          <div class="space-y-2 text-[11px] pt-1 border-t">
+            <label class="block font-bold text-gray-700">Carnet de Circulación *
+              <input type="file" id="sec-doc-carnet" required accept="image/*,.pdf" class="mt-1 block w-full text-[10px]" />
+            </label>
+            <label class="block font-bold text-gray-700">Póliza RCV Vigente *
+              <input type="file" id="sec-doc-rcv" required accept="image/*,.pdf" class="mt-1 block w-full text-[10px]" />
+            </label>
+            <label class="block font-bold text-gray-700">Licencia de Conducir *
+              <input type="file" id="sec-doc-licencia" required accept="image/*,.pdf" class="mt-1 block w-full text-[10px]" />
+            </label>
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
+            Enviar para Aprobación
+          </button>
+        </form>
+      </div>
+    `);
+  }
+
+  async function submitSecondVehicle(e) {
+    e.preventDefault();
+    const u = getActiveUser();
+    if (!u || u.role !== 'driver') return;
+
+    const type = document.getElementById('sec-veh-type').value;
+    const plate = document.getElementById('sec-veh-plate').value.trim().toUpperCase();
+    const model = document.getElementById('sec-veh-model').value.trim();
+    const fCarnet = document.getElementById('sec-doc-carnet').files[0];
+    const fRcv = document.getElementById('sec-doc-rcv').files[0];
+    const fLic = document.getElementById('sec-doc-licencia').files[0];
+
+    if (!plate || !model || !fCarnet || !fRcv || !fLic) {
+      showToast('Completa placa, modelo y documentos');
+      return;
+    }
+
+    const existingList = getDriverVehiclesList(u);
+    if (existingList.some(v => v.type === type)) {
+      showToast(`Ya tienes un vehículo tipo ${type} registrado`);
+      return;
+    }
+
+    const newVeh = {
+      id: 'veh-' + Date.now(),
+      type,
+      model,
+      plate,
+      docs: {
+        carnet: fCarnet.name,
+        rcv: fRcv.name,
+        licencia: fLic.name
+      },
+      approved: false
+    };
+
+    const updatedVehicles = [...existingList, newVeh];
+    u.vehicles = updatedVehicles;
+
+    await cloudPatch(`users/${u.id}`, { vehicles: updatedVehicles });
+    saveLocalOnly();
+    document.getElementById('modal-add-vehicle')?.remove();
+    renderDriverDashboard();
+    showToast('Segundo vehículo enviado al dueño para aprobación');
+  }
+
+  // =========================================================
+  // PANEL DE DUEÑO
+  // =========================================================
+  function updateOwnerBadges() {
+    const pendingPass = appState.users.filter(u => !u.approved && u.role === 'passenger').length;
+    const pendingDrv = appState.users.filter(u =>
+      u.role === 'driver' && (!u.approved || getDriverVehiclesList(u).some(v => !v.approved))
+    ).length;
+    const pendingComm = appState.commissionReports.filter(r => r.status === 'pending').length;
+
+    const bPass = document.getElementById('badge-pending-pass');
+    const bDrv = document.getElementById('badge-pending-drv');
+    const bComm = document.getElementById('badge-comm-pending');
+
+    if (bPass) { bPass.textContent = pendingPass; bPass.classList.toggle('hidden', pendingPass === 0); }
+    if (bDrv) { bDrv.textContent = pendingDrv; bDrv.classList.toggle('hidden', pendingDrv === 0); }
+    if (bComm) { bComm.textContent = pendingComm; bComm.classList.toggle('hidden', pendingComm === 0); }
+  }
+
+  function openOwnerModal(tab) {
+    currentOpenOwnerTab = tab;
+    document.getElementById('owner-submodal').classList.remove('hidden');
+    renderOwnerModalContent(tab);
+  }
+
+  function closeOwnerModal() {
+    currentOpenOwnerTab = null;
+    document.getElementById('owner-submodal').classList.add('hidden');
+  }
+
+  function renderOwnerModalContent(tab) {
+    const titleEl = document.getElementById('owner-submodal-title');
+    const bodyEl = document.getElementById('owner-submodal-body');
+
+    if (tab === 'ganancia') {
+      titleEl.textContent = '💰 Mi Ganancia y Comisiones';
+      const approvedComms = appState.commissionReports.filter(r => r.status === 'approved');
+      const pendingComms = appState.commissionReports.filter(r => r.status === 'pending');
+      const totalCobrado = approvedComms.reduce((acc, r) => acc + Number(r.amountUsd || 0), 0);
+      const totalPorCobrar = appState.users
+        .filter(u => u.role === 'driver')
+        .reduce((acc, u) => acc + Number(u.debtUsd || 0), 0);
+      const totalBrutoApp = appState.trips
+        .filter(t => t.status === 'completed')
+        .reduce((acc, t) => acc + Number(t.priceUsd || 0), 0);
+
+      bodyEl.innerHTML = `
+        <div class="grid grid-cols-2 gap-2.5 text-center">
+          <div class="p-3.5 rounded-2xl bg-[#00b14f]/10 border border-[#00b14f]/30">
+            <p class="text-[10px] font-bold text-gray-500">Cobrado en Cuenta</p>
+            <p class="text-lg font-black text-[#00b14f]">$${totalCobrado.toFixed(2)}</p>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+            <p class="text-[10px] font-bold text-gray-500">Por Cobrar en Calle</p>
+            <p class="text-lg font-black text-amber-600">$${totalPorCobrar.toFixed(2)}</p>
+          </div>
+        </div>
+        <div class="p-3 rounded-2xl bg-gray-100 flex justify-between items-center">
+          <span class="font-bold text-gray-600">Facturación total generada:</span>
+          <span class="font-black">$${totalBrutoApp.toFixed(2)}</span>
+        </div>
+        <h4 class="font-black text-xs uppercase text-[#00b14f] pt-2">Reportes de Pago Pendientes (${pendingComms.length})</h4>
+        ${pendingComms.length === 0
+          ? `<p class="p-3 rounded-xl bg-gray-50 text-gray-400 font-bold text-center">No hay pagos pendientes por validar</p>`
+          : pendingComms.map(r => `
+            <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-2">
+              <div>
+                <p class="font-black">${r.driverName} · $${Number(r.amountUsd).toFixed(2)}</p>
+                <p class="text-[11px] text-gray-500">Ref: <b>${r.reference}</b> · ${r.date}</p>
+              </div>
+              <button type="button" onclick="ownerApproveCommission('${r.id}')" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white font-extrabold">Aprobar</button>
+            </div>
+          `).join('')
         }
-        <div class="min-w-0">
-          <p class="text-sm font-black truncate">${u.name}</p>
-          <p class="text-[11px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
-          ${isDriverMode ? `<p class="text-[10px] font-bold text-[#00b14f]">${activeVeh.type === 'Moto' ? '🏍️' : '🚗'} ${activeVeh.model} (${activeVeh.plate})</p>` : ''}
+      `;
+    } else if (tab === 'bcv') {
+      titleEl.textContent = '💱 Tasa BCV (Bs / $)';
+      bodyEl.innerHTML = `
+        <div class="p-4 rounded-2xl bg-gray-100 text-center space-y-1">
+          <p class="text-[11px] font-bold text-gray-500">Tasa Actual Activa</p>
+          <p class="text-2xl font-black text-[#11131a]">Bs. ${Number(appState.bcvRate).toFixed(2)}</p>
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Nueva Tasa en Bolívares</label>
+          <input type="number" step="0.01" id="input-owner-bcv" value="${appState.bcvRate}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-gray-300 font-black text-sm" />
+        </div>
+        <button type="button" onclick="saveBcvFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Guardar Tasa (PIN 2026)
+        </button>
+      `;
+    } else if (tab === 'pending_users') {
+      titleEl.textContent = '⏳ Usuarios por Aprobación';
+      const list = appState.users.filter(u => !u.approved && u.role === 'passenger');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center font-bold text-[#00b14f]">✓ No hay pasajeros pendientes por aprobar</p>`
+        : list.map(u => renderPendingCardHtml(u)).join('');
+    } else if (tab === 'pending_drivers') {
+      titleEl.textContent = '🚖 Conductores por Aprobación';
+      const newDrivers = appState.users.filter(u => !u.approved && u.role === 'driver');
+      const driversWithExtraVeh = appState.users.filter(u =>
+        u.approved && u.role === 'driver' && getDriverVehiclesList(u).some(v => !v.approved)
+      );
+
+      if (newDrivers.length === 0 && driversWithExtraVeh.length === 0) {
+        bodyEl.innerHTML = `<p class="py-8 text-center font-bold text-[#00b14f]">✓ No hay conductores ni vehículos pendientes por aprobar</p>`;
+      } else {
+        const htmlNew = newDrivers.map(u => renderPendingCardHtml(u)).join('');
+        const htmlExtra = driversWithExtraVeh.map(u => {
+          const pendVeh = getDriverVehiclesList(u).find(v => !v.approved);
+          return `
+            <div class="p-4 rounded-3xl bg-blue-50/70 border-2 border-blue-400 space-y-2">
+              <p class="text-[10px] font-extrabold uppercase text-blue-700">+ Segundo Vehículo Registrado</p>
+              <p class="text-xs font-black">${u.name} · 🪪 ${u.cedula || '---'}</p>
+              <p class="text-xs font-bold text-gray-800">🚘 ${pendVeh.type}: ${pendVeh.model} · Placa: <b>${pendVeh.plate}</b></p>
+              <p class="text-[10px] text-[#00b14f] font-bold">📄 Docs: Carnet, RCV y Licencia cargados</p>
+              <div class="flex gap-2 pt-1">
+                <button type="button" onclick="ownerApproveSecondVehicle('${u.id}', '${pendVeh.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white font-extrabold">✓ Aprobar ${pendVeh.type}</button>
+                <button type="button" onclick="ownerRejectSecondVehicle('${u.id}', '${pendVeh.id}')" class="px-3.5 py-2.5 rounded-xl bg-red-500/15 text-red-600 font-extrabold">Rechazar</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        bodyEl.innerHTML = htmlNew + htmlExtra;
+      }
+    } else if (tab === 'comision') {
+      titleEl.textContent = '📊 Porcentaje de Comisión';
+      bodyEl.innerHTML = `
+        <div class="p-4 rounded-2xl bg-gray-100 text-center space-y-1">
+          <p class="text-[11px] font-bold text-gray-500">Comisión Actual por Viaje Completado</p>
+          <p class="text-2xl font-black text-[#00b14f]">${appState.commissionPct}%</p>
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Nuevo Porcentaje (%)</label>
+          <input type="number" min="1" max="50" id="input-owner-comm" value="${appState.commissionPct}" class="mt-1 w-full px-4 py-3 rounded-2xl border border-gray-300 font-black text-sm" />
+        </div>
+        <button type="button" onclick="saveCommissionFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Actualizar Comisión (PIN 2026)
+        </button>
+      `;
+    } else if (tab === 'pasajeros') {
+      titleEl.textContent = '🧍 Pasajeros Registrados';
+      const list = appState.users.filter(u => u.approved && u.role === 'passenger');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">Aún no hay pasajeros aprobados</p>`
+        : list.map(u => renderActiveUserCardHtml(u)).join('');
+    } else if (tab === 'conductores') {
+      titleEl.textContent = '🚖 Flota de Conductores';
+      const list = appState.users.filter(u => u.approved && u.role === 'driver');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">Aún no hay conductores aprobados</p>`
+        : list.map(u => renderActiveUserCardHtml(u)).join('');
+    } else if (tab === 'mapa_vivo') {
+      titleEl.textContent = '📍 Conductores en Vivo';
+      const onlineDrivers = appState.users.filter(u => u.approved && u.role === 'driver');
+      bodyEl.innerHTML = `
+        <div id="owner-live-map" class="w-full h-64 rounded-2xl border border-gray-200"></div>
+        <p class="text-[11px] text-gray-500 font-bold">Mostrando ${onlineDrivers.length} conductor(es) registrado(s) en la flota.</p>
+      `;
+      setTimeout(() => {
+        const m = L.map('owner-live-map').setView([10.2016, -71.3148], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(m);
+        onlineDrivers.forEach(d => {
+          if (d.lat && d.lng) {
+            const v = getDriverActiveVehicle(d);
+            L.marker([d.lat, d.lng]).addTo(m).bindPopup(`<b>${d.name}</b><br>${v.type} · ${v.plate}`);
+          }
+        });
+      }, 150);
+    } else if (tab === 'datos_app') {
+      titleEl.textContent = '⚙️ Datos de la App';
+      const m = appState.appMeta;
+      bodyEl.innerHTML = `
+        <div class="space-y-2.5">
+          <div>
+            <label class="font-bold text-gray-600">Ciudad / Zona de Operación</label>
+            <input type="text" id="meta-city" value="${m.city}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+          </div>
+          <div>
+            <label class="font-bold text-gray-600">WhatsApp de Soporte</label>
+            <input type="text" id="meta-wa" value="${m.supportWhatsapp}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+          </div>
+          <div>
+            <label class="font-bold text-gray-600">Teléfono de Emergencia</label>
+            <input type="text" id="meta-emerg" value="${m.emergencyPhone}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+          </div>
+          <button type="button" onclick="saveAppMetaFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+            💾 Guardar Datos (PIN 2026)
+          </button>
+        </div>
+      `;
+    } else if (tab === 'tarifas') {
+      titleEl.textContent = '💵 Configuración de Tarifas';
+      const t = appState.tariffs;
+      bodyEl.innerHTML = `
+        <div class="space-y-3">
+          <div class="p-3 rounded-2xl bg-gray-100 space-y-2">
+            <p class="font-black text-[#11131a]">🏍️ Moto Go</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="text-[10px] font-bold">Mínima ($)</label><input type="number" step="0.05" id="t-moto-min" value="${t.motoMin}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+              <div><label class="text-[10px] font-bold">Por Km ($)</label><input type="number" step="0.05" id="t-moto-km" value="${t.motoKm}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+            </div>
+          </div>
+          <div class="p-3 rounded-2xl bg-gray-100 space-y-2">
+            <p class="font-black text-[#11131a]">🚗 Carro Go</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="text-[10px] font-bold">Mínima ($)</label><input type="number" step="0.05" id="t-carro-min" value="${t.carroMin}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+              <div><label class="text-[10px] font-bold">Por Km ($)</label><input type="number" step="0.05" id="t-carro-km" value="${t.carroKm}" class="w-full px-3 py-2 rounded-xl border bg-white font-bold" /></div>
+            </div>
+          </div>
+          <button type="button" onclick="saveTariffsFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+            💾 Guardar Tarifas (PIN 2026)
+          </button>
+        </div>
+      `;
+    } else if (tab === 'realizados') {
+      titleEl.textContent = '✅ Servicios Realizados';
+      const list = appState.trips.filter(t => t.status === 'completed');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">Aún hay 0 servicios completados</p>`
+        : list.map(t => `
+          <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 space-y-1">
+            <div class="flex justify-between font-black">
+              <span>${t.service} · ${t.distanceKm} km</span>
+              <span class="text-[#00b14f]">$${Number(t.priceUsd).toFixed(2)}</span>
+            </div>
+            <p class="text-[11px] text-gray-600">Pasajero: <b>${t.passengerName}</b></p>
+            <p class="text-[11px] text-gray-600">Destino: ${t.destinationText}</p>
+            <p class="text-[10px] text-gray-400">${t.createdAt}</p>
+          </div>
+        `).join('');
+    } else if (tab === 'cancelados') {
+      titleEl.textContent = '❌ Servicios Cancelados';
+      const list = appState.trips.filter(t => t.status === 'cancelled');
+      bodyEl.innerHTML = list.length === 0
+        ? `<p class="py-8 text-center text-gray-400 font-bold">No hay servicios cancelados</p>`
+        : list.map(t => `
+          <div class="p-3.5 rounded-2xl bg-red-50/60 border border-red-200 space-y-1">
+            <div class="flex justify-between font-black text-red-700">
+              <span>${t.service} · $${Number(t.priceUsd).toFixed(2)}</span>
+              <span>Cancelado</span>
+            </div>
+            <p class="text-[11px] text-gray-700">Pasajero: <b>${t.passengerName}</b> (${t.passengerPhone})</p>
+            <p class="text-[11px] text-gray-500">Destino: ${t.destinationText}</p>
+            <p class="text-[10px] text-gray-400">${t.createdAt}</p>
+          </div>
+        `).join('');
+    } else if (tab === 'terminos') {
+      titleEl.textContent = '📜 Términos y Condiciones';
+      bodyEl.innerHTML = `
+        <textarea id="input-owner-terms" rows="8" class="w-full p-3.5 rounded-2xl border border-gray-300 text-xs leading-relaxed">${appState.appMeta.terms}</textarea>
+        <button type="button" onclick="saveTermsFromModal()" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Actualizar Términos (PIN 2026)
+        </button>
+      `;
+    }
+  }
+
+  function renderPendingCardHtml(u) {
+    return `
+      <div class="p-4 rounded-3xl bg-gray-50 border-2 border-amber-400 space-y-2.5">
+        <div>
+          <p class="text-xs font-black">${u.name}</p>
+          <p class="text-[11px] font-bold text-gray-700">🪪 Cédula: ${u.cedula || '---'} · 📞 ${u.phone}</p>
+          ${u.role === 'driver' ? `
+            <p class="text-[11px] font-bold text-gray-700 mt-1">🚘 ${u.vehicleType}: ${u.vehicleModel} · Placa: <b>${u.plate}</b></p>
+            <p class="text-[10px] text-[#00b14f] font-bold mt-0.5">📄 5 Docs: C.I., Carnet, Licencia, Carta Médica y RCV</p>
+          ` : ''}
+        </div>
+        ${(u.cedulaImg || u.selfieImg) ? `
+          <div class="grid grid-cols-2 gap-2">
+            ${u.cedulaImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Cédula</p><img src="${u.cedulaImg}" class="w-full h-24 object-cover rounded-xl border" /></div>` : ''}
+            ${u.selfieImg ? `<div><p class="text-[9px] font-bold text-gray-400 mb-1">Selfie</p><img src="${u.selfieImg}" class="w-full h-24 object-cover rounded-xl border" /></div>` : ''}
+          </div>
+        ` : ''}
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="ownerApproveUser('${u.id}')" class="flex-1 py-2.5 rounded-xl bg-[#00b14f] text-white font-extrabold">✓ Aprobar</button>
+          <button type="button" onclick="ownerEditUserForm('${u.id}')" class="px-3 py-2.5 rounded-xl bg-[#11131a] text-white font-extrabold">✏️ Editar</button>
+          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3 py-2.5 rounded-xl bg-red-500/15 text-red-600 font-extrabold">✕</button>
         </div>
       </div>
+    `;
+  }
 
-      <!-- Botonera de Ajustes -->
-      <div class="space-y-2">
-        <button type="button" onclick="openSettingsSubSection('perfil')" class="w-full p-3.5 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 flex items-center justify-between font-extrabold">
-          <span>👤 Mi Perfil</span>
-          <span class="text-gray-400">›</span>
+  function renderActiveUserCardHtml(u) {
+    const vehs = getDriverVehiclesList(u);
+    const vehSummary = vehs.map(v => `${v.type === 'Moto' ? '🏍️' : '🚗'} ${v.model} (${v.plate})${v.approved ? '' : ' [Pendiente]'}`).join(' · ');
+    return `
+      <div class="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-black">${u.name} ${u.blocked ? '<span class="text-red-600">(SUSPENDIDO)</span>' : ''}</p>
+            <p class="text-[10px] text-gray-500">🪪 ${u.cedula || '---'} · 📞 ${u.phone}</p>
+            ${u.role === 'driver' ? `<p class="text-[10px] font-bold text-gray-700">${vehSummary} · Deuda: <span class="text-red-600">$${Number(u.debtUsd || 0).toFixed(2)}</span></p>` : ''}
+          </div>
+        </div>
+        <div class="flex gap-1.5">
+          <button type="button" onclick="ownerEditUserForm('${u.id}')" class="px-3 py-2 rounded-xl bg-[#11131a] text-white font-extrabold">
+            ✏️ Editar
+          </button>
+          <button type="button" onclick="ownerToggleBlockUser('${u.id}')" class="flex-1 py-2 rounded-xl ${u.blocked ? 'bg-[#00b14f] text-white' : 'bg-amber-500/20 text-amber-700'} font-extrabold">
+            ${u.blocked ? 'Reactivar' : 'Suspender'}
+          </button>
+          <button type="button" onclick="ownerDeleteUser('${u.id}')" class="px-3 py-2 rounded-xl bg-red-500/15 text-red-600 font-extrabold">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function ownerApproveSecondVehicle(userId, vehId) {
+    if (!requirePin('aprobar el segundo vehículo')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    const list = getDriverVehiclesList(u).map(v => v.id === vehId ? Object.assign({}, v, { approved: true }) : v);
+    u.vehicles = list;
+    await cloudPatch(`users/${userId}`, { vehicles: list });
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Segundo vehículo aprobado ✓');
+  }
+
+  async function ownerRejectSecondVehicle(userId, vehId) {
+    if (!requirePin('rechazar este vehículo')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    const list = getDriverVehiclesList(u).filter(v => v.id !== vehId);
+    u.vehicles = list;
+    await cloudPatch(`users/${userId}`, { vehicles: list });
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Vehículo rechazado');
+  }
+
+  function ownerEditUserForm(userId) {
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    currentOpenOwnerTab = 'edit_user';
+    document.getElementById('owner-submodal-title').textContent = `✏️ Editar: ${u.name}`;
+    document.getElementById('owner-submodal-body').innerHTML = `
+      <div class="space-y-2.5">
+        <div>
+          <label class="font-bold text-gray-600">Nombre y Apellido</label>
+          <input type="text" id="edit-u-name" value="${u.name || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Cédula</label>
+          <input type="text" id="edit-u-cedula" value="${u.cedula || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Teléfono</label>
+          <input type="tel" id="edit-u-phone" value="${u.phone || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        <div>
+          <label class="font-bold text-gray-600">Contraseña</label>
+          <input type="text" id="edit-u-pass" value="${u.pass || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+        </div>
+        ${u.role === 'driver' ? `
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="font-bold text-gray-600">Placa Principal</label>
+              <input type="text" id="edit-u-plate" value="${u.plate || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+            </div>
+            <div>
+              <label class="font-bold text-gray-600">Vehículo Principal</label>
+              <input type="text" id="edit-u-model" value="${u.vehicleModel || ''}" class="mt-1 w-full px-3.5 py-2.5 rounded-xl border border-gray-300" />
+            </div>
+          </div>
+        ` : ''}
+        <button type="button" onclick="saveEditedUser('${u.id}')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white font-extrabold">
+          💾 Guardar Cambios (PIN 2026)
         </button>
+      </div>
+    `;
+  }
 
-        ${isDriverMode ? `
-          <button type="button" onclick="openSettingsSubSection('comision')" class="w-full p-3.5 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 flex items-center justify-between font-extrabold">
-            <span>📲 Pago de Comisión (${appState.commissionPct}%)</span>
+  async function saveEditedUser(userId) {
+    if (!requirePin('guardar los cambios de este usuario')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+
+    u.name = document.getElementById('edit-u-name').value.trim();
+    u.cedula = document.getElementById('edit-u-cedula').value.trim().toUpperCase();
+    u.phone = document.getElementById('edit-u-phone').value.trim();
+    u.pass = document.getElementById('edit-u-pass').value.trim();
+
+    const patchData = { name: u.name, cedula: u.cedula, phone: u.phone, pass: u.pass };
+    if (u.role === 'driver') {
+      u.plate = document.getElementById('edit-u-plate').value.trim().toUpperCase();
+      u.vehicleModel = document.getElementById('edit-u-model').value.trim();
+      patchData.plate = u.plate;
+      patchData.vehicleModel = u.vehicleModel;
+    }
+
+    await cloudPatch(`users/${userId}`, patchData);
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Datos actualizados ✓');
+  }
+
+  async function saveBcvFromModal() {
+    if (!requirePin('actualizar la tasa BCV')) return;
+    const num = parseFloat(document.getElementById('input-owner-bcv').value);
+    if (isNaN(num) || num <= 0) return;
+    appState.bcvRate = num;
+    await cloudPatch('config', { bcvRate: num });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast(`Tasa actualizada a Bs. ${num.toFixed(2)}`);
+  }
+
+  async function saveCommissionFromModal() {
+    if (!requirePin('cambiar el % de comisión')) return;
+    const num = parseFloat(document.getElementById('input-owner-comm').value);
+    if (isNaN(num) || num < 0 || num > 100) return;
+    appState.commissionPct = num;
+    await cloudPatch('config', { commissionPct: num });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast(`Comisión actualizada al ${num}%`);
+  }
+
+  async function saveAppMetaFromModal() {
+    if (!requirePin('guardar datos de la app')) return;
+    appState.appMeta.city = document.getElementById('meta-city').value.trim();
+    appState.appMeta.supportWhatsapp = document.getElementById('meta-wa').value.trim();
+    appState.appMeta.emergencyPhone = document.getElementById('meta-emerg').value.trim();
+    await cloudPatch('config', { appMeta: appState.appMeta });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Datos guardados');
+  }
+
+  async function saveTariffsFromModal() {
+    if (!requirePin('actualizar las tarifas')) return;
+    appState.tariffs.motoMin = parseFloat(document.getElementById('t-moto-min').value) || 1.10;
+    appState.tariffs.motoKm = parseFloat(document.getElementById('t-moto-km').value) || 0.75;
+    appState.tariffs.carroMin = parseFloat(document.getElementById('t-carro-min').value) || 1.80;
+    appState.tariffs.carroKm = parseFloat(document.getElementById('t-carro-km').value) || 1.15;
+    appState.tariffs.envioMin = appState.tariffs.motoMin;
+    appState.tariffs.envioKm = appState.tariffs.motoKm;
+    await cloudPatch('config', { tariffs: appState.tariffs });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Tarifas actualizadas');
+  }
+
+  async function saveTermsFromModal() {
+    if (!requirePin('actualizar los términos y condiciones')) return;
+    appState.appMeta.terms = document.getElementById('input-owner-terms').value.trim();
+    await cloudPatch('config', { appMeta: appState.appMeta });
+    saveLocalOnly();
+    closeOwnerModal();
+    showToast('Términos guardados');
+  }
+
+  function openTermsPublicModal() {
+    document.getElementById('modal-public-terms')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-public-terms" class="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-white text-[#11131a] rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">📜 Términos y Condiciones</h3>
+            <button type="button" onclick="document.getElementById('modal-public-terms').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-xs text-gray-600 whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">${appState.appMeta.terms}</p>
+        </div>
+      </div>
+    `);
+  }
+
+  async function ownerApproveUser(userId) {
+    if (!requirePin('autorizar el ingreso de este integrante')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    u.approved = true;
+    u.online = true;
+    const vehs = getDriverVehiclesList(u).map(v => Object.assign({}, v, { approved: true }));
+    if (u.role === 'driver') u.vehicles = vehs;
+
+    await cloudPatch(`users/${userId}`, {
+      approved: true,
+      online: true,
+      ...(u.role === 'driver' ? { vehicles: vehs } : {})
+    });
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Integrante autorizado');
+  }
+
+  async function ownerToggleBlockUser(userId) {
+    if (!requirePin('cambiar el estado de esta cuenta')) return;
+    const u = appState.users.find(x => x.id === userId);
+    if (!u) return;
+    u.blocked = !u.blocked;
+    await cloudPatch(`users/${userId}`, { blocked: u.blocked });
+    saveLocalOnly();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast(u.blocked ? 'Cuenta suspendida' : 'Cuenta reactivada');
+  }
+
+  async function ownerDeleteUser(userId) {
+    if (!requirePin('eliminar este registro')) return;
+    appState.users = appState.users.filter(x => x.id !== userId);
+    await cloudDelete(`users/${userId}`);
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Registro eliminado');
+  }
+
+  async function ownerApproveCommission(repId) {
+    if (!requirePin('aprobar este pago de comisión')) return;
+    const rep = appState.commissionReports.find(r => r.id === repId);
+    if (rep) {
+      rep.status = 'approved';
+      await cloudPatch(`commissionReports/${repId}`, { status: 'approved' });
+      const drv = appState.users.find(u => u.id === rep.driverId);
+      if (drv) {
+        drv.debtUsd = 0;
+        await cloudPatch(`users/${drv.id}`, { debtUsd: 0 });
+      }
+    }
+    saveLocalOnly();
+    updateOwnerBadges();
+    if (currentOpenOwnerTab) renderOwnerModalContent(currentOpenOwnerTab);
+    showToast('Pago aprobado y deuda saldada');
+  }
+
+  function openOwnerPagoMovilModal() {
+    const pay = appState.ownerPayment;
+    document.getElementById('modal-owner-pm')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-owner-pm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">📲 Mi Pago Móvil</h3>
+            <button type="button" onclick="document.getElementById('modal-owner-pm').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <p class="text-[11px] text-gray-500">Solo los conductores verán estos datos al reportar su comisión.</p>
+          <input type="text" id="pm-bank" value="${pay.bank}" placeholder="Banco" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <input type="tel" id="pm-phone" value="${pay.phone}" placeholder="Teléfono Pago Móvil" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <input type="text" id="pm-ci" value="${pay.ci}" placeholder="Cédula o RIF" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <input type="text" id="pm-name" value="${pay.name}" placeholder="Titular" class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs" />
+          <button type="button" onclick="saveOwnerPagoMovil()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+            💾 Guardar (PIN 2026)
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function saveOwnerPagoMovil() {
+    if (!requirePin('guardar tu Pago Móvil')) return;
+    appState.ownerPayment = {
+      bank: document.getElementById('pm-bank').value.trim(),
+      phone: document.getElementById('pm-phone').value.trim(),
+      ci: document.getElementById('pm-ci').value.trim(),
+      name: document.getElementById('pm-name').value.trim()
+    };
+    await cloudPatch('config', { ownerPayment: appState.ownerPayment });
+    saveLocalOnly();
+    document.getElementById('modal-owner-pm').remove();
+    showToast('Pago Móvil guardado');
+  }
+
+  // =========================================================
+  // MAPA PASAJERO + SEGUIMIENTO DE ESTADOS + CHAT INTERNO
+  // =========================================================
+  let passMap = null;
+  let originCoords = [10.2016, -71.3148];
+  let destCoords = null;
+  let originMarker = null;
+  let destMarker = null;
+  let liveDriverMarker = null;
+  let streetPolyline = null;
+  let passLastDrawnRouteKey = '';
+  let currentDistKm = 0;
+  let currentDurMin = 0;
+  let selectedService = 'Moto Go';
+  let isPinMode = false;
+  let pinReverseTimer = null;
+  let searchBoxTimer = null;
+
+  function initPassengerMap() {
+    if (!passMap) {
+      passMap = L.map('map-passenger', { zoomControl: false }).setView(originCoords, 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(passMap);
+    }
+    setTimeout(() => passMap.invalidateSize(), 200);
+    syncPassengerGps(true);
+  }
+
+  function syncPassengerGps(center) {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        originCoords = [pos.coords.latitude, pos.coords.longitude];
+        if (passMap) {
+          if (center) passMap.setView(originCoords, 16);
+          if (!originMarker) {
+            originMarker = L.circleMarker(originCoords, {
+              radius: 9, fillColor: '#00b14f', color: '#ffffff', weight: 3, fillOpacity: 1
+            }).addTo(passMap);
+          } else {
+            originMarker.setLatLng(originCoords);
+          }
+        }
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${originCoords[0]}&lon=${originCoords[1]}`)
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.display_name) {
+              document.getElementById('input-origin').value = d.display_name.split(',').slice(0, 3).join(',');
+            }
+          }).catch(() => {});
+      },
+      () => {
+        document.getElementById('input-origin').value = 'Ubicación actual (Activa GPS para precisión)';
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
+
+  function openPinPicker() {
+    isPinMode = true;
+    document.getElementById('pass-step-destination').classList.add('hidden');
+    document.getElementById('pin-picker-overlay').classList.remove('hidden');
+    document.getElementById('pin-picker-bar').classList.remove('hidden');
+
+    if (passMap) {
+      passMap.invalidateSize();
+      updatePinCenterInfo();
+      passMap.off('move', updatePinCenterInfo);
+      passMap.off('moveend', updatePinCenterInfo);
+      passMap.on('move', updatePinCenterInfo);
+      passMap.on('moveend', updatePinCenterInfo);
+    }
+  }
+
+  function closePinPicker() {
+    isPinMode = false;
+    if (passMap) {
+      passMap.off('move', updatePinCenterInfo);
+      passMap.off('moveend', updatePinCenterInfo);
+    }
+    document.getElementById('pin-picker-overlay').classList.add('hidden');
+    document.getElementById('pin-picker-bar').classList.add('hidden');
+    document.getElementById('pass-step-destination').classList.remove('hidden');
+  }
+
+  function updatePinCenterInfo() {
+    if (!passMap || !isPinMode) return;
+    const c = passMap.getCenter();
+    window._pinCandidate = { lat: c.lat, lng: c.lng, label: `Punto (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})` };
+    document.getElementById('pin-street-badge').textContent = 'Ubicando calle...';
+
+    clearTimeout(pinReverseTimer);
+    pinReverseTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
+        const data = await res.json();
+        const label = (data && data.display_name)
+          ? data.display_name.split(',').slice(0, 3).join(',')
+          : `Punto (${c.lat.toFixed(4)}, ${c.lng.toFixed(4)})`;
+        window._pinCandidate = { lat: c.lat, lng: c.lng, label };
+        document.getElementById('pin-street-badge').textContent = label;
+        document.getElementById('pin-address-preview').textContent = label;
+      } catch (e) {}
+    }, 280);
+  }
+
+  async function confirmPinLocation() {
+    const c = window._pinCandidate || (passMap ? { lat: passMap.getCenter().lat, lng: passMap.getCenter().lng, label: 'Destino marcado' } : null);
+    if (!c) return;
+    closePinPicker();
+    await calculateStreetRouteAndShowVehicles(c.lat, c.lng, c.label);
+  }
+
+  function searchPlacesInput(q) {
+    const drop = document.getElementById('search-results-dropdown');
+    clearTimeout(searchBoxTimer);
+    if (q.trim().length < 3) {
+      drop.classList.add('hidden');
+      return;
+    }
+    searchBoxTimer = setTimeout(async () => {
+      try {
+        drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Buscando...</p>`;
+        drop.classList.remove('hidden');
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'es' } });
+        const list = await res.json();
+        if (!Array.isArray(list) || list.length === 0) {
+          drop.innerHTML = `<p class="p-3 text-xs text-gray-400">Sin resultados. Usa "Pin en el mapa".</p>`;
+          return;
+        }
+        drop.innerHTML = list.map(it => {
+          const title = it.display_name.split(',')[0];
+          const sub = it.display_name.split(',').slice(1, 3).join(',');
+          const safe = it.display_name.split(',').slice(0, 3).join(',').replace(/'/g, "\\'");
+          return `
+            <button type="button" onclick="selectSearchedPlace(${it.lat}, ${it.lon}, '${safe}')" class="w-full text-left px-3.5 py-2.5 hover:bg-gray-50">
+              <p class="text-xs font-extrabold truncate">📍 ${title}</p>
+              <p class="text-[10px] text-gray-400 truncate">${sub}</p>
+            </button>
+          `;
+        }).join('');
+      } catch (e) { drop.classList.add('hidden'); }
+    }, 400);
+  }
+
+  async function selectSearchedPlace(lat, lon, label) {
+    document.getElementById('search-results-dropdown').classList.add('hidden');
+    await calculateStreetRouteAndShowVehicles(lat, lon, label);
+  }
+
+  function clearDestination() {
+    document.getElementById('input-destination').value = '';
+    document.getElementById('search-results-dropdown').classList.add('hidden');
+    if (streetPolyline && passMap) passMap.removeLayer(streetPolyline);
+    if (destMarker && passMap) passMap.removeLayer(destMarker);
+  }
+
+  async function drawOsrmRouteOnMap(mapObj, startCoords, endCoords, colorHex, existingLine) {
+    let routePoints = [startCoords, endCoords];
+    let distKm = 1.0;
+    let durMin = 3;
+
+    try {
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson`);
+      const data = await res.json();
+      if (data && data.routes && data.routes[0]) {
+        const r = data.routes[0];
+        distKm = Math.max(0.2, Number((r.distance / 1000).toFixed(1)));
+        durMin = Math.max(1, Math.round(r.duration / 60));
+        routePoints = r.geometry.coordinates.map(c => [c[1], c[0]]);
+      }
+    } catch (e) {}
+
+    if (existingLine && mapObj) mapObj.removeLayer(existingLine);
+    const poly = L.polyline(routePoints, { color: colorHex, weight: 5, opacity: 0.9 }).addTo(mapObj);
+    return { poly, distKm, durMin };
+  }
+
+  async function calculateStreetRouteAndShowVehicles(lat, lon, label) {
+    destCoords = [parseFloat(lat), parseFloat(lon)];
+    document.getElementById('input-destination').value = label;
+
+    if (passMap) {
+      if (destMarker) passMap.removeLayer(destMarker);
+      destMarker = L.circleMarker(destCoords, {
+        radius: 9, fillColor: '#e51d2e', color: '#ffffff', weight: 3, fillOpacity: 1
+      }).addTo(passMap);
+
+      const res = await drawOsrmRouteOnMap(passMap, originCoords, destCoords, '#11131a', streetPolyline);
+      streetPolyline = res.poly;
+      currentDistKm = res.distKm;
+      currentDurMin = res.durMin;
+      passMap.fitBounds(streetPolyline.getBounds(), { padding: [55, 55] });
+    }
+
+    document.getElementById('trip-summary-metrics').textContent = `${currentDistKm} km · ~${currentDurMin} min`;
+    renderHiddenTariffVehicles();
+    document.getElementById('pass-step-destination').classList.add('hidden');
+    document.getElementById('pass-step-vehicles').classList.remove('hidden');
+  }
+
+  function backToDestinationStep() {
+    document.getElementById('pass-step-vehicles').classList.add('hidden');
+    document.getElementById('pass-step-destination').classList.remove('hidden');
+  }
+
+  function getCalculatedServices() {
+    const rate = appState.bcvRate || 45;
+    const t = appState.tariffs;
+    const motoUsd = Math.max(t.motoMin, Number((currentDistKm * t.motoKm).toFixed(2)));
+    const carroUsd = Math.max(t.carroMin, Number((currentDistKm * t.carroKm).toFixed(2)));
+    const envioUsd = Math.max(t.envioMin, Number((currentDistKm * t.envioKm).toFixed(2)));
+
+    return [
+      { name: 'Moto Go', desc: '1 pasajero · Ágil', icon: '🏍️', usd: motoUsd, bs: (motoUsd * rate).toFixed(2) },
+      { name: 'Carro Go', desc: 'Confort · 4 puestos', icon: '🚗', usd: carroUsd, bs: (carroUsd * rate).toFixed(2) },
+      { name: 'Envío Express', desc: 'Paquetes y entregas', icon: '📦', usd: envioUsd, bs: (envioUsd * rate).toFixed(2) }
+    ];
+  }
+
+  function renderHiddenTariffVehicles() {
+    const list = document.getElementById('vehicle-options-list');
+    const services = getCalculatedServices();
+    list.innerHTML = services.map(s => {
+      const active = selectedService === s.name;
+      return `
+        <button type="button" onclick="selectedService='${s.name}';renderHiddenTariffVehicles();" class="w-full p-3.5 rounded-2xl border-2 ${active ? 'border-[#00b14f] bg-[#00b14f]/5' : 'border-gray-200 bg-white'} flex items-center justify-between text-left transition">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">${s.icon}</span>
+            <div>
+              <p class="text-xs font-black">${s.name}</p>
+              <p class="text-[11px] text-gray-500">${s.desc}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-black">$${s.usd.toFixed(2)}</p>
+            <p class="text-[10px] font-bold text-gray-400">Bs. ${s.bs}</p>
+          </div>
+        </button>
+      `;
+    }).join('');
+  }
+
+  async function requestRideNow() {
+    const user = getActiveUser();
+    if (!user || !destCoords) return;
+
+    const chosen = getCalculatedServices().find(s => s.name === selectedService) || getCalculatedServices()[0];
+    const payMethod = document.getElementById('pass-payment-method').value;
+
+    const newTrip = {
+      id: 'trip-' + Date.now(),
+      passengerId: user.id,
+      passengerName: user.name,
+      passengerPhone: user.phone,
+      originText: document.getElementById('input-origin').value,
+      destinationText: document.getElementById('input-destination').value,
+      originCoords,
+      destCoords,
+      distanceKm: currentDistKm,
+      service: chosen.name,
+      priceUsd: chosen.usd,
+      priceBs: chosen.bs,
+      paymentMethod: payMethod,
+      status: 'searching',
+      driverId: null,
+      driverVehicleModel: null,
+      driverPlate: null,
+      driverLat: null,
+      driverLng: null,
+      messages: {},
+      createdAt: new Date().toLocaleString()
+    };
+
+    await cloudPut(`trips/${newTrip.id}`, newTrip);
+    appState.trips.unshift(newTrip);
+    saveLocalOnly();
+    syncPassengerTripUI();
+    showToast('Buscando conductor cercano...');
+  }
+
+  async function syncPassengerTripUI() {
+    const user = getActiveUser();
+    if (!user || user.role !== 'passenger') return;
+
+    const activeStatuses = ['searching', 'accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'];
+    const activeTrip = appState.trips.find(t =>
+      t.passengerId === user.id && activeStatuses.includes(t.status)
+    );
+
+    const stepDest = document.getElementById('pass-step-destination');
+    const stepVeh = document.getElementById('pass-step-vehicles');
+    const stepAct = document.getElementById('pass-step-active-trip');
+    const content = document.getElementById('active-trip-content');
+
+    if (!activeTrip) {
+      stepAct.classList.add('hidden');
+      if (liveDriverMarker && passMap) {
+        passMap.removeLayer(liveDriverMarker);
+        liveDriverMarker = null;
+      }
+      passLastDrawnRouteKey = '';
+      if (activeChatTripId) closeTripChatModal();
+      return;
+    }
+
+    checkNewChatNotification(activeTrip);
+
+    if (lastNotifiedTripStatus[activeTrip.id] !== activeTrip.status) {
+      lastNotifiedTripStatus[activeTrip.id] = activeTrip.status;
+      if (activeTrip.status === 'heading_pickup') showToast('🚀 ¡Tu conductor va saliendo a buscarte!');
+      if (activeTrip.status === 'arrived_pickup') showToast('📍 ¡Tu conductor ha llegado al punto de recogida!');
+      if (activeTrip.status === 'in_progress') showToast('▶️ ¡Viaje iniciado rumbo a tu destino!');
+    }
+
+    stepDest.classList.add('hidden');
+    stepVeh.classList.add('hidden');
+    stepAct.classList.remove('hidden');
+
+    if (activeTrip.status === 'searching') {
+      content.innerHTML = `
+        <div class="text-center space-y-2.5 py-2">
+          <div class="w-10 h-10 mx-auto rounded-full bg-[#00b14f]/15 text-[#00b14f] flex items-center justify-center text-xl animate-pulse">📡</div>
+          <h3 class="text-sm font-black">Buscando conductor disponible...</h3>
+          <p class="text-xs text-gray-500">${activeTrip.service} · $${activeTrip.priceUsd.toFixed(2)} (Bs. ${activeTrip.priceBs})</p>
+          <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="mt-1 px-6 py-2.5 rounded-2xl bg-red-600 text-white text-xs font-extrabold shadow">
+            ✕ Cancelar Solicitud
+          </button>
+        </div>
+      `;
+    } else {
+      const drv = appState.users.find(u => u.id === activeTrip.driverId) || {};
+      const activeVeh = drv.id ? getDriverActiveVehicle(drv) : {};
+      const showModel = activeTrip.driverVehicleModel || activeVeh.model || drv.vehicleModel || 'Vehículo';
+      const showPlate = activeTrip.driverPlate || activeVeh.plate || drv.plate || '---';
+      const dLat = drv.lat || activeTrip.driverLat;
+      const dLng = drv.lng || activeTrip.driverLng;
+
+      if (dLat && dLng && passMap) {
+        if (!liveDriverMarker) {
+          const icon = L.divIcon({
+            html: `<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">🚖</div>`,
+            className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+          });
+          liveDriverMarker = L.marker([dLat, dLng], { icon }).addTo(passMap);
+        } else {
+          liveDriverMarker.setLatLng([dLat, dLng]);
+        }
+
+        const routeKey = `${activeTrip.status}-${Math.round(dLat*1000)}-${Math.round(dLng*1000)}`;
+        if (passLastDrawnRouteKey !== routeKey) {
+          passLastDrawnRouteKey = routeKey;
+          if (['accepted', 'heading_pickup'].includes(activeTrip.status) && activeTrip.originCoords) {
+            const res = await drawOsrmRouteOnMap(passMap, [dLat, dLng], activeTrip.originCoords, '#00b14f', streetPolyline);
+            streetPolyline = res.poly;
+          } else if (activeTrip.status === 'in_progress' && activeTrip.destCoords) {
+            const res = await drawOsrmRouteOnMap(passMap, [dLat, dLng], activeTrip.destCoords, '#11131a', streetPolyline);
+            streetPolyline = res.poly;
+          }
+        }
+      }
+
+      const statusLabels = {
+        accepted: { badge: '✓ Conductor asignado · Preparándose', color: 'bg-blue-500/15 text-blue-700' },
+        heading_pickup: { badge: '🚀 Voy saliendo · Conductor en camino a buscarte', color: 'bg-[#00b14f]/15 text-[#00b14f]' },
+        arrived_pickup: { badge: '📍 ¡El conductor ha llegado por ti!', color: 'bg-amber-500/20 text-amber-800 animate-pulse' },
+        in_progress: { badge: '▶️ En viaje hacia tu destino final', color: 'bg-[#11131a] text-white' }
+      };
+      const stInfo = statusLabels[activeTrip.status] || statusLabels.accepted;
+
+      const cleanPhone = (drv.phone || '').replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '58' + cleanPhone.slice(1) : cleanPhone;
+      const canCancel = activeTrip.status !== 'in_progress';
+      const unreadChat = getUnreadChatCount(activeTrip);
+
+      content.innerHTML = `
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="px-2.5 py-1 rounded-full ${stInfo.color} text-[10px] font-extrabold uppercase">${stInfo.badge}</span>
+            <span class="text-sm font-black shrink-0">$${activeTrip.priceUsd.toFixed(2)}</span>
+          </div>
+          <div class="p-3 rounded-2xl bg-gray-100 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-sm font-black truncate">🧑🏻‍✈️ ${drv.name || 'Conductor Asignado'}</p>
+              <p class="text-xs text-gray-600 truncate">🚘 ${showModel} · Placa: <b>${showPlate}</b></p>
+              <p class="text-xs text-gray-600">📞 ${drv.phone || ''}</p>
+            </div>
+            <div class="flex flex-col gap-1.5 shrink-0">
+              <button type="button" onclick="openTripChatModal('${activeTrip.id}')" class="px-3.5 py-2 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold flex items-center justify-center gap-1 shadow">
+                💬 Chat ${unreadChat > 0 ? `<span class="px-1.5 rounded-full bg-white text-[#11131a] text-[10px] font-black">${unreadChat}</span>` : ''}
+              </button>
+              <div class="grid grid-cols-2 gap-1">
+                <a href="tel:${drv.phone || ''}" class="px-2 py-1.5 rounded-xl bg-[#11131a] text-white text-[10px] font-extrabold text-center">📞</a>
+                <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-2 py-1.5 rounded-xl bg-emerald-700 text-white text-[10px] font-extrabold text-center">WA</a>
+              </div>
+            </div>
+          </div>
+          ${canCancel ? `
+            <button type="button" onclick="cancelActiveTrip('${activeTrip.id}')" class="w-full py-2.5 rounded-2xl bg-red-500/15 text-red-600 text-xs font-extrabold">
+              ✕ Cancelar Viaje
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+  }
+
+  async function cancelActiveTrip(tripId) {
+    if (!confirm('¿Seguro que deseas cancelar este viaje?')) return;
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (trip) trip.status = 'cancelled';
+    await cloudPatch(`trips/${tripId}`, { status: 'cancelled' });
+    saveLocalOnly();
+    syncPassengerTripUI();
+    document.getElementById('pass-step-destination').classList.remove('hidden');
+    showToast('Viaje cancelado');
+  }
+
+  // =========================================================
+  // CONDUCTOR: MAPA EN VIVO + FLUJO + CHAT INTERNO
+  // =========================================================
+  let drvMap = null;
+  let drvSelfMarker = null;
+  let drvTargetMarker = null;
+  let drvRouteLine = null;
+  let drvLastDrawnRouteKey = '';
+  let lastGpsPush = 0;
+
+  function startDriverGpsBroadcast() {
+    if (!navigator.geolocation || window._drvGpsActive) return;
+    window._drvGpsActive = true;
+    navigator.geolocation.watchPosition(
+      pos => {
+        const u = getActiveUser();
+        if (!u || u.role !== 'driver') return;
+        u.lat = pos.coords.latitude;
+        u.lng = pos.coords.longitude;
+
+        const now = Date.now();
+        if (now - lastGpsPush < 3000) return;
+        lastGpsPush = now;
+
+        cloudPatch(`users/${u.id}`, { lat: u.lat, lng: u.lng });
+        appState.trips.forEach(t => {
+          if (t.driverId === u.id && ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)) {
+            t.driverLat = u.lat;
+            t.driverLng = u.lng;
+            cloudPatch(`trips/${t.id}`, { driverLat: u.lat, driverLng: u.lng });
+          }
+        });
+        renderDriverDashboard();
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 2500 }
+    );
+  }
+
+  async function toggleDriverOnline() {
+    const u = getActiveUser();
+    if (!u || u.role !== 'driver') return;
+    const nextState = !(u.online === true);
+    u.online = nextState;
+    driverManualOffline = !nextState;
+    await cloudPatch(`users/${u.id}`, { online: nextState });
+    saveLocalOnly();
+    renderDriverDashboard();
+    showToast(nextState ? '● Ahora estás En Línea' : '○ Te has desconectado');
+  }
+
+  async function updateDriverLiveMap(u, activeTrip) {
+    const mapContainer = document.getElementById('map-driver');
+    if (!mapContainer) return;
+
+    const dLat = u.lat || activeTrip.driverLat || (activeTrip.originCoords ? activeTrip.originCoords[0] : 10.2016);
+    const dLng = u.lng || activeTrip.driverLng || (activeTrip.originCoords ? activeTrip.originCoords[1] : -71.3148);
+
+    if (!drvMap) {
+      drvMap = L.map('map-driver', { zoomControl: false }).setView([dLat, dLng], 15);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(drvMap);
+    }
+    setTimeout(() => drvMap.invalidateSize(), 150);
+
+    if (!drvSelfMarker) {
+      const icon = L.divIcon({
+        html: `<div style="font-size:26px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">🚖</div>`,
+        className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+      });
+      drvSelfMarker = L.marker([dLat, dLng], { icon }).addTo(drvMap);
+    } else {
+      drvSelfMarker.setLatLng([dLat, dLng]);
+    }
+
+    let routeStart = [dLat, dLng];
+    let routeEnd = activeTrip.originCoords;
+    let routeColor = '#00b14f';
+    let badgePrefix = '🟢 Ruta hacia punto de recogida';
+
+    if (activeTrip.status === 'in_progress') {
+      routeStart = [dLat, dLng];
+      routeEnd = activeTrip.destCoords;
+      routeColor = '#11131a';
+      badgePrefix = '🔴 Ruta hacia destino final';
+    }
+
+    if (routeEnd && routeEnd.length === 2) {
+      if (drvTargetMarker) drvMap.removeLayer(drvTargetMarker);
+      drvTargetMarker = L.circleMarker(routeEnd, {
+        radius: 9,
+        fillColor: activeTrip.status === 'in_progress' ? '#e51d2e' : '#00b14f',
+        color: '#ffffff',
+        weight: 3,
+        fillOpacity: 1
+      }).addTo(drvMap);
+
+      const routeKey = `${activeTrip.id}-${activeTrip.status}-${Math.round(dLat*1000)}-${Math.round(dLng*1000)}`;
+      if (drvLastDrawnRouteKey !== routeKey) {
+        drvLastDrawnRouteKey = routeKey;
+        const res = await drawOsrmRouteOnMap(drvMap, routeStart, routeEnd, routeColor, drvRouteLine);
+        drvRouteLine = res.poly;
+        const badgeEl = document.getElementById('drv-map-route-badge');
+        if (badgeEl) badgeEl.textContent = `${badgePrefix} · ${res.distKm} km (~${res.durMin} min)`;
+        drvMap.fitBounds(drvRouteLine.getBounds(), { padding: [35, 35] });
+      }
+    }
+  }
+
+  function renderDriverDashboard() {
+    const u = getActiveUser();
+    if (!u || u.role !== 'driver') return;
+
+    renderDriverVehicleSwitcher(u);
+    const activeVeh = getDriverActiveVehicle(u);
+    document.getElementById('drv-header-name').textContent = `${u.name} · ${activeVeh.plate}`;
+
+    const isOnline = u.online !== false && !driverManualOffline;
+    const toggleBtn = document.getElementById('drv-online-toggle');
+    toggleBtn.textContent = isOnline ? '● En Línea' : '○ Desconectado';
+    toggleBtn.className = isOnline
+      ? 'px-2.5 py-1.5 rounded-full bg-[#00b14f] text-white text-[11px] font-extrabold'
+      : 'px-2.5 py-1.5 rounded-full bg-gray-600 text-white text-[11px] font-extrabold';
+
+    document.getElementById('drv-stat-trips').textContent = u.tripsCount || 0;
+    document.getElementById('drv-stat-earned').textContent = `$${Number(u.earnedUsd || 0).toFixed(2)}`;
+    document.getElementById('drv-stat-debt').textContent = `$${Number(u.debtUsd || 0).toFixed(2)}`;
+    const pctEl = document.getElementById('drv-comm-pct-label');
+    if (pctEl) pctEl.textContent = appState.commissionPct || 10;
+
+    const activeStatuses = ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'];
+    const activeTrip = appState.trips.find(t => t.driverId === u.id && activeStatuses.includes(t.status));
+    const activeWrapper = document.getElementById('drv-active-trip-wrapper');
+    const activeBox = document.getElementById('drv-active-trip-box');
+    const reqList = document.getElementById('drv-requests-list');
+
+    if (activeTrip) {
+      checkNewChatNotification(activeTrip);
+      activeWrapper.classList.remove('hidden');
+      updateDriverLiveMap(u, activeTrip);
+
+      const cleanPhone = (activeTrip.passengerPhone || '').replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '58' + cleanPhone.slice(1) : cleanPhone;
+      const unreadChat = getUnreadChatCount(activeTrip);
+
+      let primaryActionBtn = '';
+      let statusBanner = '';
+
+      if (activeTrip.status === 'accepted') {
+        statusBanner = 'Carrera Aceptada · Toca "Voy Saliendo" para iniciar rumbo al pasajero';
+        primaryActionBtn = `
+          <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'heading_pickup')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
+            🚀 Voy Saliendo (Ir a buscar)
+          </button>
+        `;
+      } else if (activeTrip.status === 'heading_pickup') {
+        statusBanner = 'En camino al punto de recogida del pasajero';
+        primaryActionBtn = `
+          <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'arrived_pickup')" class="w-full py-3.5 rounded-2xl bg-amber-500 text-[#11131a] text-xs font-black shadow-lg active:scale-95 transition">
+            📍 He Llegado (Avisar al pasajero)
+          </button>
+        `;
+      } else if (activeTrip.status === 'arrived_pickup') {
+        statusBanner = 'Esperando que el pasajero aborde el vehículo';
+        primaryActionBtn = `
+          <button type="button" onclick="changeDriverTripStatus('${activeTrip.id}', 'in_progress')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
+            ▶️ Comenzar Viaje (Hacia destino final)
+          </button>
+        `;
+      } else if (activeTrip.status === 'in_progress') {
+        statusBanner = 'Viaje en curso hacia el destino final';
+        primaryActionBtn = `
+          <button type="button" onclick="completeTripDriver('${activeTrip.id}')" class="w-full py-3.5 rounded-2xl bg-[#00b14f] text-white text-xs font-black shadow-lg active:scale-95 transition">
+            ✓ Finalizar Viaje ($${activeTrip.priceUsd.toFixed(2)})
+          </button>
+        `;
+      }
+
+      activeBox.innerHTML = `
+        <div class="bg-[#11131a] text-white rounded-3xl p-4 space-y-3 shadow-xl">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[10px] font-extrabold uppercase text-[#00b14f]">${statusBanner}</span>
+            <span class="text-sm font-black shrink-0">$${activeTrip.priceUsd.toFixed(2)}</span>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-white/10 text-xs space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <p class="truncate"><b>Pasajero:</b> ${activeTrip.passengerName}</p>
+              <div class="flex gap-1.5 shrink-0">
+                <button type="button" onclick="openTripChatModal('${activeTrip.id}')" class="px-3 py-1.5 rounded-xl bg-[#00b14f] text-white text-[11px] font-extrabold flex items-center gap-1 shadow">
+                  💬 Chat ${unreadChat > 0 ? `<span class="px-1.5 rounded-full bg-white text-[#11131a] text-[10px] font-black">${unreadChat}</span>` : ''}
+                </button>
+                <a href="tel:${activeTrip.passengerPhone}" class="px-2.5 py-1.5 rounded-xl bg-white/15 text-[11px] font-bold">📞</a>
+                <a href="https://wa.me/${waPhone}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 text-[11px] font-bold">WA</a>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-300">🟢 <b>Recoger:</b> ${activeTrip.originText}</p>
+            <p class="text-[11px] text-gray-300">🔴 <b>Destino:</b> ${activeTrip.destinationText}</p>
+            <p class="text-[11px] text-amber-400 font-bold">💵 Pago: ${activeTrip.paymentMethod}</p>
+          </div>
+
+          ${primaryActionBtn}
+
+          ${activeTrip.status !== 'in_progress' ? `
+            <button type="button" onclick="driverCancelTrip('${activeTrip.id}')" class="w-full py-2.5 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-extrabold">
+              ✕ Cancelar Carrera
+            </button>
+          ` : ''}
+        </div>
+      `;
+    } else {
+      activeWrapper.classList.add('hidden');
+      drvLastDrawnRouteKey = '';
+      if (activeChatTripId) closeTripChatModal();
+    }
+
+    const allowedServices = activeVeh.type === 'Carro'
+      ? ['Carro Go', 'Envío Express']
+      : ['Moto Go', 'Envío Express'];
+
+    const pendingReqs = isOnline
+      ? appState.trips.filter(t => t.status === 'searching' && allowedServices.includes(t.service))
+      : [];
+
+    if (!isOnline) {
+      reqList.innerHTML = `<div class="p-6 text-center bg-amber-50 rounded-3xl border border-amber-300 text-xs text-amber-800 font-extrabold">Estás Desconectado. Toca el botón gris arriba para ponerte ● En Línea y recibir carreras.</div>`;
+    } else if (pendingReqs.length === 0) {
+      reqList.innerHTML = `<div class="p-6 text-center bg-white rounded-3xl border border-gray-200 text-xs text-gray-400 font-bold">Sin solicitudes nuevas para ${activeVeh.type} en este momento</div>`;
+    } else {
+      reqList.innerHTML = pendingReqs.map(t => `
+        <div class="bg-white rounded-3xl p-4 shadow-sm border-2 border-[#00b14f] space-y-2.5">
+          <div class="flex justify-between items-center">
+            <span class="px-2.5 py-1 rounded-full bg-[#00b14f]/10 text-[#00b14f] text-[10px] font-extrabold">${t.service} · ${t.distanceKm} km</span>
+            <span class="text-sm font-black">$${t.priceUsd.toFixed(2)} <span class="text-[10px] text-gray-400">(Bs. ${t.priceBs})</span></span>
+          </div>
+          <p class="text-xs font-bold">🧑🏻‍💼 ${t.passengerName}</p>
+          <p class="text-[11px] text-gray-500">🟢 ${t.originText}</p>
+          <p class="text-[11px] text-gray-500">🔴 ${t.destinationText}</p>
+          <button type="button" onclick="acceptTripDriver('${t.id}')" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold shadow">
+            Aceptar Carrera (${activeVeh.type})
+          </button>
+        </div>
+      `).join('');
+    }
+  }
+
+  async function acceptTripDriver(tripId) {
+    const u = getActiveUser();
+    const trip = appState.trips.find(t => t.id === tripId && t.status === 'searching');
+    if (!u || !trip) return;
+    const activeVeh = getDriverActiveVehicle(u);
+
+    trip.status = 'accepted';
+    trip.driverId = u.id;
+    trip.driverVehicleModel = activeVeh.model;
+    trip.driverPlate = activeVeh.plate;
+    trip.driverLat = u.lat;
+    trip.driverLng = u.lng;
+    drvLastDrawnRouteKey = '';
+
+    await cloudPatch(`trips/${trip.id}`, {
+      status: 'accepted',
+      driverId: u.id,
+      driverVehicleModel: activeVeh.model,
+      driverPlate: activeVeh.plate,
+      driverLat: u.lat,
+      driverLng: u.lng
+    });
+    saveLocalOnly();
+    renderDriverDashboard();
+    showToast('Carrera aceptada');
+  }
+
+  async function changeDriverTripStatus(tripId, newStatus) {
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (!trip) return;
+    trip.status = newStatus;
+    drvLastDrawnRouteKey = '';
+    await cloudPatch(`trips/${tripId}`, { status: newStatus });
+    saveLocalOnly();
+    renderDriverDashboard();
+
+    if (newStatus === 'heading_pickup') showToast('🚀 Voy saliendo · Ruta de recogida activa');
+    if (newStatus === 'arrived_pickup') showToast('📍 Aviso enviado: Has llegado al punto');
+    if (newStatus === 'in_progress') showToast('▶️ Viaje comenzado hacia el destino final');
+  }
+
+  async function driverCancelTrip(tripId) {
+    if (!confirm('¿Seguro que deseas cancelar esta carrera?')) return;
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (trip) trip.status = 'cancelled';
+    await cloudPatch(`trips/${tripId}`, { status: 'cancelled' });
+    saveLocalOnly();
+    renderDriverDashboard();
+    showToast('Carrera cancelada');
+  }
+
+  async function completeTripDriver(tripId) {
+    const u = getActiveUser();
+    const trip = appState.trips.find(t => t.id === tripId);
+    if (!u || !trip) return;
+    const pct = (appState.commissionPct || 10) / 100;
+    trip.status = 'completed';
+    u.tripsCount = (u.tripsCount || 0) + 1;
+    u.earnedUsd = Number(((u.earnedUsd || 0) + trip.priceUsd).toFixed(2));
+    u.debtUsd = Number(((u.debtUsd || 0) + (trip.priceUsd * pct)).toFixed(2));
+
+    await cloudPatch(`trips/${trip.id}`, { status: 'completed' });
+    await cloudPatch(`users/${u.id}`, {
+      tripsCount: u.tripsCount,
+      earnedUsd: u.earnedUsd,
+      debtUsd: u.debtUsd
+    });
+
+    saveLocalOnly();
+    renderDriverDashboard();
+    showToast('✓ Viaje finalizado con éxito');
+  }
+
+  function openDriverCommissionModal() {
+    const u = getActiveUser();
+    const pay = appState.ownerPayment;
+    document.getElementById('modal-drv-comm')?.remove();
+
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-drv-comm" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">Pagar Comisión ${appState.commissionPct}%</h3>
+            <button type="button" onclick="document.getElementById('modal-drv-comm').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-gray-100 space-y-1 text-xs">
+            <p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Datos de Pago Móvil del Dueño</p>
+            <p><b>Banco:</b> ${pay.bank}</p>
+            <p><b>Teléfono:</b> ${pay.phone}</p>
+            <p><b>Cédula / RIF:</b> ${pay.ci}</p>
+            <p><b>Titular:</b> ${pay.name}</p>
+            <p class="pt-1 text-red-600 font-extrabold">Deuda acumulada: $${Number(u?.debtUsd || 0).toFixed(2)}</p>
+          </div>
+          <input type="text" id="comm-ref-input" placeholder="Número de referencia del pago" class="w-full px-3.5 py-3 rounded-2xl border border-gray-200 text-xs" />
+          <button type="button" onclick="sendDriverCommissionReport()" class="w-full py-3 rounded-2xl bg-[#00b14f] text-white text-xs font-extrabold">
+            Enviar Reporte de Pago
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function sendDriverCommissionReport() {
+    const ref = document.getElementById('comm-ref-input').value.trim();
+    if (!ref) { showToast('Ingresa la referencia'); return; }
+    const u = getActiveUser();
+    const rep = {
+      id: 'rep-' + Date.now(),
+      driverId: u.id,
+      driverName: u.name,
+      amountUsd: u.debtUsd || 0,
+      reference: ref,
+      status: 'pending',
+      date: new Date().toLocaleString()
+    };
+    await cloudPut(`commissionReports/${rep.id}`, rep);
+    appState.commissionReports.unshift(rep);
+    saveLocalOnly();
+    document.getElementById('modal-drv-comm').remove();
+    showToast('Reporte enviado al Dueño');
+  }
+
+  function openHistoryModal(role) {
+    const u = getActiveUser();
+    const myTrips = appState.trips.filter(t => t.status === 'completed' && (t.passengerId === u?.id || t.driverId === u?.id));
+    document.getElementById('modal-history')?.remove();
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="modal-history" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3 shadow-2xl">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-black">Historial de Viajes (${myTrips.length})</h3>
+            <button type="button" onclick="document.getElementById('modal-history').remove()" class="w-8 h-8 rounded-full bg-gray-100 text-xs font-bold">✕</button>
+          </div>
+          <div class="max-h-60 overflow-y-auto space-y-2">
+            ${myTrips.length === 0
+              ? `<p class="py-6 text-center text-xs text-gray-400 font-bold">Aún tienes 0 viajes completados.</p>`
+              : myTrips.map(t => `
+                <div class="p-3 rounded-2xl bg-gray-100 flex justify-between items-center text-xs">
+                  <div>
+                    <p class="font-extrabold">${t.destinationText}</p>
+                    <p class="text-[10px] text-gray-500">${t.createdAt}</p>
+                  </div>
+                  <span class="font-black text-[#00b14f]">$${t.priceUsd.toFixed(2)}</span>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  setInterval(() => {
+    if (getActiveUser()) syncFromCloud();
+  }, 3000);
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+    loadLocalSession();
+    routeUserScreen();
+    await syncFromCloud();
+  });
+</script>
+</body>
+</html>
