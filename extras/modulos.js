@@ -95,6 +95,33 @@
   }
 
   // =========================================================
+  // OCULTAR TARJETAS DECLINADAS EN EL PANEL INFERIOR DEL CONDUCTOR
+  // =========================================================
+  const origRenderDriverDashboard = window.renderDriverDashboard;
+  if (typeof origRenderDriverDashboard === 'function') {
+    window.renderDriverDashboard = function () {
+      origRenderDriverDashboard.apply(this, arguments);
+      try {
+        const reqList = document.getElementById('drv-requests-list');
+        if (!reqList) return;
+        const buttons = reqList.querySelectorAll('button[onclick*="acceptTripDriver"]');
+        buttons.forEach(btn => {
+          const match = (btn.getAttribute('onclick') || '').match(/acceptTripDriver\('([^']+)'\)/);
+          if (match && declinedTripIds.has(match[1])) {
+            const card = btn.closest('div');
+            if (card) card.remove();
+          }
+        });
+        if (reqList.children.length === 0) {
+          const u = typeof getActiveUser === 'function' ? getActiveUser() : null;
+          const activeVeh = (u && typeof getDriverActiveVehicle === 'function') ? getDriverActiveVehicle(u) : { type: 'Moto', plate: '' };
+          reqList.innerHTML = '<p class="text-center text-xs text-gray-400 font-bold py-1">Esperando solicitudes (' + activeVeh.type + ' · ' + activeVeh.plate + ')...</p>';
+        }
+      } catch (e) {}
+    };
+  }
+
+  // =========================================================
   // 1. PANTALLA ENTRANTE DE CARRERA CON TEMPORIZADOR Y SONIDO
   // =========================================================
   function ensureIncomingRideModal() {
@@ -135,7 +162,10 @@
   }
 
   function closeIncomingRideModal(declineId) {
-    if (declineId) declinedTripIds.add(declineId);
+    if (declineId) {
+      declinedTripIds.add(declineId);
+      if (typeof renderDriverDashboard === 'function') renderDriverDashboard();
+    }
     activeIncomingTripId = null;
     clearInterval(incomingTimerInterval);
     clearInterval(incomingRingInterval);
