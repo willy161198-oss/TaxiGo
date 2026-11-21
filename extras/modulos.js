@@ -1,8 +1,5 @@
 // =========================================================
 // MÓDULO DE EXTENSIONES EXTERNAS - TAXIGO (extras/modulos.js)
-// 1. Pantalla de Carrera Entrante con Temporizador + Sonido
-// 2. Limpieza automática del mapa al finalizar o cancelar
-// 3. Alertas sonoras en Chat + Calificación con Estrellas
 // =========================================================
 (function () {
   if (window._taxigoExtrasLoaded) return;
@@ -15,6 +12,7 @@
   let incomingRingInterval = null;
   let lastChatSoundTs = 0;
   let ratedTripIds = new Set();
+  let lastKnownTripStates = {};
 
   try {
     const savedRated = JSON.parse(localStorage.getItem('taxigo_rated_trips') || '[]');
@@ -29,14 +27,13 @@
   }
 
   // =========================================================
-  // MOTOR DE SONIDO Y VIBRACIÓN (SIN ARCHIVOS EXTERNOS)
+  // MOTOR DE SONIDO Y VIBRACIÓN
   // =========================================================
   function playAlertTone(type) {
     try {
       if (navigator.vibrate) {
-        if (type === 'ride') navigator.vibrate([300, 150, 300, 150, 400]);
+        if (type === 'ride') navigator.vibrate([350, 150, 350, 150, 450]);
         else if (type === 'chat') navigator.vibrate([120, 80, 120]);
-        else navigator.vibrate(150);
       }
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
@@ -49,7 +46,7 @@
           const gain = ctx.createGain();
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, now + i * 0.14);
-          gain.gain.setValueAtTime(0.22, now + i * 0.14);
+          gain.gain.setValueAtTime(0.25, now + i * 0.14);
           gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.14 + 0.35);
           osc.connect(gain);
           gain.connect(ctx.destination);
@@ -62,7 +59,7 @@
           const gain = ctx.createGain();
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, now + i * 0.1);
-          gain.gain.setValueAtTime(0.16, now + i * 0.1);
+          gain.gain.setValueAtTime(0.18, now + i * 0.1);
           gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.22);
           osc.connect(gain);
           gain.connect(ctx.destination);
@@ -73,9 +70,6 @@
     } catch (e) {}
   }
 
-  // =========================================================
-  // CÁLCULO DE DISTANCIA PARA PANTALLA DE CARRERA ENTRANTE
-  // =========================================================
   function calcHaversineKm(c1, c2) {
     if (!c1 || !c2 || c1.length < 2 || c2.length < 2) return 1.2;
     const toRad = d => (d * Math.PI) / 180;
@@ -91,25 +85,29 @@
   }
 
   function getUserRatingDisplay(userId) {
-    const u = (appState.users || []).find(x => x.id === userId);
-    if (!u || !u.ratingCount) return '5.0';
-    return Number(u.ratingAvg || 5.0).toFixed(1);
+    try {
+      const u = (appState.users || []).find(x => x.id === userId);
+      if (!u || !u.ratingCount) return '5,0';
+      return Number(u.ratingAvg || 5.0).toFixed(1).replace('.', ',');
+    } catch (e) {
+      return '5,0';
+    }
   }
 
   // =========================================================
-  // 1. PANTALLA DE CARRERA ENTRANTE CON TEMPORIZADOR (CAPTURA 3)
+  // 1. PANTALLA ENTRANTE DE CARRERA CON TEMPORIZADOR Y SONIDO
   // =========================================================
   function ensureIncomingRideModal() {
     if (document.getElementById('incoming-ride-overlay')) return;
     document.body.insertAdjacentHTML('beforeend',
-      '<div id="incoming-ride-overlay" class="hidden fixed inset-0 z-[90] bg-white flex flex-col justify-between p-6 text-[#11131a] overflow-y-auto">' +
+      '<div id="incoming-ride-overlay" class="hidden fixed inset-0 z-[95] bg-white flex flex-col justify-between p-6 text-[#11131a] overflow-y-auto">' +
         '<div class="pt-4 text-center space-y-2">' +
           '<div id="inc-pass-initials" class="w-20 h-20 rounded-full bg-rose-300/80 text-white text-2xl font-black flex items-center justify-center mx-auto shadow">TG</div>' +
-          '<p id="inc-pass-rating" class="text-xs font-extrabold text-gray-500">★ 5.0</p>' +
+          '<p id="inc-pass-rating" class="text-xs font-extrabold text-gray-500">★ 5,0</p>' +
           '<h2 id="inc-pass-name" class="text-lg font-black">Pasajero</h2>' +
           '<div class="pt-2">' +
             '<p id="inc-pay-method" class="text-xl font-black">Efectivo USD</p>' +
-            '<p id="inc-price-usd" class="text-3xl font-black tracking-tight mt-0.5">$1.10</p>' +
+            '<p id="inc-price-usd" class="text-3xl font-black tracking-tight mt-0.5">$1,10</p>' +
             '<p id="inc-price-bs" class="text-xs font-bold text-gray-400">Bs. 49.50</p>' +
           '</div>' +
           '<div class="pt-3 space-y-1.5">' +
@@ -120,8 +118,8 @@
             '</div>' +
           '</div>' +
           '<div class="pt-3 text-xs space-y-1 text-gray-700">' +
-            '<p id="inc-pickup-dist">Buscar a <b>1.0 km</b> (3 min)</p>' +
-            '<p id="inc-trip-dist">Luego llevar a <b>2.5 km</b> (6 min)</p>' +
+            '<p id="inc-pickup-dist">Buscar a <b>1,0 km</b> (3 min)</p>' +
+            '<p id="inc-trip-dist">Luego llevar a <b>2,5 km</b> (6 min)</p>' +
           '</div>' +
         '</div>' +
         '<div class="my-4 py-3 border-t border-b border-dashed border-gray-300 space-y-2.5 text-xs">' +
@@ -163,7 +161,7 @@
     const tripMin = Math.max(2, Math.round(tripKm * 2.2));
 
     document.getElementById('inc-pass-initials').textContent = initials;
-    document.getElementById('inc-pass-rating').textContent = '★ ' + ratingStr.replace('.', ',');
+    document.getElementById('inc-pass-rating').textContent = '★ ' + ratingStr;
     document.getElementById('inc-pass-name').textContent = trip.passengerName || 'Pasajero';
     document.getElementById('inc-pay-method').textContent = trip.paymentMethod || 'Efectivo USD';
     document.getElementById('inc-price-usd').textContent = '$' + Number(trip.priceUsd || 0).toFixed(2).replace('.', ',');
@@ -207,7 +205,7 @@
   }
 
   // =========================================================
-  // 2. LIMPIEZA TOTAL DEL MAPA AL FINALIZAR O CANCELAR (CAPTURA 1)
+  // 2. LIMPIEZA TOTAL DEL MAPA AL FINALIZAR O CANCELAR
   // =========================================================
   function resetPassengerMapClean() {
     try {
@@ -238,11 +236,10 @@
     } catch (e) {}
   }
 
-  // Envolver cancelación y finalización para limpiar mapa al instante
   const origConfirmCancel = window.confirmTripCancellationWithReason;
   if (typeof origConfirmCancel === 'function') {
     window.confirmTripCancellationWithReason = async function () {
-      const role = pendingCancelByRole;
+      const role = typeof pendingCancelByRole !== 'undefined' ? pendingCancelByRole : null;
       await origConfirmCancel.apply(this, arguments);
       if (role === 'passenger') resetPassengerMapClean();
       if (role === 'driver') resetDriverMapClean();
@@ -258,7 +255,7 @@
   }
 
   // =========================================================
-  // 3. CALIFICACIÓN CON ESTRELLAS AL FINALIZAR EL VIAJE
+  // 3. CALIFICACIÓN CON ESTRELLAS AL FINALIZAR
   // =========================================================
   function openStarRatingModal(trip, raterRole) {
     if (!trip || ratedTripIds.has(trip.id)) return;
@@ -271,7 +268,7 @@
     let selectedStars = 5;
 
     document.body.insertAdjacentHTML('beforeend',
-      '<div id="star-rating-modal" class="fixed inset-0 z-[95] bg-black/80 flex items-center justify-center p-4">' +
+      '<div id="star-rating-modal" class="fixed inset-0 z-[98] bg-black/80 flex items-center justify-center p-4">' +
         '<div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">' +
           '<div class="w-14 h-14 rounded-full bg-[#00b14f]/15 text-[#00b14f] flex items-center justify-center text-3xl mx-auto">⭐</div>' +
           '<div><p class="text-[10px] font-extrabold uppercase text-[#00b14f]">Viaje Finalizado</p><h3 class="text-base font-black mt-0.5">Califica a ' + targetName + '</h3><p class="text-xs text-gray-500 mt-1">Servicio: ' + trip.service + ' · $' + Number(trip.priceUsd || 0).toFixed(2) + '</p></div>' +
@@ -321,10 +318,8 @@
   }
 
   // =========================================================
-  // VIGILANTE EN TIEMPO REAL (SONIDO DE CHAT, ENTRADA DE CARRERA Y ESTRELLAS)
+  // VIGILANTE EN TIEMPO REAL
   // =========================================================
-  let lastKnownTripStates = {};
-
   setInterval(() => {
     try {
       if (typeof getActiveUser !== 'function' || typeof appState === 'undefined') return;
@@ -349,7 +344,8 @@
       }
 
       // B. Pantalla entrante con temporizador para conductor En Línea
-      if (role === 'driver' && u.approved && u.online !== false && !driverManualOffline) {
+      const isDriverOnline = u.online !== false && (typeof driverManualOffline === 'undefined' || !driverManualOffline);
+      if (role === 'driver' && u.approved && isDriverOnline) {
         const hasOngoing = (appState.trips || []).some(t =>
           t.driverId === u.id && ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)
         );
@@ -372,7 +368,7 @@
         }
       }
 
-      // C. Detectar viaje recién finalizado o cancelado para limpiar mapa y pedir calificación
+      // C. Limpiar mapa al cancelar o finalizar + abrir estrellas al finalizar
       (appState.trips || []).forEach(t => {
         if (t.passengerId !== u.id && t.driverId !== u.id) return;
         const prevStatus = lastKnownTripStates[t.id];
@@ -390,5 +386,5 @@
         }
       });
     } catch (e) {}
-  }, 1200);
+  }, 1000);
 })();
