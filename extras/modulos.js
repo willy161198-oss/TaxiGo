@@ -15,9 +15,22 @@
   let lastKnownTripStates = {};
 
   try {
+    const savedDeclined = JSON.parse(sessionStorage.getItem('taxigo_declined_trips') || '[]');
+    savedDeclined.forEach(id => declinedTripIds.add(id));
+  } catch (e) {}
+
+  try {
     const savedRated = JSON.parse(localStorage.getItem('taxigo_rated_trips') || '[]');
     savedRated.forEach(id => ratedTripIds.add(id));
   } catch (e) {}
+
+  function addDeclinedTrip(tripId) {
+    if (!tripId) return;
+    declinedTripIds.add(tripId);
+    try {
+      sessionStorage.setItem('taxigo_declined_trips', JSON.stringify(Array.from(declinedTripIds)));
+    } catch (e) {}
+  }
 
   function markTripAsRated(tripId) {
     ratedTripIds.add(tripId);
@@ -95,29 +108,49 @@
   }
 
   // =========================================================
-  // OCULTAR TARJETAS DECLINADAS EN EL PANEL INFERIOR DEL CONDUCTOR
+  // FILTRAR CARRERAS DECLINADAS EN EL PANEL INFERIOR DEL CONDUCTOR
   // =========================================================
+  function cleanDeclinedCardsInDom() {
+    try {
+      const reqList = document.getElementById('drv-requests-list');
+      if (!reqList) return;
+
+      const u = typeof getActiveUser === 'function' ? getActiveUser() : null;
+      const isOnline = u ? (u.online !== false && (typeof driverManualOffline === 'undefined' || !driverManualOffline)) : true;
+      if (!isOnline) return;
+
+      const activeVeh = (u && typeof getDriverActiveVehicle === 'function') ? getDriverActiveVehicle(u) : { type: 'Moto', plate: '' };
+      const allowedServices = activeVeh.type === 'Carro' ? ['Carro Go', 'Envío Express'] : ['Moto Go', 'Envío Express'];
+      const validTrips = (typeof appState !== 'undefined' && Array.isArray(appState.trips))
+        ? appState.trips.filter(t => t && t.status === 'searching' && allowedServices.includes(t.service) && !declinedTripIds.has(t.id))
+        : [];
+
+      if (validTrips.length === 0) {
+        reqList.innerHTML = '<p class="text-center text-xs text-gray-400 font-bold py-1">Esperando solicitudes (' + activeVeh.type + ' · ' + activeVeh.plate + ')...</p>';
+        return;
+      }
+
+      const cards = Array.from(reqList.children);
+      cards.forEach(card => {
+        const htmlStr = card.innerHTML || '';
+        declinedTripIds.forEach(declinedId => {
+          if (htmlStr.indexOf(declinedId) !== -1) {
+            card.remove();
+          }
+        });
+      });
+
+      if (reqList.children.length === 0) {
+        reqList.innerHTML = '<p class="text-center text-xs text-gray-400 font-bold py-1">Esperando solicitudes (' + activeVeh.type + ' · ' + activeVeh.plate + ')...</p>';
+      }
+    } catch (e) {}
+  }
+
   const origRenderDriverDashboard = window.renderDriverDashboard;
   if (typeof origRenderDriverDashboard === 'function') {
     window.renderDriverDashboard = function () {
       origRenderDriverDashboard.apply(this, arguments);
-      try {
-        const reqList = document.getElementById('drv-requests-list');
-        if (!reqList) return;
-        const buttons = reqList.querySelectorAll('button[onclick*="acceptTripDriver"]');
-        buttons.forEach(btn => {
-          const match = (btn.getAttribute('onclick') || '').match(/acceptTripDriver\('([^']+)'\)/);
-          if (match && declinedTripIds.has(match[1])) {
-            const card = btn.closest('div');
-            if (card) card.remove();
-          }
-        });
-        if (reqList.children.length === 0) {
-          const u = typeof getActiveUser === 'function' ? getActiveUser() : null;
-          const activeVeh = (u && typeof getDriverActiveVehicle === 'function') ? getDriverActiveVehicle(u) : { type: 'Moto', plate: '' };
-          reqList.innerHTML = '<p class="text-center text-xs text-gray-400 font-bold py-1">Esperando solicitudes (' + activeVeh.type + ' · ' + activeVeh.plate + ')...</p>';
-        }
-      } catch (e) {}
+      cleanDeclinedCardsInDom();
     };
   }
 
@@ -163,14 +196,14 @@
 
   function closeIncomingRideModal(declineId) {
     if (declineId) {
-      declinedTripIds.add(declineId);
-      if (typeof renderDriverDashboard === 'function') renderDriverDashboard();
+      addDeclinedTrip(declineId);
     }
     activeIncomingTripId = null;
     clearInterval(incomingTimerInterval);
     clearInterval(incomingRingInterval);
     const modal = document.getElementById('incoming-ride-overlay');
     if (modal) modal.classList.add('hidden');
+    cleanDeclinedCardsInDom();
   }
 
   function openIncomingRideModal(trip, driverUser) {
@@ -352,12 +385,12 @@
   // =========================================================
   setInterval(() => {
     try {
+      cleanDeclinedCardsInDom();
       if (typeof getActiveUser !== 'function' || typeof appState === 'undefined') return;
       const u = getActiveUser();
       if (!u) return;
       const role = typeof getEffectiveRole === 'function' ? getEffectiveRole(u) : u.role;
 
-      // A. Sonido cuando llega mensaje nuevo al chat
       const activeTrip = (appState.trips || []).find(t =>
         (t.passengerId === u.id || t.driverId === u.id) &&
         ['accepted', 'heading_pickup', 'arrived_pickup', 'in_progress'].includes(t.status)
@@ -373,7 +406,6 @@
         }
       }
 
-      // B. Pantalla entrante con temporizador para conductor En Línea
       const isDriverOnline = u.online !== false && (typeof driverManualOffline === 'undefined' || !driverManualOffline);
       if (role === 'driver' && u.approved && isDriverOnline) {
         const hasOngoing = (appState.trips || []).some(t =>
@@ -398,7 +430,6 @@
         }
       }
 
-      // C. Limpiar mapa al cancelar o finalizar + abrir estrellas al finalizar
       (appState.trips || []).forEach(t => {
         if (t.passengerId !== u.id && t.driverId !== u.id) return;
         const prevStatus = lastKnownTripStates[t.id];
